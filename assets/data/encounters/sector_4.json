@@ -2,16 +2,15 @@
   "sector": 4,
   "name": "Delta — Alien Territory",
   "encounters": [
-    { "distance": 300,   "type": "scout_wave",     "params": { "count": 4 } },
-    { "distance": 1500,  "type": "destroyer_wave", "params": { "count": 1, "escort": 3 } },
-    { "distance": 2800,  "type": "mine_field",     "params": { "count": 4, "mine_type": "rapid", "stagger": true } },
-    { "distance": 4000,  "type": "warrior_wave",   "params": { "count": 3 } },
-    { "distance": 5000,  "type": "mixed_field",    "params": { "asteroids": 3, "mines": 3, "mine_type": "rapid" } },
-    { "distance": 6200,  "type": "destroyer_wave", "params": { "count": 2 } },
-    { "distance": 7200,  "type": "fuel_cache",     "params": {} },
-    { "distance": 8000,  "type": "ambush_wave",    "params": { "type": "warrior", "count_left": 2, "count_right": 2 } },
-    { "distance": 9200,  "type": "mine_field",     "params": { "count": 3, "mine_type": "cluster", "stagger": true } },
-    { "distance": 10400, "type": "destroyer_wave", "params": { "count": 2 } },
-    { "distance": 11600, "type": "star_cluster",   "params": {} }
+    { "distance": 200,  "type": "scout_wave",     "params": { "count": 4 } },
+    { "distance": 700,  "type": "destroyer_wave", "params": { "count": 1, "escort": 3 } },
+    { "distance": 1300, "type": "mine_field",     "params": { "count": 4, "mine_type": "rapid", "stagger": true } },
+    { "distance": 1900, "type": "warrior_wave",   "params": { "count": 3 } },
+    { "distance": 2500, "type": "mixed_field",    "params": { "asteroids": 3, "mines": 3, "mine_type": "rapid" } },
+    { "distance": 3100, "type": "destroyer_wave", "params": { "count": 2 } },
+    { "distance": 3600, "type": "fuel_cache",     "params": {} },
+    { "distance": 4200, "type": "ambush_wave",    "params": { "type": "warrior", "count_left": 2, "count_right": 2 } },
+    { "distance": 4900, "type": "mine_field",     "params": { "count": 3, "mine_type": "cluster", "stagger": true } },
+    { "distance": 5800, "type": "star_cluster",   "params": {} }
   ]
 }

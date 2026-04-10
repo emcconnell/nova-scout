@@ -2,14 +2,14 @@
   "sector": 2,
   "name": "Beta — Asteroid Fields",
   "encounters": [
-    { "distance": 600,   "type": "asteroid_field", "params": { "count": 5, "tier": 0, "mix": true } },
-    { "distance": 2000,  "type": "scout_wave",     "params": { "count": 3 } },
-    { "distance": 3400,  "type": "asteroid_field", "params": { "count": 4, "tier": 0, "mix": true } },
-    { "distance": 4600,  "type": "mine_field",     "params": { "count": 4, "mine_type": "standard", "stagger": true } },
-    { "distance": 5800,  "type": "scout_wave",     "params": { "count": 4 } },
-    { "distance": 7000,  "type": "derelict_ship",  "params": {} },
-    { "distance": 8200,  "type": "ambush_wave",    "params": { "type": "scout", "count_left": 2, "count_right": 2 } },
-    { "distance": 9600,  "type": "asteroid_field", "params": { "count": 3, "tier": 1 } },
-    { "distance": 11600, "type": "star_cluster",   "params": {} }
+    { "distance": 250,  "type": "asteroid_field", "params": { "count": 5, "tier": 0, "mix": true } },
+    { "distance": 800,  "type": "scout_wave",     "params": { "count": 3 } },
+    { "distance": 1500, "type": "asteroid_field", "params": { "count": 4, "tier": 0, "mix": true } },
+    { "distance": 2200, "type": "mine_field",     "params": { "count": 4, "mine_type": "standard", "stagger": true } },
+    { "distance": 2900, "type": "scout_wave",     "params": { "count": 4 } },
+    { "distance": 3500, "type": "derelict_ship",  "params": {} },
+    { "distance": 4200, "type": "ambush_wave",    "params": { "type": "scout", "count_left": 2, "count_right": 2 } },
+    { "distance": 5000, "type": "asteroid_field", "params": { "count": 3, "tier": 1 } },
+    { "distance": 5800, "type": "star_cluster",   "params": {} }
   ]
 }

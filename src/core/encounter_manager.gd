@@ -10,7 +10,7 @@ signal sector_complete()
 
 # ─── Constants ───────────────────────────────────────────────────────────────
 const SCROLL_SPEED  := 40.0      # px/sec virtual distance rate
-const SECTOR_LENGTH := 12000.0   # ~5 min per sector (300s × 40)
+const SECTOR_LENGTH := 6000.0    # ~2.5 min per sector (150s × 40)
 
 # ─── State ───────────────────────────────────────────────────────────────────
 var distance_traveled: float = 0.0
@@ -46,8 +46,10 @@ func _process(delta: float) -> void:
 		else:
 			break
 
-	# Sector complete when all encounters have fired
-	if _next_idx >= _encounters.size() and _encounters.size() > 0:
+	# Sector complete when all encounters have fired.
+	# Guard: if stop() was called by a signal handler above (e.g. star_cluster
+	# encounter), _active is already false — skip to avoid double-trigger.
+	if _next_idx >= _encounters.size() and _encounters.size() > 0 and _active:
 		_active = false
 		sector_complete.emit()
 

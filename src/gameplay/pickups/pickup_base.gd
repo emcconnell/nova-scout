@@ -19,7 +19,7 @@ var _dead: bool = false
 
 func _ready() -> void:
 	add_to_group("pickups")
-	monitoring = true
+	# monitoring defaults true on Area2D — skip explicit set to avoid physics errors
 	collision_layer = 32
 	collision_mask = 1   # player
 	body_entered.connect(_on_body_entered)

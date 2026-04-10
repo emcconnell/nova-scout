@@ -55,8 +55,7 @@ var _charge_timer: float = 0.0
 
 func _ready() -> void:
 	add_to_group("hazards")
-	monitoring = true
-	monitorable = true
+	# monitoring/monitorable default true — skip explicit set to avoid physics errors
 	collision_layer = 16
 	collision_mask = 5   # 1=player + 4=player bullets
 	area_entered.connect(_on_area_entered)
@@ -222,7 +221,7 @@ func _on_area_entered(_area: Area2D) -> void:
 
 func _on_body_entered(body: Node2D) -> void:
 	if body.is_in_group("player"):
-		_explode()
+		call_deferred("_explode")  # Defer: physics callback can't spawn nodes directly
 
 func _explode() -> void:
 	if _dead:
@@ -251,10 +250,11 @@ func _spawn_cluster_children() -> void:
 	var scene: PackedScene = load("res://scenes/hazards/space_mine.tscn")
 	if scene == null:
 		return
+	var parent := get_parent()
 	for i in 3:
 		var child := scene.instantiate() as SpaceMine
-		get_parent().add_child(child)
 		var a: float = TAU / 3.0 * float(i) + randf_range(-0.3, 0.3)
-		child.global_position = global_position + Vector2(cos(a), sin(a)) * 8.0
+		child.position = global_position + Vector2(cos(a), sin(a)) * 8.0
 		child.setup(MineType.STANDARD, i)
 		child._lurch_vel = Vector2(cos(a), sin(a)) * 30.0
+		parent.call_deferred("add_child", child)  # Defer: avoid monitoring-during-physics error

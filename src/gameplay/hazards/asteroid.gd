@@ -24,8 +24,8 @@ var _shape_pts: PackedVector2Array = PackedVector2Array()
 
 func _ready() -> void:
 	add_to_group("hazards")
-	monitoring = true
-	monitorable = true
+	# monitoring and monitorable default true on Area2D — don't set explicitly
+	# to avoid "can't change monitoring state during physics query" errors
 	collision_layer = 16
 	collision_mask = 5   # 1=player + 4=player bullets
 	area_entered.connect(_on_area_entered)

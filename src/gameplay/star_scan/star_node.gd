@@ -82,9 +82,9 @@ func _abort_scan() -> void:
 
 func _advance_scan(delta: float) -> void:
 	_scan_progress += delta / _scan_duration
-	# Auto-abort if hull critical
+	# Auto-abort only if nearly dead (hull <= 5) to avoid frustrating cancels
 	var player := _get_player()
-	if player and player.health.hull < 20:
+	if player and player.health.hull <= 5:
 		_abort_scan()
 		return
 	if _scan_progress >= 1.0:

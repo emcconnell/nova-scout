@@ -222,13 +222,13 @@ func _on_asteroid_destroyed(pos: Vector2, tier: int) -> void:
 		return
 	for i in 2:
 		var child := AsteroidScene.instantiate() as Asteroid
-		hazards_node.add_child(child)
 		var angle  := PI * i + randf_range(-0.6, 0.6)
 		var speed  := randf_range(35.0, 65.0)
 		var offset := Vector2(randf_range(-6.0, 6.0), randf_range(-6.0, 6.0))
-		child.global_position = pos + offset
+		child.position = pos + offset   # set before add_child
 		child.setup(tier + 1, Vector2(cos(angle), sin(angle)) * speed)
 		child.destroyed.connect(_on_asteroid_destroyed)
+		hazards_node.call_deferred("add_child", child)  # defer: called from physics signal
 
 func _spawn_mine() -> void:
 	var m := SpaceMineScene.instantiate() as SpaceMine
@@ -376,6 +376,8 @@ func _encounter_ambush_wave(params: Dictionary) -> void:
 # ─── Star Cluster ─────────────────────────────────────────────────────────────
 
 func _start_star_cluster() -> void:
+	if _in_star_cluster:
+		return   # Guard: encounter + sector_complete both fire this; run once only
 	_in_star_cluster = true
 	GameManager.change_state(GameManager.GameState.STAR_CLUSTER)
 	_encounter_manager.stop()
@@ -553,14 +555,15 @@ func spawn_pickup(pos: Vector2, type: String) -> void:
 			"crystal":   GameManager.add_crystal(1)
 		GameManager.add_score(15)
 		return
-	# Spawn a physical pickup entity
+	# Spawn a physical pickup entity — deferred add_child avoids
+	# "can't change monitoring state" errors from physics callbacks.
 	var scene := PickupScene as PackedScene
 	if scene == null:
 		return
 	var pickup := scene.instantiate() as PickupVisuals
-	pickups_node.add_child(pickup)
-	pickup.global_position = pos
+	pickup.position = pos
 	pickup.setup(type)
+	pickups_node.call_deferred("add_child", pickup)
 
 func spawn_loot_wave(loot_list: Array, center: Vector2) -> void:
 	var types := DropTable.from_loot_list(loot_list)

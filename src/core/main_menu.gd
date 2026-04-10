@@ -115,4 +115,5 @@ func _draw_high_scores(vp: Rect2, cx: float, font: Font) -> void:
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 5, COL_DIM)
 
 func _start_game() -> void:
+	GameManager.start_new_game()   # Fresh game — reset everything before loading
 	get_tree().change_scene_to_file("res://scenes/game_world.tscn")

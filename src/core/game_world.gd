@@ -79,7 +79,11 @@ var _base_camera_offset: Vector2 = Vector2.ZERO
 func _ready() -> void:
 	add_to_group("game_world")
 	GameManager.game_world = self
-	GameManager.start_new_game()
+	# start_new_game() is called by MainMenu on a true fresh start.
+	# On sector-transition reload: advance_sector() already ran; keep the sector.
+	# On death retry: restore player stats for this sector only.
+	if GameManager.current_state == GameManager.GameState.DEATH:
+		GameManager.restart_sector()
 	GameManager.change_state(GameManager.GameState.TRAVEL)
 
 	# Object pools

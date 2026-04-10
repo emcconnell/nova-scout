@@ -105,13 +105,15 @@ func _reset_player_stats() -> void:
 	player_laser_damage = 8
 
 func restart_sector() -> void:
-	# Reset to sector start stats (partial reset)
+	# Reset to sector start stats (partial reset — sector/score preserved)
 	player_hull = player_max_hull
 	player_shield = 60
 	player_fuel = player_max_fuel
 	player_missiles = 6
 	player_emp = 2
 	score_multiplier = 1
+	kill_streak = 0
+	streak_multiplier = 1
 
 # ─── Score ───────────────────────────────────────────────────────────────────
 func add_score(amount: int) -> void:

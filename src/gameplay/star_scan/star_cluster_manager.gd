@@ -11,35 +11,36 @@ signal human_viable_found(sector: int)
 # ─── Star configs per sector ──────────────────────────────────────────────────
 # Each entry: {type, result, scan_duration}
 # result can be "barren", "human_viable", "alien_territory", "anomaly"
+# scan_duration reduced: 20-30s was too punishing. 8-12s keeps tension manageable.
 const SECTOR_STARS := {
 	1: [
-		{"id":"A1","result":"barren",        "scan_duration":20,"wave_path":""},
-		{"id":"A2","result":"barren",        "scan_duration":20,"wave_path":"","reward":"crystal2"},
-		{"id":"A3","result":"barren",        "scan_duration":20,"wave_path":"","reward":"repair_kit","optional":true},
+		{"id":"A1","result":"barren",        "scan_duration":8, "wave_path":""},
+		{"id":"A2","result":"barren",        "scan_duration":8, "wave_path":"","reward":"crystal2"},
+		{"id":"A3","result":"barren",        "scan_duration":8, "wave_path":"","reward":"repair_kit","optional":true},
 	],
 	2: [
-		{"id":"B1","result":"barren",        "scan_duration":22,"wave_path":""},
-		{"id":"B2","result":"alien_territory","scan_duration":0,"wave_path":"res://assets/data/waves/sector_2_star_b2.json"},
-		{"id":"B3","result":"barren",        "scan_duration":22,"wave_path":"","optional":true},
-		{"id":"B4","result":"anomaly",       "scan_duration":0,"wave_path":"","optional":true,"hidden":true},
+		{"id":"B1","result":"barren",        "scan_duration":9, "wave_path":""},
+		{"id":"B2","result":"alien_territory","scan_duration":0, "wave_path":"res://assets/data/waves/sector_2_star_b2.json"},
+		{"id":"B3","result":"barren",        "scan_duration":9, "wave_path":"","optional":true},
+		{"id":"B4","result":"anomaly",       "scan_duration":0, "wave_path":"","optional":true,"hidden":true},
 	],
 	3: [
-		{"id":"G1","result":"barren",        "scan_duration":25,"wave_path":""},
-		{"id":"G2","result":"human_viable",  "scan_duration":25,"wave_path":"","guaranteed":true},
-		{"id":"G3","result":"alien_territory","scan_duration":0,"wave_path":"res://assets/data/waves/sector_3_star_g3.json","optional":true},
-		{"id":"G4","result":"barren",        "scan_duration":25,"wave_path":"","optional":true},
+		{"id":"G1","result":"barren",        "scan_duration":10,"wave_path":""},
+		{"id":"G2","result":"human_viable",  "scan_duration":10,"wave_path":"","guaranteed":true},
+		{"id":"G3","result":"alien_territory","scan_duration":0, "wave_path":"res://assets/data/waves/sector_3_star_g3.json","optional":true},
+		{"id":"G4","result":"barren",        "scan_duration":10,"wave_path":"","optional":true},
 	],
 	4: [
-		{"id":"D1","result":"alien_territory","scan_duration":0,"wave_path":"res://assets/data/waves/sector_4_star_d1.json"},
-		{"id":"D2","result":"human_viable",  "scan_duration":28,"wave_path":"","guaranteed":true},
-		{"id":"D3","result":"alien_territory","scan_duration":0,"wave_path":"res://assets/data/waves/sector_4_star_d3.json","optional":true},
-		{"id":"D4","result":"anomaly",       "scan_duration":0,"wave_path":"","optional":true},
+		{"id":"D1","result":"alien_territory","scan_duration":0, "wave_path":"res://assets/data/waves/sector_4_star_d1.json"},
+		{"id":"D2","result":"human_viable",  "scan_duration":12,"wave_path":"","guaranteed":true},
+		{"id":"D3","result":"alien_territory","scan_duration":0, "wave_path":"res://assets/data/waves/sector_4_star_d3.json","optional":true},
+		{"id":"D4","result":"anomaly",       "scan_duration":0, "wave_path":"","optional":true},
 	],
 	5: [
-		{"id":"E1","result":"alien_territory","scan_duration":0,"wave_path":"res://assets/data/waves/sector_5_star_e1.json"},
-		{"id":"E2","result":"barren",        "scan_duration":30,"wave_path":"","reward":"repair_kit+missile4"},
-		{"id":"E3","result":"human_viable",  "scan_duration":30,"wave_path":"res://assets/data/waves/sector_5_star_e3.json","guaranteed":true},
-		{"id":"E4","result":"mothership",    "scan_duration":0,"wave_path":"","mandatory_after":"E3"},
+		{"id":"E1","result":"alien_territory","scan_duration":0, "wave_path":"res://assets/data/waves/sector_5_star_e1.json"},
+		{"id":"E2","result":"barren",        "scan_duration":12,"wave_path":"","reward":"repair_kit+missile4"},
+		{"id":"E3","result":"human_viable",  "scan_duration":12,"wave_path":"res://assets/data/waves/sector_5_star_e3.json","guaranteed":true},
+		{"id":"E4","result":"mothership",    "scan_duration":0, "wave_path":"","mandatory_after":"E3"},
 	],
 }
 
@@ -114,6 +115,9 @@ func _on_scan_completed(result: String, star_data: Dictionary, _star: StarNode, 
 
 	if _stars_cleared >= _required_cleared:
 		cluster_complete.emit()
+
+func is_complete() -> bool:
+	return _stars_cleared >= _required_cleared
 
 func _on_scan_aborted() -> void:
 	pass  # Player aborted — no consequence

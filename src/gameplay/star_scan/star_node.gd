@@ -118,9 +118,16 @@ func _draw() -> void:
 	draw_circle(Vector2.ZERO, 8.0 * pulse, Color(star_col.r, star_col.g, star_col.b, 0.25))
 	draw_circle(Vector2.ZERO, 5.0, Color(star_col.r, star_col.g, star_col.b, pulse))
 	draw_circle(Vector2.ZERO, 3.0, COL_STAR)
-	# Approach ring when nearby
+	# Approach ring + prompt when nearby
 	if _player_nearby and not _scanned:
 		draw_arc(Vector2.ZERO, APPROACH_RADIUS, 0, TAU, 32, COL_RING, 0.5)
+		var font := ThemeDB.fallback_font
+		if not _scanning:
+			draw_string(font, Vector2(-16.0, -APPROACH_RADIUS - 4.0), "[E] SCAN",
+				HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color(0.22, 1.0, 0.08, 0.9))
+		else:
+			draw_string(font, Vector2(-16.0, -APPROACH_RADIUS - 4.0), "[E] ABORT",
+				HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color(1.0, 0.5, 0.0, 0.8))
 	# Scanned indicator
 	if _scanned:
 		draw_arc(Vector2.ZERO, 7.0, 0, TAU, 24, Color(0.5, 0.5, 0.5, 0.4), 1.0)

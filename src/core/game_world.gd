@@ -62,6 +62,7 @@ var _bg_fill_timer: float = 6.0   # Change 6: dead-zone filler
 var _in_star_cluster: bool = false
 var _in_arena: bool = false
 var _current_arena_wave_path: String = ""
+var _cluster_complete_pending: bool = false   # cluster_complete arrived during combat
 
 # ─── Parallax starfield ───────────────────────────────────────────────────────
 # Each star: Vector4(x, y, layer 0/1/2, brightness_offset)
@@ -390,17 +391,17 @@ func _start_star_cluster() -> void:
 	_star_cluster_mgr.setup(GameManager.current_sector)
 	_star_cluster_mgr.spawn_stars()
 
-	# Wire scan bar to any star node (the first one)
+	# Wire scan bar to ALL star nodes
 	if scan_bar_ui:
 		for star in stars_node.get_children():
 			if star is StarNode:
-				star.player_in_range.connect(func(in_range):
-					if in_range and star.is_scanning():
-						scan_bar_ui.show_for(star)
+				var s := star  # capture loop var
+				s.player_in_range.connect(func(in_range):
+					if in_range:
+						scan_bar_ui.show_for(s)
 					else:
 						scan_bar_ui.hide_scan())
-				star.scan_completed.connect(func(_r, _d): scan_bar_ui.hide_scan())
-				break
+				s.scan_completed.connect(func(_r, _d): scan_bar_ui.hide_scan())
 
 	AudioManager.play_sfx("star_cluster_arrive")
 
@@ -411,6 +412,10 @@ func _on_viable_found(sector: int) -> void:
 	# Continue — player can keep scanning other stars
 
 func _on_cluster_complete() -> void:
+	# If combat is active, defer until arena clears
+	if _in_arena:
+		_cluster_complete_pending = true
+		return
 	if GameManager.has_won():
 		_trigger_win(false)
 		return
@@ -441,6 +446,10 @@ func _on_arena_cleared() -> void:
 	player.fuel_sys.refuel(player.fuel_sys._max_fuel * 0.15)
 	AudioManager.play_sfx("arena_clear")
 	AudioManager.play_sector_music(GameManager.current_sector)
+	# If cluster finished while we were fighting, progress now
+	if _cluster_complete_pending:
+		_cluster_complete_pending = false
+		_on_cluster_complete()
 
 func exit_arena_escape() -> void:
 	_on_arena_cleared()

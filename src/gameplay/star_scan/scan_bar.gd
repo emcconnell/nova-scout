@@ -29,8 +29,11 @@ func hide_scan() -> void:
 
 func _process(delta: float) -> void:
 	_wobble += delta * 6.0
-	if _target and _target.is_scanning():
-		_progress = _target.get_scan_progress()
+	if _target:
+		if _target.is_scanning():
+			_progress = _target.get_scan_progress()
+		else:
+			_progress = 0.0
 	queue_redraw()
 
 func _draw() -> void:

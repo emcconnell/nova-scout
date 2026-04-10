@@ -110,6 +110,7 @@ func _draw() -> void:
 	_draw_score_display(font)
 	_draw_sector_display(font)
 	_draw_streak_display(font)
+	_draw_context_hint(font)
 
 # ─── Status panel — top-left ──────────────────────────────────────────────────
 
@@ -247,3 +248,23 @@ func _draw_sector_display(font: Font) -> void:
 	draw_string(font, Vector2(px + 4, py + 13.5),
 		GameManager.get_sector_name(),
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color(COL_GREEN.r, COL_GREEN.g, COL_GREEN.b, 0.88))
+
+# ─── Context hint — bottom-centre state-aware prompt ─────────────────────────
+
+func _draw_context_hint(font: Font) -> void:
+	var vp  := get_viewport_rect()
+	var cx: float = vp.size.x * 0.5
+	var y: float  = vp.size.y - 8.0
+	match GameManager.current_state:
+		GameManager.GameState.STAR_CLUSTER:
+			draw_string(font, Vector2(cx - 54, y),
+				"FLY TO STAR  \u25b6  PRESS [E] TO SCAN",
+				HORIZONTAL_ALIGNMENT_LEFT, -1, 4, Color(0.22, 1.0, 0.08, 0.75))
+		GameManager.GameState.SCANNING:
+			draw_string(font, Vector2(cx - 34, y),
+				"SCANNING \u2014 HOLD ORBIT",
+				HORIZONTAL_ALIGNMENT_LEFT, -1, 4, Color(0.00, 0.80, 1.00, 0.85))
+		GameManager.GameState.ALIEN_COMBAT:
+			draw_string(font, Vector2(cx - 46, y),
+				"CLEAR ALL ENEMIES  \u25b6  HOLD [E] TO ESCAPE",
+				HORIZONTAL_ALIGNMENT_LEFT, -1, 4, Color(1.0, 0.27, 0.0, 0.85))

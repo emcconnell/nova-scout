@@ -83,7 +83,7 @@ func _draw() -> void:
 		draw_rect(Rect2(bx - 1, 8, 2, 8), COL_BARREL)
 	# Charge glow
 	if _charging:
-		var ga := 0.3 + 0.7 * abs(sin(_charge_anim))
+		var ga: float = 0.3 + 0.7 * abs(sin(_charge_anim))
 		for i in 6:
 			var bx := -12.5 + i * 5.0
 			draw_circle(Vector2(bx, 16), 2.0, Color(COL_CHARGE.r, COL_CHARGE.g, COL_CHARGE.b, ga))

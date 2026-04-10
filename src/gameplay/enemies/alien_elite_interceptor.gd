@@ -94,7 +94,7 @@ func _draw() -> void:
 		Vector2(10, 6), Vector2(18, 10), Vector2(12, 12), Vector2(8, 8)
 	]), hull)
 	# Glow core
-	var pulse := 0.5 + 0.5 * abs(sin(_wobble))
+	var pulse: float = 0.5 + 0.5 * abs(sin(_wobble))
 	draw_circle(Vector2(0, -2), 4.0, Color(COL_GLOW.r, COL_GLOW.g, COL_GLOW.b, pulse))
 	# Blink flash
 	if _blink_flash > 0.0:

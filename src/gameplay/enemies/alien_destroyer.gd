@@ -164,7 +164,7 @@ func _draw() -> void:
 		Color(COL_GLOW.r, COL_GLOW.g, COL_GLOW.b, belly_a), 2.0)
 	# Exposed core (double damage window)
 	if _exposed:
-		var pulse := 0.6 + 0.4 * abs(sin(_wobble * 2.0))
+		var pulse: float = 0.6 + 0.4 * abs(sin(_wobble * 2.0))
 		draw_circle(Vector2(0, 0), 5.0, Color(COL_EXPOSED.r, COL_EXPOSED.g, COL_EXPOSED.b, pulse))
 	# Shield pulse visual
 	if _invincible_pulse:

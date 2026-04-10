@@ -243,7 +243,7 @@ func _draw() -> void:
 	var flash := _hit_flash_timer > 0.0
 	var hull  := Color(1,1,1) if flash else COL_HULL
 	var armor := COL_ARMOR if not flash else Color(1,1,1)
-	var hp_pct := float(hp) / max(max_hp, 1)
+	var hp_pct: float = float(hp) / float(maxi(max_hp, 1))
 
 	# Enormous hull — multi-segment
 	# Main body
@@ -268,17 +268,17 @@ func _draw() -> void:
 		draw_circle(Vector2(px, -16), 4.0, Color(0.8, 0.0, 1.0, 0.7))
 	# Reactor core (blast doors)
 	var core_col := COL_CORE if _core_open else COL_CORE_CLOSED
-	var core_pulse := 0.7 + 0.3 * abs(sin(_wobble * 3.0))
+	var core_pulse: float = 0.7 + 0.3 * abs(sin(_wobble * 3.0))
 	draw_circle(Vector2(0, 0), 8.0, Color(core_col.r, core_col.g, core_col.b, core_pulse))
 	if _core_open:
 		draw_circle(Vector2(0, 0), 5.0, COL_CORE)
 	# Phase 3 enrage flash
 	if _phase == 3:
-		var ef := 0.2 * abs(sin(_wobble * 5.0))
+		var ef: float = 0.2 * abs(sin(_wobble * 5.0))
 		draw_circle(Vector2.ZERO, 70.0, Color(COL_ENRAGE.r, COL_ENRAGE.g, COL_ENRAGE.b, ef))
 	# Desperation warning
 	if _sweep_active and _sweep_warning > 0.0:
-		var warn_a := abs(sin(_wobble * 8.0)) * 0.6
+		var warn_a: float = abs(sin(_wobble * 8.0)) * 0.6
 		var vp := get_viewport_rect()
 		# Drawn in world space, so local position is (0,0) relative to self
 		draw_line(Vector2(-200, 40), Vector2(200, 40),

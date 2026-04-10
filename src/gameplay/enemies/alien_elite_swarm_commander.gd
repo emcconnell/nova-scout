@@ -82,7 +82,7 @@ func _draw() -> void:
 	# Spawn bays (two ports)
 	draw_rect(Rect2(-18, 0, 6, 10), hull)
 	draw_rect(Rect2(12, 0, 6, 10), hull)
-	var port_a := 0.5 + 0.5 * abs(sin(_wobble * 2.0))
+	var port_a: float = 0.5 + 0.5 * abs(sin(_wobble * 2.0))
 	draw_circle(Vector2(-15, 8), 3.0, Color(COL_PORT.r, COL_PORT.g, COL_PORT.b, port_a))
 	draw_circle(Vector2(15, 8), 3.0, Color(COL_PORT.r, COL_PORT.g, COL_PORT.b, port_a))
 	# Central glow

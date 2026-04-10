@@ -22,6 +22,13 @@ const UPGRADES := [
 var _selection: int = 0
 var _visible_flag: bool = false
 
+func _ready() -> void:
+	hide()
+	anchor_right  = 1.0
+	anchor_bottom = 1.0
+	mouse_filter  = Control.MOUSE_FILTER_IGNORE
+	process_mode  = Node.PROCESS_MODE_ALWAYS
+
 func show_upgrades() -> void:
 	_visible_flag = true
 	_selection = 0

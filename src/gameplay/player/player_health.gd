@@ -50,6 +50,7 @@ func take_damage(amount: int) -> void:
 		hull = maxi(hull, 0)
 		GameManager.player_hull = hull
 		hull_changed.emit(hull)
+		GameManager.reset_streak()  # Hull damage breaks streak (Change 7c)
 		if hull <= 0:
 			_die()
 

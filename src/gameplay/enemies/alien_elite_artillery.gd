@@ -64,7 +64,7 @@ func _update(delta: float) -> void:
 	else:
 		_volley_timer -= delta
 		if _volley_timer <= 0.0:
-			_volley_timer = VOLLEY_INTERVAL
+			_volley_timer = _scaled_interval(VOLLEY_INTERVAL)
 			_charging = true
 			_shot_queue = VOLLEY_SIZE
 			_shot_timer = 0.0

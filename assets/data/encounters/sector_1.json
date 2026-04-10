@@ -2,13 +2,13 @@
   "sector": 1,
   "name": "Alpha — Inner Rim",
   "encounters": [
-    { "distance": 1200,  "type": "asteroid_field", "params": { "count": 3, "tier": 0 } },
-    { "distance": 3600,  "type": "asteroid_field", "params": { "count": 5, "tier": 0, "mix": true } },
-    { "distance": 7200,  "type": "debris_cloud",   "params": { "count": 1 } },
-    { "distance": 9600,  "type": "asteroid_field", "params": { "count": 4, "tier": 0, "mix": true } },
-    { "distance": 11000, "type": "mine_field",      "params": { "count": 2 } },
-    { "distance": 13200, "type": "fuel_cache",      "params": {} },
-    { "distance": 16800, "type": "asteroid_field", "params": { "count": 3, "tier": 1 } },
-    { "distance": 19000, "type": "star_cluster",   "params": {} }
+    { "distance": 750,   "type": "asteroid_field", "params": { "count": 3, "tier": 0 } },
+    { "distance": 2200,  "type": "asteroid_field", "params": { "count": 4, "tier": 0, "mix": true } },
+    { "distance": 3800,  "type": "fuel_cache",     "params": {} },
+    { "distance": 4600,  "type": "debris_cloud",   "params": { "count": 1 } },
+    { "distance": 5600,  "type": "asteroid_field", "params": { "count": 5, "tier": 0, "mix": true } },
+    { "distance": 7000,  "type": "mine_field",     "params": { "count": 2, "mine_type": "standard", "stagger": true } },
+    { "distance": 8800,  "type": "asteroid_field", "params": { "count": 3, "tier": 1 } },
+    { "distance": 11600, "type": "star_cluster",   "params": {} }
   ]
 }

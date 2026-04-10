@@ -10,7 +10,7 @@ signal sector_complete()
 
 # ─── Constants ───────────────────────────────────────────────────────────────
 const SCROLL_SPEED  := 40.0      # px/sec virtual distance rate
-const SECTOR_LENGTH := 19200.0   # ~8 min per sector (480s × 40)
+const SECTOR_LENGTH := 12000.0   # ~5 min per sector (300s × 40)
 
 # ─── State ───────────────────────────────────────────────────────────────────
 var distance_traveled: float = 0.0
@@ -34,6 +34,8 @@ func _process(delta: float) -> void:
 	if not _active:
 		return
 	distance_traveled += scroll_speed * delta
+	# Score trickle — reward the player for surviving (Change 7a)
+	GameManager.add_score(int(scroll_speed * delta * 0.05))
 
 	# Fire triggered encounters in order
 	while _next_idx < _encounters.size():

@@ -113,12 +113,12 @@ func _update(delta: float) -> void:
 
 func _start_pause() -> void:
 	_current_pattern = Pattern.PAUSE
-	_pause_timer = PATTERN_PAUSE
+	_pause_timer = _scaled_interval(PATTERN_PAUSE)
 	_burst_count = 0
 
 func _advance_pattern() -> void:
 	_pattern_index = (_pattern_index + 1) % 5
-	_pattern_timer = 3.0
+	_pattern_timer = _scaled_interval(3.0)
 	_burst_shot_timer = 0.0
 	_beam_timer = 0.0
 	match _pattern_index:

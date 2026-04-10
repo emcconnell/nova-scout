@@ -8,6 +8,7 @@ signal sector_changed(sector: int)
 signal beacon_collected(total: int)
 signal score_changed(score: int)
 signal crystals_changed(crystals: int)
+signal streak_changed(streak: int, multiplier: int)
 
 # ─── Enums ───────────────────────────────────────────────────────────────────
 enum GameState {
@@ -55,6 +56,10 @@ var enemies_destroyed: int = 0
 var stars_scanned: int = 0
 var sector_start_time: float = 0.0
 
+# Kill streak (Change 7c)
+var kill_streak: int = 0
+var streak_multiplier: int = 1
+
 # ─── References ──────────────────────────────────────────────────────────────
 var game_world: Node = null  # Set by GameWorld when it loads
 
@@ -81,6 +86,8 @@ func start_new_game() -> void:
 	data_crystals = 0
 	enemies_destroyed = 0
 	stars_scanned = 0
+	kill_streak = 0
+	streak_multiplier = 1
 	_reset_player_stats()
 	sector_start_time = Time.get_ticks_msec() / 1000.0
 
@@ -177,6 +184,31 @@ func _get_upgrade_cost(upgrade_id: String) -> int:
 
 func save_data_on_death() -> void:
 	SaveManager.save_high_score(score, current_sector, survey_beacons, "death")
+
+# ─── Sector Intensity (Change 4) ───────────────────────────────────────────
+func get_sector_intensity() -> float:
+	return 1.0 + float(current_sector - 1) * 0.375
+
+# ─── Kill Streak (Change 7c) ───────────────────────────────────────────────
+func on_enemy_killed() -> void:
+	kill_streak += 1
+	var new_mult: int = 1
+	if kill_streak >= 6:
+		new_mult = 3
+	elif kill_streak >= 3:
+		new_mult = 2
+	if new_mult != streak_multiplier:
+		streak_multiplier = new_mult
+		set_multiplier(streak_multiplier)
+	streak_changed.emit(kill_streak, streak_multiplier)
+
+func reset_streak() -> void:
+	if kill_streak == 0:
+		return
+	kill_streak = 0
+	streak_multiplier = 1
+	set_multiplier(1)
+	streak_changed.emit(0, 1)
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 func get_sector_name() -> String:

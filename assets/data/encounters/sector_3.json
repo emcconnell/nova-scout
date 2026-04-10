@@ -2,16 +2,16 @@
   "sector": 3,
   "name": "Gamma — Nebula Crossing",
   "encounters": [
-    { "distance": 800,   "type": "mine_field",      "params": { "count": 3 } },
-    { "distance": 2400,  "type": "scout_wave",     "params": { "count": 6, "formation": "ambush" } },
-    { "distance": 4800,  "type": "debris_cloud",   "params": { "count": 2 } },
-    { "distance": 7200,  "type": "warrior_wave",   "params": { "count": 1 } },
-    { "distance": 9600,  "type": "scout_wave",     "params": { "count": 4, "formation": "spread" } },
-    { "distance": 11000, "type": "warrior_wave",   "params": { "count": 2 } },
-    { "distance": 12600, "type": "asteroid_field", "params": { "count": 6, "tier": 0, "mix": true } },
-    { "distance": 14400, "type": "warrior_wave",   "params": { "count": 2 } },
-    { "distance": 15000, "type": "scout_wave",     "params": { "count": 4, "formation": "V" } },
-    { "distance": 17000, "type": "debris_cloud",   "params": { "count": 1 } },
-    { "distance": 18800, "type": "star_cluster",   "params": {} }
+    { "distance": 500,   "type": "mine_field",     "params": { "count": 3, "mine_type": "standard", "stagger": true } },
+    { "distance": 1600,  "type": "scout_wave",     "params": { "count": 6 } },
+    { "distance": 2800,  "type": "debris_cloud",   "params": { "count": 2 } },
+    { "distance": 4000,  "type": "warrior_wave",   "params": { "count": 1 } },
+    { "distance": 5200,  "type": "mixed_field",    "params": { "asteroids": 4, "mines": 2, "mine_type": "standard" } },
+    { "distance": 6400,  "type": "warrior_wave",   "params": { "count": 2 } },
+    { "distance": 7400,  "type": "mine_field",     "params": { "count": 3, "mine_type": "cluster", "stagger": true } },
+    { "distance": 8600,  "type": "ambush_wave",    "params": { "type": "scout", "count_left": 3, "count_right": 3 } },
+    { "distance": 9800,  "type": "warrior_wave",   "params": { "count": 2 } },
+    { "distance": 10800, "type": "fuel_cache",     "params": {} },
+    { "distance": 11600, "type": "star_cluster",   "params": {} }
   ]
 }

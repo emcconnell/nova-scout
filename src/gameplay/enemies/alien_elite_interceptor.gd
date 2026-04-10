@@ -72,7 +72,7 @@ func _update(delta: float) -> void:
 	# Spread fire
 	_fire_timer -= delta
 	if _fire_timer <= 0.0:
-		_fire_timer = FIRE_INTERVAL
+		_fire_timer = _scaled_interval(FIRE_INTERVAL)
 		var spread := TAU / SPREAD_SHOTS
 		for i in SPREAD_SHOTS:
 			var angle := _aim_at_player().angle() + (i - SPREAD_SHOTS / 2) * spread * 0.3

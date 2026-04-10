@@ -74,7 +74,7 @@ func _update(delta: float) -> void:
 	# Fire timer
 	_fire_timer -= delta
 	if _fire_timer <= 0.0:
-		_fire_timer = FIRE_INTERVAL + randf_range(-0.3, 0.3)
+		_fire_timer = _scaled_interval(FIRE_INTERVAL) + randf_range(-0.3, 0.3)
 		_fire_bolt(_aim_at_player(), BOLT_DAMAGE, BOLT_SPEED, "scout")
 		AudioManager.play_sfx("enemy_laser")
 

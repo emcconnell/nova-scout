@@ -56,6 +56,7 @@ var _spawn_timer: float = 0.0
 var _mine_timer: float  = 8.0
 var _cloud_timer: float = 12.0
 var _scroll_offset: float = 0.0
+var _bg_fill_timer: float = 6.0   # Change 6: dead-zone filler
 
 # ─── Star Cluster state ───────────────────────────────────────────────────────
 var _in_star_cluster: bool = false
@@ -161,20 +162,30 @@ func _process(delta: float) -> void:
 
 func _update_travel_spawning(delta: float) -> void:
 	var hc := hazards_node.get_child_count()
+	var intensity: float = GameManager.get_sector_intensity()  # Change 4
+	var effective_interval: float = SPAWN_INTERVAL / intensity
+	var effective_max: int = int(float(MAX_HAZARDS) * minf(intensity, 2.0))
+
 	_spawn_timer += delta
-	if _spawn_timer >= SPAWN_INTERVAL and hc < MAX_HAZARDS:
+	if _spawn_timer >= effective_interval and hc < effective_max:
 		_spawn_timer = 0.0
 		_spawn_asteroid(randi_range(0, 1))
 
 	_mine_timer += delta
-	if _mine_timer >= MINE_SPAWN_INTERVAL:
+	if _mine_timer >= MINE_SPAWN_INTERVAL / intensity:
 		_mine_timer = 0.0
 		_spawn_mine()
 
 	_cloud_timer += delta
-	if _cloud_timer >= CLOUD_SPAWN_INTERVAL:
+	if _cloud_timer >= CLOUD_SPAWN_INTERVAL / intensity:
 		_cloud_timer = 0.0
 		_spawn_debris_cloud()
+
+	# Change 6: Background filler — prevent dead screen time
+	_bg_fill_timer -= delta
+	if _bg_fill_timer <= 0.0 and hc < 3:
+		_bg_fill_timer = maxf(8.0 / intensity, 3.0)
+		_spawn_background_filler()
 
 func _draw() -> void:
 	var t := Time.get_ticks_msec() / 1000.0
@@ -219,7 +230,23 @@ func _spawn_mine() -> void:
 	hazards_node.add_child(m)
 	var vp := get_viewport_rect()
 	m.global_position = Vector2(randf_range(16.0, vp.size.x - 16.0), -18.0)
-	m._drift_vel = Vector2(randf_range(-5.0, 5.0), randf_range(15.0, 25.0))
+	m.setup(SpaceMine.MineType.STANDARD, 0)
+
+func _spawn_background_filler() -> void:
+	var sector := GameManager.current_sector
+	match randi() % 4:
+		0: _spawn_asteroid(0)
+		1: _spawn_asteroid(randi_range(0, 1))
+		2:
+			if sector >= 2:
+				_spawn_debris_cloud()
+			else:
+				_spawn_asteroid(0)
+		3:
+			if sector >= 3:
+				_spawn_mine()
+			else:
+				_spawn_asteroid(randi_range(0, 1))
 
 func _spawn_debris_cloud() -> void:
 	var d := DebrisCloudScene.instantiate() as DebrisCloud
@@ -244,6 +271,8 @@ func _handle_encounter(enc: Dictionary) -> void:
 		"fuel_cache":     _encounter_fuel_cache()
 		"derelict_ship":  _encounter_derelict()
 		"star_cluster":   _start_star_cluster()
+		"mixed_field":    _encounter_mixed_field(params)   # Change 5
+		"ambush_wave":    _encounter_ambush_wave(params)   # Change 5
 
 func _encounter_asteroid_field(params: Dictionary) -> void:
 	var count: int = params.get("count", 4)
@@ -255,15 +284,24 @@ func _encounter_asteroid_field(params: Dictionary) -> void:
 			t = randi_range(tier, mini(tier + 1, 2))
 		_spawn_asteroid(t)
 
+func _mine_type_from_string(s: String) -> int:
+	match s:
+		"cluster": return SpaceMine.MineType.CLUSTER
+		"rapid":   return SpaceMine.MineType.RAPID
+		_:         return SpaceMine.MineType.STANDARD
+
 func _encounter_mine_field(params: Dictionary) -> void:
-	var count: int = params.get("count", 3)
+	var count: int       = params.get("count", 3)
+	var type_str: String = params.get("mine_type", "standard")
+	var stagger: bool    = params.get("stagger", false)
+	var mine_type: int   = _mine_type_from_string(type_str)
 	var vp := get_viewport_rect()
 	for i in count:
 		var m := SpaceMineScene.instantiate() as SpaceMine
 		hazards_node.add_child(m)
 		var spacing := vp.size.x / (count + 1.0)
 		m.global_position = Vector2(spacing * (i + 1), -18.0)
-		m._drift_vel = Vector2(randf_range(-3.0, 3.0), randf_range(18.0, 28.0))
+		m.setup(mine_type, i if stagger else 0)
 
 func _encounter_debris(params: Dictionary) -> void:
 	var count: int = params.get("count", 1)
@@ -298,6 +336,37 @@ func _encounter_derelict() -> void:
 	# TODO Sprint 7: spawn shootable derelict hull
 	spawn_pickup(Vector2(get_viewport_rect().size.x * 0.5, 50.0), "missile_pack")
 	spawn_pickup(Vector2(get_viewport_rect().size.x * 0.4, 60.0), "crystal")
+
+## Change 5: Asteroids and mines simultaneously.
+func _encounter_mixed_field(params: Dictionary) -> void:
+	var asteroids: int   = params.get("asteroids", 3)
+	var mines: int       = params.get("mines", 2)
+	var type_str: String = params.get("mine_type", "standard")
+	var mine_type: int   = _mine_type_from_string(type_str)
+	var vp := get_viewport_rect()
+	for _i in asteroids:
+		_spawn_asteroid(randi_range(0, 1))
+	for i in mines:
+		var m := SpaceMineScene.instantiate() as SpaceMine
+		hazards_node.add_child(m)
+		var spacing := vp.size.x / (mines + 1.0)
+		m.global_position = Vector2(spacing * (i + 1) + randf_range(-15.0, 15.0), -18.0)
+		m.setup(mine_type, i)
+
+## Change 5: Enemies from both screen edges simultaneously.
+func _encounter_ambush_wave(params: Dictionary) -> void:
+	var type: String    = params.get("type", "scout")
+	var count_left: int = params.get("count_left", 2)
+	var count_right: int = params.get("count_right", 2)
+	var vp := get_viewport_rect()
+	# Left group — spawn near left edge
+	for i in count_left:
+		var x := randf_range(8.0, vp.size.x * 0.2)
+		spawn_enemy_at(type, Vector2(x, -25.0))
+	# Right group — spawn near right edge
+	for i in count_right:
+		var x := randf_range(vp.size.x * 0.8, vp.size.x - 8.0)
+		spawn_enemy_at(type, Vector2(x, -25.0))
 
 # ─── Star Cluster ─────────────────────────────────────────────────────────────
 
@@ -439,7 +508,14 @@ func spawn_mine_at(pos: Vector2) -> void:
 	var m := SpaceMineScene.instantiate() as SpaceMine
 	hazards_node.add_child(m)
 	m.global_position = pos
-	m._drift_vel = Vector2.ZERO
+	m.setup(SpaceMine.MineType.STANDARD, 0)
+
+## Change 2: Fired by SpaceMine spike shots via call_group.
+func spawn_mine_bolt(pos: Vector2, direction: Vector2, damage: int) -> void:
+	var bolt := preload("res://scenes/projectiles/enemy_bolt.tscn").instantiate() as EnemyBolt
+	enemy_projectiles_node.add_child(bolt)
+	bolt.global_position = pos
+	bolt.setup(damage, direction, 140.0, "scout")
 
 func spawn_missile_from(pos: Vector2, target: Node2D, damage: int) -> void:
 	var scene := load("res://scenes/projectiles/enemy_missile.tscn") as PackedScene

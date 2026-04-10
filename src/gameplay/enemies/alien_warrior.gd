@@ -87,7 +87,7 @@ func _update(delta: float) -> void:
 	else:
 		_fire_timer -= delta
 		if _fire_timer <= 0.0:
-			_fire_timer = FIRE_INTERVAL + randf_range(-0.4, 0.4)
+			_fire_timer = _scaled_interval(FIRE_INTERVAL) + randf_range(-0.4, 0.4)
 			_burst_queue = BURST_COUNT
 			_burst_timer = 0.0
 

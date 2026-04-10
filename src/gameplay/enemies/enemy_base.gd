@@ -26,6 +26,8 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	collision_layer = 2
 	collision_mask = 5   # 1=player + 4=player_bullets
+	# Scale HP by sector intensity after subclass _ready sets base values (Change 4)
+	call_deferred("_apply_sector_scaling")
 
 func _process(delta: float) -> void:
 	if _dead:
@@ -42,6 +44,21 @@ func _process(delta: float) -> void:
 ## Override in subclass for per-frame behavior.
 func _update(_delta: float) -> void:
 	pass
+
+## Scale HP by sector after subclass _ready has run (Change 4).
+func _apply_sector_scaling() -> void:
+	if GameManager.current_sector <= 1:
+		return
+	if score_value >= 1000:   # Elites/bosses have hp_scale; skip
+		return
+	var mult: float = 1.0 + float(GameManager.current_sector - 1) * 0.10
+	hp = int(float(hp) * mult)
+	max_hp = hp
+
+## Returns base fire interval reduced by sector fire-rate scaling (Change 4).
+func _scaled_interval(base: float) -> float:
+	var mult: float = 1.0 + float(GameManager.current_sector - 1) * 0.12
+	return base / mult
 
 func take_damage(amount: int, from_position: Vector2 = Vector2.ZERO) -> void:
 	if _dead:
@@ -73,6 +90,7 @@ func _die() -> void:
 	_dead = true
 	GameManager.add_score(score_value)
 	GameManager.enemies_destroyed += 1
+	GameManager.on_enemy_killed()  # Streak tracking (Change 7c)
 	died.emit(global_position, drop_table)
 	AudioManager.play_sfx("enemy_explode")
 	# Score popup

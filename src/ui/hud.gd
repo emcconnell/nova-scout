@@ -19,6 +19,11 @@ var _score: int      = 0
 # ─── Animation ────────────────────────────────────────────────────────────────
 var _wobble: float = 0.0
 
+# ─── Streak state (Change 7c) ─────────────────────────────────────────────────
+var _streak: int = 0
+var _streak_mult: int = 1
+var _streak_flash: float = 0.0
+
 # ─── Palette ──────────────────────────────────────────────────────────────────
 const COL_HULL    := Color(0.10, 0.90, 0.25)
 const COL_SHIELD  := Color(0.00, 0.70, 1.00)
@@ -44,12 +49,16 @@ func _ready() -> void:
 	anchor_bottom = 1.0
 	mouse_filter  = Control.MOUSE_FILTER_IGNORE
 	GameManager.score_changed.connect(func(v): _score = v; queue_redraw())
+	GameManager.streak_changed.connect(_on_streak_changed)
 
 func _process(delta: float) -> void:
 	_wobble += delta * 5.0
 	var hull_crit: bool = float(_hull) / maxf(_max_hull, 1) < 0.25
 	var fuel_crit: bool = _fuel / maxf(_max_fuel, 1) < 0.15
 	if hull_crit or fuel_crit:
+		queue_redraw()
+	if _streak_flash > 0.0:
+		_streak_flash -= delta
 		queue_redraw()
 
 func connect_player(p: Player) -> void:
@@ -100,6 +109,7 @@ func _draw() -> void:
 	_draw_weapons_panel(font)
 	_draw_score_display(font)
 	_draw_sector_display(font)
+	_draw_streak_display(font)
 
 # ─── Status panel — top-left ──────────────────────────────────────────────────
 
@@ -200,6 +210,25 @@ func _draw_score_display(font: Font) -> void:
 	# 7-digit score
 	draw_string(font, Vector2(px + pw * 0.5 - 21, py + 13.5), "%07d" % _score,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 6, COL_SCORE)
+
+func _on_streak_changed(streak: int, mult: int) -> void:
+	_streak = streak
+	_streak_mult = mult
+	_streak_flash = 1.5
+	queue_redraw()
+
+# ─── Streak display — below score panel (Change 7c) ───────────────────────────
+
+func _draw_streak_display(font: Font) -> void:
+	if _streak < 3:
+		return
+	var vp  := get_viewport_rect()
+	var cx: float = vp.size.x * 0.5
+	var a: float = minf(_streak_flash / 1.5, 1.0) if _streak_flash > 0.0 else 0.65
+	var col := Color(1.0, 0.80, 0.0, a)
+	var label: String = "x%d STREAK" % _streak_mult if _streak_mult > 1 else "%d HITS" % _streak
+	draw_string(font, Vector2(cx - 18.0, 32.0), label,
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 5, col)
 
 # ─── Sector display — top-right ───────────────────────────────────────────────
 

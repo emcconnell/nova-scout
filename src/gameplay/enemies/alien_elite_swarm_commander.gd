@@ -58,7 +58,7 @@ func _update(delta: float) -> void:
 	# Homing missile fire
 	_missile_timer -= delta
 	if _missile_timer <= 0.0:
-		_missile_timer = MISSILE_INTERVAL
+		_missile_timer = _scaled_interval(MISSILE_INTERVAL)
 		_fire_homing_missile()
 
 func _fire_homing_missile() -> void:

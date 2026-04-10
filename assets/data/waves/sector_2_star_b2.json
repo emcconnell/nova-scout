@@ -1,0 +1,21 @@
+{
+  "system": "Beta-2",
+  "waves": [
+    {
+      "wave": 1,
+      "enemies": [{ "type": "scout", "count": 3, "formation": "line" }],
+      "loot": [{ "type": "crystal", "count": 1 }]
+    },
+    {
+      "wave": 2,
+      "enemies": [{ "type": "scout", "count": 5, "formation": "V" }],
+      "loot": [{ "type": "fuel_cell", "count": 1 }]
+    },
+    {
+      "wave": 3,
+      "enemies": [{ "type": "elite_interceptor", "count": 1 }],
+      "is_boss": true,
+      "loot": [{ "type": "repair_kit", "count": 1 }, { "type": "crystal", "count": 3 }]
+    }
+  ]
+}

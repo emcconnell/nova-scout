@@ -1,0 +1,79 @@
+[gd_scene load_steps=12 format=3 uid="uid://c1gameworld1"]
+
+[ext_resource type="Script" path="res://src/core/game_world.gd" id="1_gw"]
+[ext_resource type="PackedScene" uid="uid://c1player0001" path="res://scenes/player/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" uid="uid://c1hud000001" path="res://scenes/ui/hud.tscn" id="3_hud"]
+[ext_resource type="Script" path="res://src/ui/pause_menu.gd" id="4_pause"]
+[ext_resource type="Script" path="res://src/ui/death_screen.gd" id="5_death"]
+[ext_resource type="Script" path="res://src/ui/upgrade_screen.gd" id="6_upgrade"]
+[ext_resource type="Script" path="res://src/ui/sector_transition.gd" id="7_trans"]
+[ext_resource type="Script" path="res://src/ui/win_screen.gd" id="8_win"]
+[ext_resource type="Script" path="res://src/gameplay/star_scan/scan_bar.gd" id="9_sb"]
+
+[node name="GameWorld" type="Node2D"]
+script = ExtResource("1_gw")
+
+[node name="Hazards" type="Node2D" parent="."]
+
+[node name="Enemies" type="Node2D" parent="."]
+
+[node name="EnemyProjectiles" type="Node2D" parent="."]
+
+[node name="Projectiles" type="Node2D" parent="."]
+
+[node name="Pickups" type="Node2D" parent="."]
+
+[node name="Stars" type="Node2D" parent="."]
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(160, 152)
+
+[node name="HUD" parent="." instance=ExtResource("3_hud")]
+
+[node name="ScanBar" type="Control" parent="HUD"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("9_sb")
+
+[node name="PauseMenu" type="CanvasLayer" parent="."]
+layer = 20
+script = ExtResource("4_pause")
+
+[node name="DeathScreen" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+z_index = 25
+script = ExtResource("5_death")
+
+[node name="UpgradeScreen" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+z_index = 22
+script = ExtResource("6_upgrade")
+
+[node name="SectorTransition" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+z_index = 21
+script = ExtResource("7_trans")
+
+[node name="WinScreen" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+z_index = 23
+script = ExtResource("8_win")

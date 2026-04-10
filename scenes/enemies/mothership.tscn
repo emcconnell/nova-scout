@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3 uid="uid://c1mothship01"]
+
+[ext_resource type="Script" path="res://src/gameplay/enemies/mothership.gd" id="1_ms"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(110, 36)
+
+[node name="Mothership" type="Area2D"]
+collision_layer = 2
+collision_mask = 4
+script = ExtResource("1_ms")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_1")

@@ -1,0 +1,16 @@
+{
+  "sector": 2,
+  "name": "Beta — Asteroid Fields",
+  "encounters": [
+    { "distance": 1000,  "type": "asteroid_field", "params": { "count": 5, "tier": 0, "mix": true } },
+    { "distance": 3600,  "type": "asteroid_field", "params": { "count": 8, "tier": 0, "mix": true } },
+    { "distance": 5400,  "type": "scout_wave",     "params": { "count": 3, "formation": "line" } },
+    { "distance": 7200,  "type": "mine_field",      "params": { "count": 8, "pattern": "zigzag" } },
+    { "distance": 9000,  "type": "scout_wave",     "params": { "count": 4, "formation": "spread" } },
+    { "distance": 10800, "type": "asteroid_field", "params": { "count": 4, "tier": 0, "mix": true } },
+    { "distance": 12600, "type": "derelict_ship",  "params": {} },
+    { "distance": 14400, "type": "scout_wave",     "params": { "count": 5, "formation": "V" } },
+    { "distance": 16200, "type": "asteroid_field", "params": { "count": 3, "tier": 1 } },
+    { "distance": 18800, "type": "star_cluster",   "params": {} }
+  ]
+}

@@ -1,0 +1,27 @@
+[gd_scene load_steps=6 format=3 uid="uid://c1player0001"]
+
+[ext_resource type="Script" path="res://src/gameplay/player/player.gd" id="1_player"]
+[ext_resource type="Script" path="res://src/gameplay/player/player_health.gd" id="2_health"]
+[ext_resource type="Script" path="res://src/gameplay/player/player_weapons.gd" id="3_weapons"]
+[ext_resource type="Script" path="res://src/gameplay/player/player_fuel.gd" id="4_fuel"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_1"]
+radius = 5.0
+height = 12.0
+
+[node name="Player" type="CharacterBody2D"]
+collision_layer = 1
+collision_mask = 26
+script = ExtResource("1_player")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CapsuleShape2D_1")
+
+[node name="PlayerHealth" type="Node" parent="."]
+script = ExtResource("2_health")
+
+[node name="PlayerWeapons" type="Node" parent="."]
+script = ExtResource("3_weapons")
+
+[node name="PlayerFuel" type="Node" parent="."]
+script = ExtResource("4_fuel")

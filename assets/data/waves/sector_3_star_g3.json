@@ -1,0 +1,21 @@
+{
+  "system": "Gamma-3",
+  "waves": [
+    {
+      "wave": 1,
+      "enemies": [{ "type": "scout", "count": 4 }, { "type": "warrior", "count": 1 }],
+      "loot": [{ "type": "missile_pack", "count": 1 }]
+    },
+    {
+      "wave": 2,
+      "enemies": [{ "type": "warrior", "count": 2 }, { "type": "scout", "count": 3 }],
+      "loot": [{ "type": "crystal", "count": 2 }]
+    },
+    {
+      "wave": 3,
+      "enemies": [{ "type": "elite_artillery", "count": 1 }],
+      "is_boss": true,
+      "loot": [{ "type": "repair_kit", "count": 1 }, { "type": "emp_cartridge", "count": 1 }, { "type": "crystal", "count": 3 }]
+    }
+  ]
+}

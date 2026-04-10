@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3 uid="uid://c1enemybolt01"]
+
+[ext_resource type="Script" path="res://src/gameplay/projectiles/enemy_bolt.gd" id="1_eb"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(2, 8)
+
+[node name="EnemyBolt" type="Area2D"]
+collision_layer = 8
+collision_mask = 1
+script = ExtResource("1_eb")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_1")

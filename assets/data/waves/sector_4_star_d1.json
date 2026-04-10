@@ -1,0 +1,26 @@
+{
+  "system": "Delta-1",
+  "waves": [
+    {
+      "wave": 1,
+      "enemies": [{ "type": "warrior", "count": 3 }, { "type": "scout", "count": 2 }],
+      "loot": [{ "type": "fuel_cell", "count": 1 }]
+    },
+    {
+      "wave": 2,
+      "enemies": [{ "type": "destroyer", "count": 1 }, { "type": "scout", "count": 4 }],
+      "loot": [{ "type": "crystal", "count": 2 }]
+    },
+    {
+      "wave": 3,
+      "enemies": [{ "type": "destroyer", "count": 2 }, { "type": "warrior", "count": 2 }],
+      "loot": [{ "type": "missile_pack", "count": 1 }, { "type": "crystal", "count": 2 }]
+    },
+    {
+      "wave": 4,
+      "enemies": [{ "type": "elite_swarm_commander", "count": 1 }],
+      "is_boss": true,
+      "loot": [{ "type": "repair_kit", "count": 1 }, { "type": "emp_cartridge", "count": 1 }, { "type": "crystal", "count": 3 }]
+    }
+  ]
+}

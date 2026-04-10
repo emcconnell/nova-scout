@@ -1,0 +1,15 @@
+{
+  "sector": 5,
+  "name": "Epsilon — The Frontier",
+  "encounters": [
+    { "distance": 200,   "type": "scout_wave",     "params": { "count": 6, "formation": "spread" } },
+    { "distance": 1200,  "type": "warrior_wave",   "params": { "count": 2 } },
+    { "distance": 2400,  "type": "destroyer_wave", "params": { "count": 3, "sequential": true } },
+    { "distance": 4800,  "type": "asteroid_field", "params": { "count": 4, "tier": 0, "mix": true } },
+    { "distance": 5600,  "type": "destroyer_wave", "params": { "count": 2 } },
+    { "distance": 6000,  "type": "mine_field",      "params": { "count": 5 } },
+    { "distance": 8400,  "type": "fuel_cache",      "params": {} },
+    { "distance": 9600,  "type": "elite_wave",     "params": { "variants": ["interceptor","artillery","swarm_commander"], "hp_scale": 1.25 } },
+    { "distance": 18800, "type": "star_cluster",   "params": {} }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "sector": 4,
+  "name": "Delta — Alien Territory",
+  "encounters": [
+    { "distance": 400,   "type": "scout_wave",     "params": { "count": 4, "formation": "spread" } },
+    { "distance": 2400,  "type": "destroyer_wave", "params": { "count": 1, "escort": 4 } },
+    { "distance": 4800,  "type": "scout_wave",     "params": { "count": 6, "formation": "ambush" } },
+    { "distance": 6000,  "type": "mine_field",      "params": { "count": 5 } },
+    { "distance": 7200,  "type": "warrior_wave",   "params": { "count": 3 } },
+    { "distance": 9600,  "type": "destroyer_wave", "params": { "count": 2 } },
+    { "distance": 11400, "type": "fuel_cache",      "params": {} },
+    { "distance": 13200, "type": "warrior_wave",   "params": { "count": 2 } },
+    { "distance": 14400, "type": "scout_wave",     "params": { "count": 5, "formation": "V" } },
+    { "distance": 16200, "type": "destroyer_wave", "params": { "count": 3 } },
+    { "distance": 18800, "type": "star_cluster",   "params": {} }
+  ]
+}

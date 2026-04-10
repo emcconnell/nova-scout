@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3 uid="uid://c1destroyer1"]
+
+[ext_resource type="Script" path="res://src/gameplay/enemies/alien_destroyer.gd" id="1_dest"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(28, 28)
+
+[node name="AlienDestroyer" type="Area2D"]
+collision_layer = 2
+collision_mask = 5
+script = ExtResource("1_dest")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_1")

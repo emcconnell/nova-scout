@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://c1enemymiss01"]
+
+[ext_resource type="Script" path="res://src/gameplay/projectiles/enemy_missile.gd" id="1_em"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_1"]
+radius = 2.0
+height = 8.0
+
+[node name="EnemyMissile" type="Area2D"]
+collision_layer = 8
+collision_mask = 1
+script = ExtResource("1_em")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CapsuleShape2D_1")

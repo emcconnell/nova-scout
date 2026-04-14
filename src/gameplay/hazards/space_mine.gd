@@ -172,13 +172,29 @@ func _find_player() -> Node2D:
 func _draw() -> void:
 	var blink_rate: float = 10.0 if (_chasing or _charging) else 3.0
 	var blink: bool = sin(_blink_timer * blink_rate) > 0.0
+	var bt := _blink_timer
 
 	var body_col: Color = COLOR_STANDARD
 	match mine_type:
 		MineType.CLUSTER: body_col = COLOR_CLUSTER
 		MineType.RAPID:   body_col = COLOR_RAPID
 
-	# Spikes (6 directions) — tip glows orange while charging
+	# Charging glow aura (expands as charge builds)
+	if _charging:
+		var ct: float = _charge_timer / CHARGE_DUR
+		var glow_r := 8.0 + ct * 6.0
+		draw_circle(Vector2.ZERO, glow_r,
+			Color(COLOR_CHARGE.r, COLOR_CHARGE.g, COLOR_CHARGE.b, ct * 0.25))
+		# Pulsing charge ring
+		draw_arc(Vector2.ZERO, glow_r, bt * 4.0, bt * 4.0 + TAU, 16,
+			Color(COLOR_CHARGE.r, COLOR_CHARGE.g, COLOR_CHARGE.b, ct * 0.5), 1.0)
+
+	# Chase proximity glow
+	if _chasing:
+		var chase_a := 0.15 + 0.1 * sin(bt * 8.0)
+		draw_circle(Vector2.ZERO, 10.0, Color(COLOR_LIGHT.r, COLOR_LIGHT.g, COLOR_LIGHT.b, chase_a))
+
+	# Antenna spikes (6 directions) — thicker base, tapered tips
 	for i in 6:
 		var a: float = TAU / 6.0 * float(i)
 		var tip := Vector2(cos(a), sin(a))
@@ -186,26 +202,66 @@ func _draw() -> void:
 		if _charging:
 			var t: float = _charge_timer / CHARGE_DUR
 			spike_col = COLOR_METAL.lerp(COLOR_CHARGE, t)
-		draw_line(tip * 5.0, tip * 9.5, spike_col, 1.5)
+
+		# Spike shaft — thicker at base
+		draw_line(tip * 4.5, tip * 7.0, spike_col, 2.0)
+		draw_line(tip * 7.0, tip * 10.0, spike_col, 1.0)
+
+		# Spike tip node (antenna ball)
+		var tip_pulse := 0.4 + 0.3 * sin(bt * 5.0 + float(i) * 1.2)
+		draw_circle(tip * 10.0, 1.2, Color(spike_col.r, spike_col.g, spike_col.b, tip_pulse))
+
+		# Charging tip glow buildup
 		if _charging:
-			var ct: float = _charge_timer / CHARGE_DUR
-			draw_circle(tip * 9.5, ct * 2.0, COLOR_CHARGE)
+			var ct2: float = _charge_timer / CHARGE_DUR
+			draw_circle(tip * 10.0, ct2 * 2.5, COLOR_CHARGE)
 
-	# Body
-	draw_circle(Vector2.ZERO, 5.5, body_col)
-	draw_circle(Vector2.ZERO, 3.0, Color(body_col.r * 0.5, body_col.g * 0.3, body_col.b * 0.3))
+	# Body — layered with metallic sheen
+	draw_circle(Vector2.ZERO, 6.0, body_col)
+	# Inner darker core
+	draw_circle(Vector2.ZERO, 4.0, Color(body_col.r * 0.45, body_col.g * 0.25, body_col.b * 0.25))
+	# Metallic ring detail
+	draw_arc(Vector2.ZERO, 5.0, 0, TAU, 16, COLOR_METAL, 0.8)
+	# Specular highlight
+	draw_circle(Vector2(-1.5, -2.0), 1.5, Color(1, 1, 1, 0.12))
 
-	# Warning light
+	# Panel lines on body (cross pattern)
+	draw_line(Vector2(-4, 0), Vector2(4, 0), Color(0, 0, 0, 0.2), 0.8)
+	draw_line(Vector2(0, -4), Vector2(0, 4), Color(0, 0, 0, 0.2), 0.8)
+
+	# Warning lights — multiple blinking at different rates
+	# Top light (primary)
 	if blink:
-		draw_circle(Vector2(0.0, -5.5), 1.5, COLOR_LIGHT)
+		draw_circle(Vector2(0.0, -6.0), 1.5, COLOR_LIGHT)
+		# Light bloom
+		draw_circle(Vector2(0.0, -6.0), 2.5, Color(COLOR_LIGHT.r, COLOR_LIGHT.g, COLOR_LIGHT.b, 0.25))
 	else:
-		draw_circle(Vector2(0.0, -5.5), 1.0, Color(0.4, 0.05, 0.05))
+		draw_circle(Vector2(0.0, -6.0), 1.0, Color(0.4, 0.05, 0.05))
 
-	# Cluster: three small purple dots hinting at split
+	# Side lights (offset blink)
+	var blink2: bool = sin(bt * blink_rate + 1.5) > 0.0
+	for side in [-1.0, 1.0]:
+		var lpos := Vector2(side * 4.5, 3.0)
+		if blink2:
+			draw_circle(lpos, 1.0, Color(COLOR_LIGHT.r, COLOR_LIGHT.g * 0.5, COLOR_LIGHT.b, 0.8))
+		else:
+			draw_circle(lpos, 0.7, Color(0.3, 0.03, 0.03))
+
+	# Cluster: three small purple dots hinting at split, with subtle pulse
 	if mine_type == MineType.CLUSTER:
 		for i in 3:
 			var a: float = TAU / 3.0 * float(i) + PI / 6.0
-			draw_circle(Vector2(cos(a) * 3.0, sin(a) * 3.0), 1.0, Color(0.8, 0.2, 1.0, 0.7))
+			var cp := Vector2(cos(a) * 3.0, sin(a) * 3.0)
+			var cluster_a := 0.5 + 0.2 * sin(bt * 3.0 + float(i))
+			draw_circle(cp, 1.3, Color(0.8, 0.2, 1.0, cluster_a))
+			draw_circle(cp, 0.6, Color(1.0, 0.6, 1.0, cluster_a * 0.8))
+
+	# Rapid type: extra speed indicator lines
+	if mine_type == MineType.RAPID:
+		var rapid_a := 0.4 + 0.3 * sin(bt * 6.0)
+		for side in [-1.0, 1.0]:
+			draw_line(Vector2(side * 3.0, -3.0), Vector2(side * 3.0, 3.0),
+				Color(COLOR_RAPID.r, COLOR_RAPID.g, COLOR_RAPID.b, rapid_a), 1.0)
 
 # ─── Damage & Destruction ─────────────────────────────────────────────────────
 
@@ -244,7 +300,7 @@ func _explode() -> void:
 		get_tree().call_group("game_world", "spawn_pickup", global_position, "crystal")
 
 	AudioManager.play_sfx("mine_explode")
-	queue_free()
+	call_deferred("queue_free")
 
 func _spawn_cluster_children() -> void:
 	var scene: PackedScene = load("res://scenes/hazards/space_mine.tscn")

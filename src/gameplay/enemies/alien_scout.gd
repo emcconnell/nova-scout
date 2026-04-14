@@ -86,21 +86,64 @@ func take_damage(amount: int, from_position: Vector2 = Vector2.ZERO) -> void:
 func _draw() -> void:
 	var flash := _hit_flash_timer > 0.0
 	var hull  := COLOR_HIT if flash else COL_HULL
-	# Saucer body
+	var w := _wobble
+
+	# Outer energy ring — spins and pulses
+	var outer_alpha := 0.25 + 0.15 * sin(w * 1.3)
+	draw_arc(Vector2.ZERO, 12.0, w * 0.6, w * 0.6 + TAU, 24,
+		Color(COL_RING.r, COL_RING.g, COL_RING.b, outer_alpha), 1.0)
+
+	# Underlighting glow (soft wide disc below saucer)
+	var under_a := 0.18 + 0.1 * sin(w * 2.0)
+	draw_circle(Vector2(0, 4), 8.0, Color(COL_GLOW.r, COL_GLOW.g, COL_GLOW.b, under_a))
+
+	# Saucer body — beveled double layer for depth
 	draw_colored_polygon(PackedVector2Array([
-		Vector2(-7, -2), Vector2(7, -2),
-		Vector2(9, 2), Vector2(-9, 2)
+		Vector2(-10, 0), Vector2(-7, -3), Vector2(7, -3), Vector2(10, 0),
+		Vector2(9, 3), Vector2(-9, 3)
 	]), hull)
-	# Dome
-	draw_circle(Vector2(0, -3), 4.0, COL_HULL if not flash else Color(1,1,1))
-	# Magenta glow ring
-	var ring_alpha := 0.5 + 0.3 * sin(_wobble)
-	draw_arc(Vector2.ZERO, 9.0, 0, TAU, 20, Color(COL_GLOW.r, COL_GLOW.g, COL_GLOW.b, ring_alpha), 1.5)
-	# Eyes
-	draw_circle(Vector2(-3, -2), 1.2, COL_EYE)
-	draw_circle(Vector2(3, -2), 1.2, COL_EYE)
+	# Bottom hull highlight strip
+	draw_colored_polygon(PackedVector2Array([
+		Vector2(-8, 1), Vector2(8, 1), Vector2(9, 3), Vector2(-9, 3)
+	]), Color(hull.r * 0.6, hull.g * 0.4, hull.b * 0.7))
+
+	# Spinning detail notches on rim
+	for i in 6:
+		var a: float = w * 1.2 + TAU / 6.0 * float(i)
+		var nx := cos(a) * 9.0
+		var ny := sin(a) * 1.8  # flattened ellipse to look like rim
+		draw_circle(Vector2(nx, ny), 0.8, Color(COL_GLOW.r, COL_GLOW.g, COL_GLOW.b, 0.6))
+
+	# Dome — larger, layered with interior glow
+	var dome_center := Vector2(0, -4)
+	# Dome outer shell
+	draw_circle(dome_center, 5.0, COL_HULL if not flash else Color(1, 1, 1))
+	# Dome interior glow — pulses
+	var dome_glow_a := 0.35 + 0.25 * sin(w * 1.8)
+	draw_circle(dome_center, 3.5, Color(COL_GLOW.r, COL_GLOW.g, COL_GLOW.b, dome_glow_a))
+	# Dome specular highlight
+	draw_circle(dome_center + Vector2(-1.5, -1.5), 1.2, Color(1, 1, 1, 0.25))
+
+	# Inner energy ring — counter-rotates
+	var ring_alpha := 0.5 + 0.3 * sin(w)
+	draw_arc(Vector2.ZERO, 9.5, -w * 0.8, -w * 0.8 + TAU, 20,
+		Color(COL_GLOW.r, COL_GLOW.g, COL_GLOW.b, ring_alpha), 1.5)
+
+	# Segmented inner ring dashes (rotating)
+	for i in 4:
+		var seg_start: float = -w * 0.8 + TAU / 4.0 * float(i)
+		var seg_end: float = seg_start + 0.35
+		draw_arc(Vector2.ZERO, 9.5, seg_start, seg_end, 6,
+			Color(1, 1, 1, 0.35), 1.0)
+
+	# Eyes — brighter with glow halos
+	for ex in [-3.0, 3.0]:
+		draw_circle(Vector2(ex, -3), 1.8, Color(COL_EYE.r, COL_EYE.g, COL_EYE.b, 0.3))
+		draw_circle(Vector2(ex, -3), 1.2, COL_EYE)
+		draw_circle(Vector2(ex, -3), 0.5, Color(1, 1, 1, 0.7))
+
 	# Stun indicator
 	if _stunned:
-		draw_circle(Vector2(0, -8), 2.0, Color(0.0, 1.0, 1.0, 0.8))
+		draw_circle(Vector2(0, -10), 2.0, Color(0.0, 1.0, 1.0, 0.8))
 
 const COLOR_HIT := Color(1.0, 1.0, 1.0)

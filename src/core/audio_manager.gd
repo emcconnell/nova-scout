@@ -54,8 +54,9 @@ func play_music(track_name: String, fade: bool = true) -> void:
 
 	var path := "res://assets/audio/music/%s.ogg" % track_name
 	if not ResourceLoader.exists(path):
-		# No audio file yet — stub silently
-		return
+		path = "res://assets/audio/music/%s.wav" % track_name
+		if not ResourceLoader.exists(path):
+			return
 
 	var stream := load(path) as AudioStream
 	if stream == null:

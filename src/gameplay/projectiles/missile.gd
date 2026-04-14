@@ -56,14 +56,55 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 func _draw() -> void:
-	# Trail
+	var t := _lifetime
+
+	# ── Smoky fading trail ──
 	for i in _trail.size():
 		var pt := to_local(_trail[i])
-		var alpha := (1.0 - float(i) / TRAIL_LEN) * 0.6
-		draw_circle(pt, 1.5 - i * 0.15, Color(COLOR_TRAIL.r, COLOR_TRAIL.g, COLOR_TRAIL.b, alpha))
-	# Body
-	draw_rect(Rect2(-1.5, -5, 3, 8), COLOR_BODY)
-	draw_circle(Vector2(0, -5), 1.5, COLOR_BODY)
+		var frac := float(i) / float(TRAIL_LEN)
+		var alpha := (1.0 - frac) * 0.45
+		var size := 2.0 - frac * 1.2
+		# Smoke: gray-orange fading to transparent
+		var smoke_r := lerpf(1.0, 0.5, frac)
+		var smoke_g := lerpf(0.5, 0.4, frac)
+		var smoke_b := lerpf(0.15, 0.35, frac)
+		draw_circle(pt, size, Color(smoke_r, smoke_g, smoke_b, alpha))
+		# Slight random offset for smokiness using time
+		var jx := sin(t * 8.0 + float(i) * 2.3) * 0.8
+		var jy := cos(t * 7.0 + float(i) * 1.7) * 0.6
+		draw_circle(pt + Vector2(jx, jy), size * 0.6, Color(smoke_r, smoke_g, smoke_b, alpha * 0.5))
+
+	# ── Exhaust flame (animated, behind the body) ──
+	var flame_flicker := sin(t * 18.0) * 0.3 + 0.7
+	# Outer flame — orange
+	draw_circle(Vector2(0, 4.5), 2.2 * flame_flicker, Color(1.0, 0.45, 0.05, 0.6))
+	# Inner flame — yellow-white
+	draw_circle(Vector2(0, 3.5), 1.4 * flame_flicker, Color(1.0, 0.9, 0.4, 0.8))
+	# Core — white hot
+	draw_circle(Vector2(0, 3.0), 0.7 * flame_flicker, Color(1.0, 1.0, 0.9, 0.9))
+	# Exhaust particles — small dots that scatter behind
+	for pi in 4:
+		var px := sin(t * 14.0 + float(pi) * 1.57) * 1.8
+		var py := 5.0 + float(pi) * 1.5 + sin(t * 10.0 + float(pi)) * 0.8
+		var pa := 0.5 * (1.0 - float(pi) / 4.0)
+		draw_circle(Vector2(px, py), 0.5, Color(1.0, 0.6, 0.1, pa))
+
+	# ── Missile body — tapered nose cone ──
+	var body_pts := PackedVector2Array([
+		Vector2(0, -6),      # nose tip
+		Vector2(-1.5, -3),   # shoulder left
+		Vector2(-1.5, 3),    # base left
+		Vector2(1.5, 3),     # base right
+		Vector2(1.5, -3),    # shoulder right
+	])
+	draw_colored_polygon(body_pts, COLOR_BODY)
+
+	# Fins
+	draw_line(Vector2(-1.5, 2.0), Vector2(-3.0, 4.0), Color(0.7, 0.7, 0.7), 1.0)
+	draw_line(Vector2(1.5, 2.0), Vector2(3.0, 4.0), Color(0.7, 0.7, 0.7), 1.0)
+
+	# Nose highlight
+	draw_circle(Vector2(0, -5.5), 0.8, Color(1.0, 1.0, 1.0, 0.5))
 
 func _on_area_entered(area: Area2D) -> void:
 	if area.is_in_group("enemies") or area.is_in_group("hazards"):

@@ -51,10 +51,26 @@ func _draw() -> void:
 		"player": col = COLOR_PLAYER
 		"enemy_warrior": col = COLOR_WARN
 		_: col = COLOR_ENEMY
-	# Draw bolt: 2×8 rect
-	draw_rect(Rect2(-1, -4, 2, 8), col)
-	# Glow tip
-	draw_circle(Vector2(0, -4), 1.5, Color(col.r, col.g, col.b, 0.5))
+
+	# Trail — 3 fading copies behind the bolt (in local space, "behind" = +Y)
+	for i in range(1, 4):
+		var trail_y := float(i) * 4.0
+		var trail_a := 0.25 * (1.0 - float(i) / 4.0)
+		var trail_col := Color(col.r, col.g, col.b, trail_a)
+		draw_rect(Rect2(-0.5, -4.0 + trail_y, 1.0, 6.0), trail_col)
+
+	# Outer glow — softer, wider
+	var glow_a := 0.15 + 0.05 * sin(_lifetime * 12.0)
+	draw_rect(Rect2(-2.5, -5.5, 5.0, 11.0), Color(col.r, col.g, col.b, glow_a))
+
+	# Bright core line
+	draw_rect(Rect2(-0.5, -4.5, 1.0, 9.0), col)
+	# White-hot center
+	draw_rect(Rect2(-0.25, -4.0, 0.5, 8.0), Color(1.0, 1.0, 1.0, 0.8))
+
+	# Tip glow — bright front
+	draw_circle(Vector2(0, -4.5), 2.0, Color(col.r, col.g, col.b, 0.35))
+	draw_circle(Vector2(0, -4.5), 1.0, Color(1.0, 1.0, 1.0, 0.6))
 
 func _on_area_entered(area: Area2D) -> void:
 	if _owner_type == "player":

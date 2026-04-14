@@ -60,7 +60,7 @@ func _on_body_entered(body: Node2D) -> void:
 		_apply_effect(body)
 		collected.emit(pickup_type)
 		AudioManager.play_sfx("pickup_collect")
-		queue_free()
+		call_deferred("queue_free")
 
 func _apply_effect(player: Node2D) -> void:
 	match pickup_type:

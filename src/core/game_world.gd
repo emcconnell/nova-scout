@@ -26,6 +26,7 @@ const MissileScene      = preload("res://scenes/projectiles/missile.tscn")
 const AsteroidScene     = preload("res://scenes/hazards/asteroid.tscn")
 const SpaceMineScene    = preload("res://scenes/hazards/space_mine.tscn")
 const DebrisCloudScene  = preload("res://scenes/hazards/debris_cloud.tscn")
+const DerelictShipScene = preload("res://scenes/hazards/derelict_ship.tscn")
 const PickupScene       = preload("res://scenes/pickups/pickup.tscn")
 const ScorePopupScene   = preload("res://scenes/ui/score_popup.tscn")
 const EnemyScoutScene          = preload("res://scenes/enemies/alien_scout.tscn")
@@ -109,6 +110,11 @@ func _ready() -> void:
 	# Wire HUD
 	if hud_display and hud_display.has_method("connect_player"):
 		hud_display.connect_player(player)
+
+	# Wire CRT overlay
+	var crt := get_node_or_null("CRTOverlay")
+	if crt and crt.has_method("connect_player"):
+		crt.connect_player(player)
 
 	# Wire UI nodes
 	if upgrade_screen_ui:
@@ -195,15 +201,98 @@ func _update_travel_spawning(delta: float) -> void:
 func _draw() -> void:
 	var t := Time.get_ticks_msec() / 1000.0
 	var h := _vp_size.y
+	var w := _vp_size.x
+
+	# ── Nebula glow based on current sector ──
+	var sector := clampi(GameManager.current_sector, 1, 5)
+	var nebula_color: Color
+	match sector:
+		1: nebula_color = Color(0.08, 0.12, 0.28, 0.25)   # blue
+		2: nebula_color = Color(0.18, 0.06, 0.25, 0.22)   # purple
+		3: nebula_color = Color(0.04, 0.18, 0.20, 0.22)   # teal
+		4: nebula_color = Color(0.22, 0.08, 0.04, 0.20)   # red-orange
+		_: nebula_color = Color(0.22, 0.18, 0.06, 0.20)   # gold
+
+	# Two soft nebula blobs — slow drift
+	var neb_x1 := w * 0.3 + sin(t * 0.07) * 30.0
+	var neb_y1 := h * 0.35 + cos(t * 0.05) * 20.0
+	var neb_x2 := w * 0.72 + cos(t * 0.06) * 25.0
+	var neb_y2 := h * 0.6 + sin(t * 0.04) * 18.0
+	for ring in range(5, 0, -1):
+		var r_frac := float(ring) / 5.0
+		var r_size := 50.0 * r_frac
+		var a := nebula_color.a * r_frac * (0.8 + 0.2 * sin(t * 0.3))
+		var nc := Color(nebula_color.r, nebula_color.g, nebula_color.b, a)
+		draw_circle(Vector2(neb_x1, neb_y1), r_size, nc)
+		draw_circle(Vector2(neb_x2, neb_y2), r_size * 0.8, nc)
+
+	# ── Distant galaxy smudges (2 static, seeded by sector) ──
+	var gal_seed := sector * 137
+	for gi in 2:
+		var gx := fmod(float(gal_seed + gi * 97) * 1.618, w)
+		var gy := fmod(float(gal_seed + gi * 53) * 2.317, h)
+		var ga := 0.06 + 0.02 * sin(t * 0.15 + float(gi))
+		for gr in range(3, 0, -1):
+			var gs := 3.0 * float(gr)
+			draw_circle(Vector2(gx, gy), gs, Color(0.9, 0.85, 0.7, ga * float(gr) / 3.0))
+		# Tiny bright core
+		draw_circle(Vector2(gx, gy), 0.8, Color(1.0, 0.95, 0.8, ga * 2.5))
+
+	# ── Star colors per layer ──
+	# Layer 0 (far): dim warm yellow / red — distant giants
+	# Layer 1 (mid): white / blue-white mix
+	# Layer 2 (near): bright white / blue, occasional red giant
 	for s in _stars:
 		var layer   := int(s.z)
 		var y_off   := fmod(s.y + _scroll_offset * LAYER_SPEED[layer], h)
-		var bright  := 0.35 + 0.25 * float(layer) + 0.2 * sin(t * 1.1 + s.w)
-		var radius  := 0.4 + 0.3 * float(layer)
-		draw_circle(Vector2(s.x, y_off), radius, Color(bright, bright, bright * 1.1))
+
+		# Twinkle — more pronounced, varies per star
+		var twinkle := sin(t * (1.8 + s.w * 0.5) + s.w) * 0.5 + 0.5  # 0..1 range
+		var bright  := 0.25 + 0.30 * float(layer) + 0.35 * twinkle
+		var radius  := 0.4 + 0.35 * float(layer)
+
+		# Choose star color based on layer + per-star seed
+		var star_hue := fmod(s.w * 10.0, TAU) / TAU  # 0..1 pseudo-random from offset
+		var col: Color
+		match layer:
+			0:
+				# Far layer: warm yellow, occasional red
+				if star_hue < 0.15:
+					col = Color(bright * 1.0, bright * 0.45, bright * 0.3)  # red giant
+				else:
+					col = Color(bright * 1.0, bright * 0.92, bright * 0.7)  # warm yellow
+			1:
+				# Mid layer: blue-white, white
+				if star_hue < 0.3:
+					col = Color(bright * 0.75, bright * 0.85, bright * 1.1)  # blue-white
+				else:
+					col = Color(bright, bright, bright * 1.05)  # white
+			_:
+				# Near layer: bright white dominant, occasional blue or red
+				if star_hue < 0.1:
+					col = Color(bright * 1.0, bright * 0.4, bright * 0.35)  # rare red giant
+				elif star_hue < 0.3:
+					col = Color(bright * 0.7, bright * 0.85, bright * 1.15)  # blue
+				else:
+					col = Color(bright, bright, bright)  # white
+
+		# Bloom for brighter stars — extra soft circle
+		if bright > 0.7 and layer >= 1:
+			var bloom_a := (bright - 0.7) * 0.4
+			draw_circle(Vector2(s.x, y_off), radius * 2.5, Color(col.r, col.g, col.b, bloom_a))
+
+		draw_circle(Vector2(s.x, y_off), radius, col)
+
+		# Cross-flare on the brightest near stars during peak twinkle
+		if layer == 2 and twinkle > 0.85:
+			var flare_a := (twinkle - 0.85) * 3.0 * 0.3  # 0..0.3
+			var fc := Color(col.r, col.g, col.b, flare_a)
+			draw_line(Vector2(s.x - 3.0, y_off), Vector2(s.x + 3.0, y_off), fc, 0.5)
+			draw_line(Vector2(s.x, y_off - 3.0), Vector2(s.x, y_off + 3.0), fc, 0.5)
+
 		# Wrap: also draw star one screen-height above
 		if y_off < 6.0:
-			draw_circle(Vector2(s.x, y_off + h), radius, Color(bright, bright, bright * 1.1))
+			draw_circle(Vector2(s.x, y_off + h), radius, col)
 
 # ─── Travel hazard spawning ───────────────────────────────────────────────────
 
@@ -338,9 +427,11 @@ func _encounter_fuel_cache() -> void:
 	spawn_pickup(Vector2(vp.size.x * 0.3, 80.0), "crystal")
 
 func _encounter_derelict() -> void:
-	# TODO Sprint 7: spawn shootable derelict hull
-	spawn_pickup(Vector2(get_viewport_rect().size.x * 0.5, 50.0), "missile_pack")
-	spawn_pickup(Vector2(get_viewport_rect().size.x * 0.4, 60.0), "crystal")
+	var vp := get_viewport_rect()
+	var ship := DerelictShipScene.instantiate() as DerelictShip
+	hazards_node.add_child(ship)
+	ship.global_position = Vector2(vp.size.x * randf_range(0.3, 0.7), -20.0)
+	ship.destroyed.connect(_on_derelict_destroyed)
 
 ## Change 5: Asteroids and mines simultaneously.
 func _encounter_mixed_field(params: Dictionary) -> void:
@@ -514,6 +605,12 @@ func _spawn_enemy_node(type: String, pos: Vector2) -> EnemyBase:
 	enemy.enemy_projectile_container = enemy_projectiles_node
 	enemy.died.connect(_on_enemy_died.bind(enemy))
 	return enemy
+
+func _on_derelict_destroyed(pos: Vector2) -> void:
+	spawn_pickup(pos + Vector2(-10, 0), "missile_pack")
+	spawn_pickup(pos + Vector2(10, 0), "crystal")
+	spawn_pickup(pos + Vector2(0, -8), "crystal")
+	screen_shake(3.0, 0.2)
 
 func _on_enemy_died(pos: Vector2, drop_table: String, _enemy: EnemyBase) -> void:
 	_maybe_drop_loot(pos, drop_table)

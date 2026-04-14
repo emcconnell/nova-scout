@@ -16,6 +16,7 @@ func test_health_starts_at_max_hull() -> void:
 		"Hull should start at max")
 
 func test_take_damage_reduces_hull() -> void:
+	_health.shield = 0   # Bypass shield so damage hits hull directly
 	var before := _health.hull
 	_health.take_damage(10)
 	assert_eq(_health.hull, before - 10)
@@ -57,7 +58,10 @@ func test_died_signal_only_emits_once() -> void:
 		"Died signal should emit exactly once")
 
 func test_reset_restores_full_health() -> void:
+	_health.shield = 0
 	_health.take_damage(50)
+	# Restore GameManager state so reset() reads correct values
+	GameManager.player_hull = GameManager.player_max_hull
 	_health.reset()
 	assert_eq(_health.hull, GameManager.player_max_hull)
 

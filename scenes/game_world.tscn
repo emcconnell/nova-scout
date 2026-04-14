@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://c1gameworld1"]
+[gd_scene load_steps=13 format=3 uid="uid://c1gameworld1"]
 
 [ext_resource type="Script" path="res://src/core/game_world.gd" id="1_gw"]
 [ext_resource type="PackedScene" uid="uid://c1player0001" path="res://scenes/player/player.tscn" id="2_player"]
@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://src/ui/sector_transition.gd" id="7_trans"]
 [ext_resource type="Script" path="res://src/ui/win_screen.gd" id="8_win"]
 [ext_resource type="Script" path="res://src/gameplay/star_scan/scan_bar.gd" id="9_sb"]
+[ext_resource type="Script" path="res://src/ui/crt_overlay.gd" id="10_crt"]
 
 [node name="GameWorld" type="Node2D"]
 script = ExtResource("1_gw")
@@ -77,3 +78,11 @@ anchor_bottom = 1.0
 mouse_filter = 2
 z_index = 23
 script = ExtResource("8_win")
+
+[node name="CRTOverlay" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+z_index = 50
+script = ExtResource("10_crt")

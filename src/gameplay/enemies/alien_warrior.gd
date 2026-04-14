@@ -93,29 +93,83 @@ func _update(delta: float) -> void:
 
 func _draw() -> void:
 	var flash := _hit_flash_timer > 0.0
-	var hull  := Color(1,1,1) if flash else COL_HULL
+	var hull  := Color(1, 1, 1) if flash else COL_HULL
+	var dark_hull := Color(hull.r * 0.55, hull.g * 0.4, hull.b * 0.65)
+	var w := _wobble
 
-	# Main elongated fin body
+	# Main elongated fin body — wider, armored look
 	draw_colored_polygon(PackedVector2Array([
-		Vector2(-4, -12), Vector2(4, -12),
-		Vector2(6, 4), Vector2(-6, 4)
+		Vector2(-5, -14), Vector2(5, -14),
+		Vector2(7, 4), Vector2(-7, 4)
 	]), hull)
-	# Side fins
+	# Armor panel lines — horizontal plating
+	for py in [-10, -5, 0]:
+		var pw := 4.0 + (float(py) + 14.0) / 18.0 * 3.0
+		draw_line(Vector2(-pw, py), Vector2(pw, py), dark_hull, 1.0)
+	# Center keel (darker inset panel)
 	draw_colored_polygon(PackedVector2Array([
-		Vector2(-6, -4), Vector2(-14, 2), Vector2(-10, 6), Vector2(-5, 2)
-	]), hull)
-	draw_colored_polygon(PackedVector2Array([
-		Vector2(6, -4), Vector2(14, 2), Vector2(10, 6), Vector2(5, 2)
-	]), hull)
-	# Ventral stripe (glowing)
-	var stripe_a := 0.7 + 0.3 * sin(_wobble)
-	draw_line(Vector2(0, -10), Vector2(0, 3),
+		Vector2(-2, -12), Vector2(2, -12),
+		Vector2(2.5, 3), Vector2(-2.5, 3)
+	]), dark_hull)
+
+	# Side fins — angular with armor edge highlight
+	for side in [-1.0, 1.0]:
+		var fin := PackedVector2Array([
+			Vector2(side * 7, -6), Vector2(side * 16, 0),
+			Vector2(side * 13, 7), Vector2(side * 6, 3)
+		])
+		draw_colored_polygon(fin, hull)
+		# Fin edge highlight
+		draw_line(Vector2(side * 7, -6), Vector2(side * 16, 0),
+			Color(1, 1, 1, 0.15), 1.0)
+		# Fin panel line
+		draw_line(Vector2(side * 9, -2), Vector2(side * 12, 4), dark_hull, 1.0)
+
+	# Weapon ports — small glowing circles on fin tips
+	for side in [-1.0, 1.0]:
+		var port_pos := Vector2(side * 14, 1)
+		draw_circle(port_pos, 2.0, Color(COL_ENGINE.r, COL_ENGINE.g, COL_ENGINE.b, 0.5))
+		var port_pulse := 0.6 + 0.4 * sin(w * 3.0 + side)
+		draw_circle(port_pos, 1.2, Color(COL_STRIPE.r, COL_STRIPE.g, COL_STRIPE.b, port_pulse))
+
+	# Energy veins — glowing lines running along body
+	var vein_a := 0.4 + 0.3 * sin(w * 2.5)
+	var vein_col := Color(COL_STRIPE.r, COL_STRIPE.g, COL_STRIPE.b, vein_a)
+	draw_line(Vector2(-4, -12), Vector2(-6, 3), vein_col, 1.0)
+	draw_line(Vector2(4, -12), Vector2(6, 3), vein_col, 1.0)
+
+	# Ventral stripe (glowing, wider pulse)
+	var stripe_a := 0.7 + 0.3 * sin(w)
+	draw_line(Vector2(0, -12), Vector2(0, 3),
 		Color(COL_STRIPE.r, COL_STRIPE.g, COL_STRIPE.b, stripe_a), 2.0)
-	# Engine nacelles
-	draw_circle(Vector2(-5, 4), 2.5, Color(COL_ENGINE.r, COL_ENGINE.g, COL_ENGINE.b, 0.8))
-	draw_circle(Vector2(5, 4), 2.5, Color(COL_ENGINE.r, COL_ENGINE.g, COL_ENGINE.b, 0.8))
-	# Front shield indicator (bottom face)
-	draw_arc(Vector2(0, 3), 8.0, 0.0, PI, 16, COL_SHIELD_INDICATOR, 1.5)
+	# Stripe glow bloom
+	draw_line(Vector2(0, -12), Vector2(0, 3),
+		Color(COL_STRIPE.r, COL_STRIPE.g, COL_STRIPE.b, stripe_a * 0.3), 4.0)
+
+	# Engine nacelles — dual layered with exhaust flicker
+	for side in [-1.0, 1.0]:
+		var eng_pos := Vector2(side * 5.5, 5)
+		# Outer glow
+		var eng_a := 0.5 + 0.3 * sin(w * 4.0 + side * 2.0)
+		draw_circle(eng_pos, 3.5, Color(COL_ENGINE.r, COL_ENGINE.g, COL_ENGINE.b, eng_a * 0.4))
+		# Core
+		draw_circle(eng_pos, 2.5, Color(COL_ENGINE.r, COL_ENGINE.g, COL_ENGINE.b, 0.8))
+		# Hot center
+		draw_circle(eng_pos, 1.0, Color(1, 0.6, 1, 0.6))
+		# Exhaust trail flicker
+		var trail_len := 2.0 + 1.5 * sin(w * 6.0 + side)
+		draw_line(eng_pos, eng_pos + Vector2(0, trail_len),
+			Color(COL_ENGINE.r, COL_ENGINE.g, COL_ENGINE.b, 0.5), 1.5)
+
+	# Cockpit viewport (small bright slit near top)
+	draw_line(Vector2(-2, -11), Vector2(2, -11), Color(0.5, 0.8, 1.0, 0.7), 1.5)
+
+	# Front shield indicator (bottom face) — layered arcs
+	draw_arc(Vector2(0, 4), 9.0, 0.0, PI, 16, COL_SHIELD_INDICATOR, 1.0)
+	var shield_a := 0.35 + 0.15 * sin(w * 2.0)
+	draw_arc(Vector2(0, 4), 11.0, 0.15, PI - 0.15, 16,
+		Color(COL_SHIELD_INDICATOR.r, COL_SHIELD_INDICATOR.g, COL_SHIELD_INDICATOR.b, shield_a), 1.0)
+
 	# Stun
 	if _stunned:
-		draw_circle(Vector2(0, -14), 2.0, Color(0.0, 1.0, 1.0, 0.8))
+		draw_circle(Vector2(0, -16), 2.0, Color(0.0, 1.0, 1.0, 0.8))

@@ -95,7 +95,7 @@ func _die() -> void:
 	AudioManager.play_sfx("enemy_explode")
 	# Score popup
 	get_tree().call_group("game_world", "spawn_score_popup", global_position, "+%d" % score_value)
-	queue_free()
+	call_deferred("queue_free")
 
 ## Helper — spawn an enemy bolt toward a direction.
 func _fire_bolt(direction: Vector2, damage: int, speed: float, variant: String = "scout") -> void:

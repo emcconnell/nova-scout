@@ -56,12 +56,55 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 func _draw() -> void:
+	var t := _lifetime
+
+	# ── Smoky fading trail ──
 	for i in _trail.size():
 		var pt := to_local(_trail[i])
-		var a := (1.0 - float(i) / TRAIL_LEN) * 0.5
-		draw_circle(pt, 1.2, Color(COLOR_TRAIL.r, COLOR_TRAIL.g, COLOR_TRAIL.b, a))
-	draw_rect(Rect2(-1.5, -5, 3, 8), COLOR_BODY)
-	draw_circle(Vector2(0, -5), 1.5, COLOR_BODY)
+		var frac := float(i) / float(TRAIL_LEN)
+		var alpha := (1.0 - frac) * 0.4
+		var size := 1.8 - frac * 1.0
+		# Reddish smoke fading to dark
+		var smoke_r := lerpf(1.0, 0.4, frac)
+		var smoke_g := lerpf(0.2, 0.25, frac)
+		var smoke_b := lerpf(0.0, 0.3, frac)
+		draw_circle(pt, size, Color(smoke_r, smoke_g, smoke_b, alpha))
+		# Smoke jitter
+		var jx := sin(t * 9.0 + float(i) * 2.1) * 0.7
+		var jy := cos(t * 7.5 + float(i) * 1.9) * 0.5
+		draw_circle(pt + Vector2(jx, jy), size * 0.5, Color(smoke_r, smoke_g, smoke_b, alpha * 0.4))
+
+	# ── Exhaust flame ──
+	var flame_flicker := sin(t * 16.0) * 0.3 + 0.7
+	# Outer — red-orange
+	draw_circle(Vector2(0, 4.5), 2.0 * flame_flicker, Color(1.0, 0.25, 0.0, 0.55))
+	# Inner — orange-yellow
+	draw_circle(Vector2(0, 3.5), 1.2 * flame_flicker, Color(1.0, 0.7, 0.2, 0.7))
+	# Core — white
+	draw_circle(Vector2(0, 3.0), 0.6 * flame_flicker, Color(1.0, 0.9, 0.8, 0.85))
+	# Exhaust particles
+	for pi in 3:
+		var px := sin(t * 12.0 + float(pi) * 2.09) * 1.5
+		var py := 5.0 + float(pi) * 1.3 + sin(t * 9.0 + float(pi)) * 0.6
+		var pa := 0.45 * (1.0 - float(pi) / 3.0)
+		draw_circle(Vector2(px, py), 0.4, Color(1.0, 0.3, 0.05, pa))
+
+	# ── Missile body — tapered nose cone ──
+	var body_pts := PackedVector2Array([
+		Vector2(0, -6),      # nose tip
+		Vector2(-1.5, -3),   # shoulder left
+		Vector2(-1.5, 3),    # base left
+		Vector2(1.5, 3),     # base right
+		Vector2(1.5, -3),    # shoulder right
+	])
+	draw_colored_polygon(body_pts, COLOR_BODY)
+
+	# Fins
+	draw_line(Vector2(-1.5, 2.0), Vector2(-2.8, 4.0), Color(0.6, 0.4, 0.8), 1.0)
+	draw_line(Vector2(1.5, 2.0), Vector2(2.8, 4.0), Color(0.6, 0.4, 0.8), 1.0)
+
+	# Nose highlight
+	draw_circle(Vector2(0, -5.5), 0.7, Color(1.0, 0.9, 1.0, 0.45))
 
 func _on_area_entered(area: Area2D) -> void:
 	if area.is_in_group("player"):

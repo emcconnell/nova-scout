@@ -24,6 +24,9 @@ var _streak: int = 0
 var _streak_mult: int = 1
 var _streak_flash: float = 0.0
 
+# ─── Score pulse state ───────────────────────────────────────────────────────
+var _score_pulse: float = 0.0
+
 # ─── Palette ──────────────────────────────────────────────────────────────────
 const COL_HULL    := Color(0.10, 0.90, 0.25)
 const COL_SHIELD  := Color(0.00, 0.70, 1.00)
@@ -42,13 +45,18 @@ const COL_EMP     := Color(0.20, 0.60, 1.00)
 const BAR_W := 52.0
 const BAR_H := 3.0
 
+var _font: Font = null
+
 # ─── Lifecycle ────────────────────────────────────────────────────────────────
 
 func _ready() -> void:
+	_font = load("res://assets/fonts/ShareTechMono-Regular.ttf") as Font
+	if _font == null:
+		_font = ThemeDB.fallback_font
 	anchor_right  = 1.0
 	anchor_bottom = 1.0
 	mouse_filter  = Control.MOUSE_FILTER_IGNORE
-	GameManager.score_changed.connect(func(v): _score = v; queue_redraw())
+	GameManager.score_changed.connect(func(v): _score = v; _score_pulse = 0.8; queue_redraw())
 	GameManager.streak_changed.connect(_on_streak_changed)
 
 func _process(delta: float) -> void:
@@ -59,6 +67,9 @@ func _process(delta: float) -> void:
 		queue_redraw()
 	if _streak_flash > 0.0:
 		_streak_flash -= delta
+		queue_redraw()
+	if _score_pulse > 0.0:
+		_score_pulse -= delta
 		queue_redraw()
 
 func connect_player(p: Player) -> void:
@@ -87,24 +98,48 @@ func _flicker(col: Color) -> Color:
 ## Corner-bracket panel — sci-fi terminal style. Fills background, marks corners.
 func _panel(x: float, y: float, w: float, h: float, cs: float = 6.0) -> void:
 	draw_rect(Rect2(x, y, w, h), COL_BG)
+	# Scanline pattern overlay
+	var scanline_col := Color(0.0, 0.08, 0.0, 0.12)
+	var sy := y
+	while sy < y + h:
+		draw_line(Vector2(x, sy), Vector2(x + w, sy), scanline_col)
+		sy += 2.0
 	var c := COL_CORNER
-	# Top-left
+	var ci := Color(c.r * 0.5, c.g * 0.5, c.b * 0.5, c.a * 0.5)  # inner bracket color
+	var ics := cs * 0.6  # inner bracket size
+	# Top-left double bracket
 	draw_line(Vector2(x,     y),     Vector2(x + cs, y),     c)
 	draw_line(Vector2(x,     y),     Vector2(x,     y + cs), c)
-	# Top-right
+	draw_line(Vector2(x + 2, y + 2), Vector2(x + ics + 2, y + 2), ci)
+	draw_line(Vector2(x + 2, y + 2), Vector2(x + 2, y + ics + 2), ci)
+	# Top-right double bracket
 	draw_line(Vector2(x + w, y),     Vector2(x + w - cs, y), c)
 	draw_line(Vector2(x + w, y),     Vector2(x + w, y + cs), c)
-	# Bottom-left
+	draw_line(Vector2(x + w - 2, y + 2), Vector2(x + w - ics - 2, y + 2), ci)
+	draw_line(Vector2(x + w - 2, y + 2), Vector2(x + w - 2, y + ics + 2), ci)
+	# Bottom-left double bracket
 	draw_line(Vector2(x,     y + h), Vector2(x + cs, y + h), c)
 	draw_line(Vector2(x,     y + h), Vector2(x,     y + h - cs), c)
-	# Bottom-right
+	draw_line(Vector2(x + 2, y + h - 2), Vector2(x + ics + 2, y + h - 2), ci)
+	draw_line(Vector2(x + 2, y + h - 2), Vector2(x + 2, y + h - ics - 2), ci)
+	# Bottom-right double bracket
 	draw_line(Vector2(x + w, y + h), Vector2(x + w - cs, y + h), c)
 	draw_line(Vector2(x + w, y + h), Vector2(x + w, y + h - cs), c)
+	draw_line(Vector2(x + w - 2, y + h - 2), Vector2(x + w - ics - 2, y + h - 2), ci)
+	draw_line(Vector2(x + w - 2, y + h - 2), Vector2(x + w - 2, y + h - ics - 2), ci)
 
 # ─── Main draw ────────────────────────────────────────────────────────────────
 
 func _draw() -> void:
-	var font := ThemeDB.fallback_font
+	# Hide HUD during overlay screens (sector transition, upgrade, death, win)
+	var state := GameManager.current_state
+	if state == GameManager.GameState.MENU or \
+	   state == GameManager.GameState.DEATH or \
+	   state == GameManager.GameState.WIN or \
+	   state == GameManager.GameState.SECTOR_TRANSITION or \
+	   state == GameManager.GameState.UPGRADE_SCREEN:
+		return
+	var font := _font
 	_draw_status_panel(font)
 	_draw_weapons_panel(font)
 	_draw_score_display(font)
@@ -141,17 +176,34 @@ func _draw_bar(font: Font, x: float, y: float,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 4, COL_GREEN)
 
 	var bx := x + 22.0
-	# Track
+	# Track background
 	draw_rect(Rect2(bx, y, BAR_W, BAR_H), COL_DIM)
-	# Fill
+	# Fill with gradient (darker at bottom, brighter at top)
 	var pct: float = clampf(val / maxf(max_val, 1), 0.0, 1.0)
 	var fill: float = pct * BAR_W
 	if fill > 0.5:
-		draw_rect(Rect2(bx, y, fill, BAR_H), col)
-		# Bright leading edge
-		var bright := Color(minf(col.r * 1.6, 1.0), minf(col.g * 1.6, 1.0),
-							minf(col.b * 1.6, 1.0), 1.0)
-		draw_rect(Rect2(bx + fill - 1.0, y, 1.0, BAR_H), bright)
+		# Bottom row: darker
+		var dark_col := Color(col.r * 0.6, col.g * 0.6, col.b * 0.6, col.a)
+		draw_rect(Rect2(bx, y + 2, fill, 1), dark_col)
+		# Middle row: normal
+		draw_rect(Rect2(bx, y + 1, fill, 1), col)
+		# Top row: brighter
+		var bright_top := Color(minf(col.r * 1.3, 1.0), minf(col.g * 1.3, 1.0),
+								minf(col.b * 1.3, 1.0), col.a)
+		draw_rect(Rect2(bx, y, fill, 1), bright_top)
+		# Bright leading edge with subtle glow
+		var edge := Color(minf(col.r * 1.8, 1.0), minf(col.g * 1.8, 1.0),
+							minf(col.b * 1.8, 1.0), 1.0)
+		draw_rect(Rect2(bx + fill - 1.0, y, 1.0, BAR_H), edge)
+		# Glow halo on leading edge
+		var glow_a := 0.2 + 0.15 * sin(_wobble * 3.0)
+		var glow_col := Color(col.r, col.g, col.b, glow_a)
+		draw_rect(Rect2(bx + fill - 2.0, y - 1, 3.0, BAR_H + 2), glow_col)
+	# Tick marks every 25%
+	for tick_i in 3:
+		var tx := bx + BAR_W * (float(tick_i + 1) / 4.0)
+		draw_line(Vector2(tx, y - 0.5), Vector2(tx, y + BAR_H + 0.5),
+			Color(0.2, 0.4, 0.2, 0.35))
 	# Track border
 	draw_rect(Rect2(bx, y - 0.5, BAR_W, BAR_H + 1),
 		Color(col.r, col.g, col.b, 0.18), false)
@@ -170,26 +222,38 @@ func _draw_weapons_panel(font: Font) -> void:
 	# Missiles label
 	draw_string(font, Vector2(px + 3, py + 10), "MSL",
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 4, COL_GREEN)
-	# Missile icons — small upward triangles
+	# Missile icons — small upward triangles with glow
 	for i in 8:
 		var ix: float = px + 22.0 + i * 5.5
 		var iy: float = py + 3.0
-		var mc: Color = COL_MSL if i < _missiles else Color(0.18, 0.18, 0.18, 0.45)
-		draw_colored_polygon(PackedVector2Array([
-			Vector2(ix + 1.5, iy),
-			Vector2(ix + 3.0, iy + 5.0),
-			Vector2(ix,       iy + 5.0)
-		]), mc)
+		if i < _missiles:
+			# Subtle glow behind available missile
+			var ga := 0.12 + 0.06 * sin(_wobble * 2.0 + i * 0.4)
+			draw_circle(Vector2(ix + 1.5, iy + 2.5), 4.0, Color(COL_MSL.r, COL_MSL.g, COL_MSL.b, ga))
+			draw_colored_polygon(PackedVector2Array([
+				Vector2(ix + 1.5, iy),
+				Vector2(ix + 3.0, iy + 5.0),
+				Vector2(ix,       iy + 5.0)
+			]), COL_MSL)
+		else:
+			draw_colored_polygon(PackedVector2Array([
+				Vector2(ix + 1.5, iy),
+				Vector2(ix + 3.0, iy + 5.0),
+				Vector2(ix,       iy + 5.0)
+			]), Color(0.18, 0.18, 0.18, 0.45))
 
 	# EMP label
 	var ex: float = px + 74.0
 	draw_string(font, Vector2(ex, py + 10), "EMP",
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 4, COL_GREEN)
-	# EMP icons — small squares
+	# EMP icons — small squares with glow
 	for i in 4:
 		var rx: float = ex + 17.0 + i * 7.0
 		var ry: float = py + 3.0
 		if i < _emp:
+			# Subtle glow behind available EMP
+			var ga := 0.15 + 0.08 * sin(_wobble * 2.0 + i * 0.6)
+			draw_circle(Vector2(rx + 2.5, ry + 2.5), 5.0, Color(COL_EMP.r, COL_EMP.g, COL_EMP.b, ga))
 			draw_rect(Rect2(rx, ry, 5, 5), Color(COL_EMP.r, COL_EMP.g, COL_EMP.b, 0.88))
 			draw_rect(Rect2(rx, ry, 5, 5), Color(1, 1, 1, 0.18), false)
 		else:
@@ -204,6 +268,12 @@ func _draw_score_display(font: Font) -> void:
 	var px: float  = vp.size.x * 0.5 - pw * 0.5
 	var py  := 3.0
 	_panel(px, py, pw, ph, 4.0)
+
+	# Pulsing border when score changes
+	if _score_pulse > 0.0:
+		var pa := _score_pulse * 0.6
+		var pulse_col := Color(COL_SCORE.r, COL_SCORE.g, COL_SCORE.b, pa)
+		draw_rect(Rect2(px - 1, py - 1, pw + 2, ph + 2), pulse_col, false, 1.0)
 
 	# "SCORE" subheader
 	draw_string(font, Vector2(px + pw * 0.5 - 9, py + 6.5), "SCORE",

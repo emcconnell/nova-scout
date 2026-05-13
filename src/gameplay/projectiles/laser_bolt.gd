@@ -11,6 +11,7 @@ var _velocity: Vector2 = Vector2.ZERO
 var _speed: float = 400.0
 var _owner_type: String = "player"  # "player" or "enemy"
 var _lifetime: float = 0.0
+var _returning_to_pool: bool = false
 const MAX_LIFETIME := 1.2
 
 func _ready() -> void:
@@ -23,6 +24,7 @@ func setup(damage: int, direction: Vector2, speed: float, owner_type: String = "
 	_speed = speed
 	_owner_type = owner_type
 	_lifetime = 0.0
+	_returning_to_pool = false
 	rotation = direction.angle() + PI / 2.0
 	if owner_type == "player":
 		add_to_group("player_bullets")
@@ -95,6 +97,15 @@ func _on_body_entered(body: Node2D) -> void:
 		_return_to_pool()
 
 func _return_to_pool() -> void:
+	if _returning_to_pool:
+		return
+	_returning_to_pool = true
+	if Engine.is_in_physics_frame():
+		call_deferred("_apply_return_to_pool")
+		return
+	_apply_return_to_pool()
+
+func _apply_return_to_pool() -> void:
 	remove_from_group("player_bullets")
 	remove_from_group("enemy_bullets")
 	process_mode = Node.PROCESS_MODE_DISABLED
@@ -102,3 +113,4 @@ func _return_to_pool() -> void:
 
 func reset() -> void:
 	_lifetime = 0.0
+	_returning_to_pool = false

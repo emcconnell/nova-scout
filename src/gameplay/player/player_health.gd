@@ -42,6 +42,7 @@ func take_damage(amount: int) -> void:
 	if shield > 0:
 		var absorbed := mini(shield, remaining)
 		shield -= absorbed
+		shield = maxi(shield, 0)
 		remaining -= absorbed
 		GameManager.player_shield = shield
 		shield_changed.emit(shield)

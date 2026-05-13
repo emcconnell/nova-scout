@@ -40,6 +40,10 @@ window/size/window_width_override=1280
 window/size/window_height_override=720
 window/stretch/mode="canvas_items"
 
+[rendering]
+
+textures/vram_compression/import_etc2_astc=true
+
 [input]
 
 ui_accept={

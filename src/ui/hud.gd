@@ -14,6 +14,9 @@ var _fuel: float     = 100.0
 var _max_fuel: float = 100.0
 var _missiles: int   = 6
 var _emp: int        = 2
+var _energy: float   = 100.0
+var _max_energy: float = 100.0
+var _overheated: bool = false
 var _score: int      = 0
 
 # ─── Animation ────────────────────────────────────────────────────────────────
@@ -26,6 +29,10 @@ var _streak_flash: float = 0.0
 
 # ─── Score pulse state ───────────────────────────────────────────────────────
 var _score_pulse: float = 0.0
+
+# ─── Mission-control prompt state ─────────────────────────────────────────────
+var _mission_prompt_text: String = ""
+var _mission_prompt_pulse: float = 0.0
 
 # ─── Palette ──────────────────────────────────────────────────────────────────
 const COL_HULL    := Color(0.10, 0.90, 0.25)
@@ -41,6 +48,7 @@ const COL_HDR_TXT := Color(0.18, 0.72, 0.12, 0.80)
 const COL_SCORE   := Color(0.28, 1.00, 0.12)
 const COL_MSL     := Color(0.82, 0.84, 0.80)
 const COL_EMP     := Color(0.20, 0.60, 1.00)
+const COL_ENERGY  := Color(0.30, 1.00, 0.20)
 
 const BAR_W := 52.0
 const BAR_H := 3.0
@@ -71,6 +79,9 @@ func _process(delta: float) -> void:
 	if _score_pulse > 0.0:
 		_score_pulse -= delta
 		queue_redraw()
+	if not _mission_prompt_text.is_empty():
+		_mission_prompt_pulse += delta * 3.0
+		queue_redraw()
 
 func connect_player(p: Player) -> void:
 	_player   = p
@@ -87,6 +98,21 @@ func connect_player(p: Player) -> void:
 	p.fuel_sys.fuel_changed.connect(func(v):    _fuel    = v; queue_redraw())
 	p.weapons.missiles_changed.connect(func(v): _missiles = v; queue_redraw())
 	p.weapons.emp_changed.connect(func(v):      _emp     = v; queue_redraw())
+	p.weapons.energy_changed.connect(func(v):   _energy  = v; queue_redraw())
+	_energy = p.weapons.energy
+	_max_energy = p.weapons.max_energy
+	queue_redraw()
+
+## Show a mission-control tutorial prompt in the HUD.
+func show_mission_prompt(text: String) -> void:
+	_mission_prompt_text = text
+	_mission_prompt_pulse = 0.0
+	queue_redraw()
+
+## Clear the active mission-control tutorial prompt from the HUD.
+func clear_mission_prompt() -> void:
+	_mission_prompt_text = ""
+	_mission_prompt_pulse = 0.0
 	queue_redraw()
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -145,12 +171,13 @@ func _draw() -> void:
 	_draw_score_display(font)
 	_draw_sector_display(font)
 	_draw_streak_display(font)
+	_draw_mission_prompt(font)
 	_draw_context_hint(font)
 
 # ─── Status panel — top-left ──────────────────────────────────────────────────
 
 func _draw_status_panel(font: Font) -> void:
-	var px := 3.0; var py := 3.0; var pw := 88.0; var ph := 38.0
+	var px := 3.0; var py := 3.0; var pw := 88.0; var ph := 47.0
 	_panel(px, py, pw, ph)
 
 	# Header strip
@@ -169,6 +196,11 @@ func _draw_status_panel(font: Font) -> void:
 	_draw_bar(font, px + 3, py + 31,
 		"FUEL", _fuel, _max_fuel,
 		COL_FUEL if fuel_pct > 0.15 else _flicker(COL_CRIT))
+	# Energy bar — flashes red when overheated
+	_overheated = _player.weapons.is_overheated() if _player and _player.weapons else false
+	var energy_col := _flicker(COL_CRIT) if _overheated else COL_ENERGY
+	_draw_bar(font, px + 3, py + 40,
+		"ENRG", _energy, _max_energy, energy_col)
 
 func _draw_bar(font: Font, x: float, y: float,
 			   lbl: String, val: float, max_val: float, col: Color) -> void:
@@ -300,6 +332,22 @@ func _draw_streak_display(font: Font) -> void:
 	var label: String = "x%d STREAK" % _streak_mult if _streak_mult > 1 else "%d HITS" % _streak
 	draw_string(font, Vector2(cx - 18.0, 32.0), label,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 5, col)
+
+func _draw_mission_prompt(font: Font) -> void:
+	if _mission_prompt_text.is_empty():
+		return
+	var vp := get_viewport_rect()
+	var panel_w := 224.0
+	var panel_h := 22.0
+	var px: float = vp.size.x * 0.5 - panel_w * 0.5
+	var py := 54.0
+	_panel(px, py, panel_w, panel_h, 5.0)
+	var pulse_alpha: float = 0.74 + 0.18 * abs(sin(_mission_prompt_pulse))
+	var title_col := Color(0.00, 0.80, 1.00, pulse_alpha)
+	draw_string(font, Vector2(px + 6, py + 8), "MISSION CONTROL",
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 5, title_col)
+	draw_string(font, Vector2(px + 6, py + 17), _mission_prompt_text,
+		HORIZONTAL_ALIGNMENT_LEFT, panel_w - 12.0, 5, Color(0.72, 1.00, 0.72, 0.92))
 
 # ─── Sector display — top-right ───────────────────────────────────────────────
 

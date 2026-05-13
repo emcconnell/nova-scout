@@ -36,6 +36,9 @@ const EnemyEliteInterceptor    = preload("res://scenes/enemies/alien_elite_inter
 const EnemyEliteArtillery      = preload("res://scenes/enemies/alien_elite_artillery.tscn")
 const EnemyEliteSwarmCommander = preload("res://scenes/enemies/alien_elite_swarm_commander.tscn")
 const EnemyMothershipScene     = preload("res://scenes/enemies/mothership.tscn")
+const EnemyLeviathanScene      = preload("res://scenes/enemies/space_leviathan.tscn")
+const ExplosionScene           = preload("res://scenes/effects/explosion.tscn")
+const MissionPromptScript      = preload("res://src/ui/mission_prompt.gd")
 
 # ─── Object pools ─────────────────────────────────────────────────────────────
 var _laser_pool:   ObjectPool
@@ -45,6 +48,7 @@ var _missile_pool: ObjectPool
 var _encounter_manager: EncounterManager
 var _star_cluster_mgr:  StarClusterManager
 var _arena_spawner:     ArenaWaveSpawner
+var _mission_prompt:    Node
 
 # ─── Travel phase spawning ────────────────────────────────────────────────────
 const SCROLL_SPEED        := 40.0
@@ -110,6 +114,7 @@ func _ready() -> void:
 	# Wire HUD
 	if hud_display and hud_display.has_method("connect_player"):
 		hud_display.connect_player(player)
+	_setup_mission_prompts()
 
 	# Wire CRT overlay
 	var crt := get_node_or_null("CRTOverlay")
@@ -135,6 +140,23 @@ func _ready() -> void:
 	# Seed initial asteroids
 	for i in 4:
 		_spawn_asteroid(randi_range(0, 1))
+	_request_mission_prompt("move")
+
+## Create and connect the one-time mission-control onboarding prompt system.
+func _setup_mission_prompts() -> void:
+	_mission_prompt = MissionPromptScript.new()
+	add_child(_mission_prompt)
+	_mission_prompt.prompt_shown.connect(func(_prompt_id: String, text: String):
+		if hud_display and hud_display.has_method("show_mission_prompt"):
+			hud_display.show_mission_prompt(text))
+	_mission_prompt.prompt_dismissed.connect(func(_prompt_id: String):
+		if hud_display and hud_display.has_method("clear_mission_prompt"):
+			hud_display.clear_mission_prompt())
+
+## Request a one-time mission-control prompt if the prompt system is available.
+func _request_mission_prompt(prompt_id: String) -> void:
+	if _mission_prompt:
+		_mission_prompt.request_prompt(prompt_id)
 
 func _build_starfield(vp: Rect2) -> void:
 	_stars.clear()
@@ -154,9 +176,13 @@ func _process(delta: float) -> void:
 	var scrolling := state == GameManager.GameState.TRAVEL
 
 	if scrolling:
-		_scroll_offset += SCROLL_SPEED * delta
+		var scroll_dist := SCROLL_SPEED * delta
+		_scroll_offset += scroll_dist
 		if _scroll_offset >= get_viewport_rect().size.y:
 			_scroll_offset = 0.0
+		# Grant energy based on travel distance
+		if is_instance_valid(player) and player.weapons:
+			player.weapons.add_travel_distance(scroll_dist)
 		_update_travel_spawning(delta)
 
 	# Screen shake
@@ -306,6 +332,11 @@ func _spawn_asteroid(tier: int) -> void:
 	a.destroyed.connect(_on_asteroid_destroyed)
 
 func _on_asteroid_destroyed(pos: Vector2, tier: int) -> void:
+	# Explosion per tier
+	match tier:
+		Asteroid.SizeTier.LARGE:  spawn_explosion(pos, Explosion.Type.ASTEROID_LARGE)
+		Asteroid.SizeTier.MEDIUM: spawn_explosion(pos, Explosion.Type.ASTEROID_MEDIUM)
+		_:                        spawn_explosion(pos, Explosion.Type.ASTEROID_SMALL)
 	if tier >= Asteroid.SizeTier.SMALL:
 		_maybe_drop_loot(pos, "asteroid")
 		return
@@ -355,18 +386,25 @@ func _handle_encounter(enc: Dictionary) -> void:
 	var type: String = enc.get("type", "")
 	var params: Dictionary = enc.get("params", {})
 	match type:
-		"asteroid_field": _encounter_asteroid_field(params)
+		"asteroid_field":
+			_request_mission_prompt("fire")
+			_encounter_asteroid_field(params)
 		"mine_field":     _encounter_mine_field(params)
 		"debris_cloud":   _encounter_debris(params)
-		"scout_wave":     _encounter_enemy_wave("scout", params)
+		"scout_wave":
+			_request_mission_prompt("fire")
+			_encounter_enemy_wave("scout", params)
 		"warrior_wave":   _encounter_enemy_wave("warrior", params)
 		"destroyer_wave": _encounter_enemy_wave("destroyer", params)
 		"elite_wave":     _encounter_elite_wave(params)
-		"fuel_cache":     _encounter_fuel_cache()
+		"fuel_cache":
+			_request_mission_prompt("pickup")
+			_encounter_fuel_cache()
 		"derelict_ship":  _encounter_derelict()
 		"star_cluster":   _start_star_cluster()
 		"mixed_field":    _encounter_mixed_field(params)   # Change 5
 		"ambush_wave":    _encounter_ambush_wave(params)   # Change 5
+		"leviathan":      _encounter_leviathan(params)
 
 func _encounter_asteroid_field(params: Dictionary) -> void:
 	var count: int = params.get("count", 4)
@@ -464,11 +502,17 @@ func _encounter_ambush_wave(params: Dictionary) -> void:
 		var x := randf_range(vp.size.x * 0.8, vp.size.x - 8.0)
 		spawn_enemy_at(type, Vector2(x, -25.0))
 
+func _encounter_leviathan(_params: Dictionary) -> void:
+	var vp := get_viewport_rect()
+	var pos := Vector2(randf_range(40, vp.size.x - 40), -25.0)
+	spawn_enemy_at("leviathan", pos)
+
 # ─── Star Cluster ─────────────────────────────────────────────────────────────
 
 func _start_star_cluster() -> void:
 	if _in_star_cluster:
 		return   # Guard: encounter + sector_complete both fire this; run once only
+	_request_mission_prompt("scan")
 	_in_star_cluster = true
 	GameManager.change_state(GameManager.GameState.STAR_CLUSTER)
 	_encounter_manager.stop()
@@ -481,6 +525,8 @@ func _start_star_cluster() -> void:
 	_star_cluster_mgr.cluster_complete.connect(_on_cluster_complete)
 	_star_cluster_mgr.alien_combat_triggered.connect(_enter_arena)
 	_star_cluster_mgr.human_viable_found.connect(_on_viable_found)
+	_star_cluster_mgr.star_revealed.connect(_wire_scan_bar_to_star)
+	_star_cluster_mgr.scan_pressure_pulse.connect(_on_scan_pressure_pulse)
 	_star_cluster_mgr.setup(GameManager.current_sector)
 	_star_cluster_mgr.spawn_stars()
 
@@ -488,19 +534,42 @@ func _start_star_cluster() -> void:
 	if scan_bar_ui:
 		for star in stars_node.get_children():
 			if star is StarNode:
-				var s := star  # capture loop var
-				s.player_in_range.connect(func(in_range):
-					if in_range:
-						scan_bar_ui.show_for(s)
-					else:
-						scan_bar_ui.hide_scan())
-				s.scan_completed.connect(func(_r, _d): scan_bar_ui.hide_scan())
+				_wire_scan_bar_to_star(star)
 
 	AudioManager.play_sfx("star_cluster_arrive")
 
+func _wire_scan_bar_to_star(star: StarNode) -> void:
+	if scan_bar_ui == null or star.has_meta("scan_bar_wired"):
+		return
+	star.set_meta("scan_bar_wired", true)
+	var s := star  # capture loop var
+	s.player_in_range.connect(func(in_range):
+		if in_range:
+			_request_mission_prompt("abort")
+			scan_bar_ui.show_for(s)
+		else:
+			scan_bar_ui.hide_scan())
+	s.scan_completed.connect(func(_r, _d): scan_bar_ui.hide_scan())
+
+func _on_scan_pressure_pulse(pulse: Dictionary, _star_data: Dictionary) -> void:
+	var count: int = maxi(int(pulse.get("count", 1)), 1)
+	match String(pulse.get("type", "")):
+		"asteroid":
+			for i in count:
+				_spawn_asteroid(Asteroid.SizeTier.SMALL)
+		"mine":
+			for i in count:
+				_spawn_mine()
+		"scout", "warrior", "destroyer", "elite_interceptor", "elite_artillery", "elite_swarm_commander":
+			var vp := get_viewport_rect()
+			for i in count:
+				var x := (vp.size.x / float(count + 1)) * float(i + 1)
+				spawn_enemy_at(String(pulse.get("type", "scout")), Vector2(x, -25.0))
+
 func _on_viable_found(sector: int) -> void:
-	if GameManager.has_won():
-		_trigger_win(false)
+	if sector == GameManager.MAX_SECTORS and GameManager.has_required_beacons():
+		if _star_cluster_mgr and _star_cluster_mgr.has_method("reveal_mandatory_after"):
+			_star_cluster_mgr.reveal_mandatory_after("E3")
 		return
 	# Continue — player can keep scanning other stars
 
@@ -509,14 +578,15 @@ func _on_cluster_complete() -> void:
 	if _in_arena:
 		_cluster_complete_pending = true
 		return
-	if GameManager.has_won():
-		_trigger_win(false)
+	if GameManager.is_campaign_complete():
+		_trigger_win(true)
 		return
 	_begin_sector_transition()
 
 # ─── Arena (Alien Combat) ─────────────────────────────────────────────────────
 
 func _enter_arena(wave_data_path: String) -> void:
+	_request_mission_prompt("alien")
 	_in_arena = true
 	_current_arena_wave_path = wave_data_path
 	GameManager.change_state(GameManager.GameState.ALIEN_COMBAT)
@@ -530,6 +600,8 @@ func _enter_arena(wave_data_path: String) -> void:
 	_arena_spawner.start(wave_data_path)
 
 func _on_arena_cleared() -> void:
+	if GameManager.current_state == GameManager.GameState.WIN:
+		return
 	_in_arena = false
 	GameManager.change_state(GameManager.GameState.STAR_CLUSTER)
 	if _arena_spawner:
@@ -560,11 +632,12 @@ func _begin_sector_transition() -> void:
 
 func _on_sector_transition_complete() -> void:
 	# Check if final sector complete
-	if GameManager.is_final_sector() and GameManager.has_won():
+	if GameManager.is_final_sector() and GameManager.is_campaign_complete():
 		_trigger_win(true)
 		return
 
 	# Show upgrade screen
+	_request_mission_prompt("upgrade")
 	if upgrade_screen_ui:
 		upgrade_screen_ui.show_upgrades()
 	else:
@@ -577,8 +650,19 @@ func _on_upgrade_done() -> void:
 # ─── Win ──────────────────────────────────────────────────────────────────────
 
 func _trigger_win(true_ending: bool) -> void:
+	if GameManager.current_state == GameManager.GameState.WIN:
+		return
+	GameManager.change_state(GameManager.GameState.WIN)
 	if win_screen_ui:
 		win_screen_ui.show_win(true_ending)
+
+## Complete the campaign when the final Mothership boss dies.
+func on_mothership_defeated() -> void:
+	if GameManager.mothership_defeated:
+		return
+	GameManager.mark_mothership_defeated()
+	if GameManager.is_campaign_complete():
+		_trigger_win(true)
 
 # ─── Spawning helpers (called by group) ──────────────────────────────────────
 
@@ -594,6 +678,7 @@ func _spawn_enemy_node(type: String, pos: Vector2) -> EnemyBase:
 		"elite_artillery":       EnemyEliteArtillery,
 		"elite_swarm_commander": EnemyEliteSwarmCommander,
 		"mothership":            EnemyMothershipScene,
+		"leviathan":             EnemyLeviathanScene,
 	}
 	var scene: PackedScene = scene_map.get(type, null)
 	if scene == null:
@@ -614,6 +699,19 @@ func _on_derelict_destroyed(pos: Vector2) -> void:
 
 func _on_enemy_died(pos: Vector2, drop_table: String, _enemy: EnemyBase) -> void:
 	_maybe_drop_loot(pos, drop_table)
+	if drop_table == "mothership":
+		on_mothership_defeated()
+	# Spawn type-appropriate explosion
+	var exp_type: int = Explosion.Type.SCOUT
+	match drop_table:
+		"scout": exp_type = Explosion.Type.SCOUT
+		"warrior": exp_type = Explosion.Type.WARRIOR
+		"destroyer": exp_type = Explosion.Type.DESTROYER
+		"elite": exp_type = Explosion.Type.ELITE
+		"mothership": exp_type = Explosion.Type.MOTHERSHIP
+		"shield_drone": exp_type = Explosion.Type.SCOUT
+		"leviathan": exp_type = Explosion.Type.LEVIATHAN
+	spawn_explosion(pos, exp_type)
 	screen_shake(2.5, 0.15)
 
 func spawn_mine_at(pos: Vector2) -> void:
@@ -646,10 +744,11 @@ func spawn_pickup(pos: Vector2, type: String) -> void:
 		return
 	# Fast path: immediate effect for common types during travel
 	if GameManager.current_state == GameManager.GameState.TRAVEL \
-	   and (type == "fuel_cell" or type == "crystal"):
+	   and type in ["fuel_cell", "crystal", "energy_cell"]:
 		match type:
-			"fuel_cell": player.fuel_sys.refuel(25.0)
-			"crystal":   GameManager.add_crystal(1)
+			"fuel_cell":    player.fuel_sys.refuel(25.0)
+			"crystal":      GameManager.add_crystal(1)
+			"energy_cell":  player.weapons.add_energy(40.0)
 		GameManager.add_score(15)
 		return
 	# Spawn a physical pickup entity — deferred add_child avoids
@@ -698,15 +797,24 @@ func spawn_score_popup(pos: Vector2, text: String) -> void:
 
 # ─── Screen Shake ─────────────────────────────────────────────────────────────
 
+## Spawn an explosion effect at a position.
+func spawn_explosion(pos: Vector2, type: int) -> void:
+	var exp := ExplosionScene.instantiate() as Explosion
+	add_child(exp)
+	exp.global_position = pos
+	exp.setup(type)
+
 func screen_shake(amount: float, duration: float) -> void:
-	_shake_amount = maxf(_shake_amount, amount)
-	_shake_timer  = maxf(_shake_timer, duration)
+	var shake_multiplier := clampf(float(SaveManager.get_setting("screen_shake")), 0.0, 1.0)
+	_shake_amount = maxf(_shake_amount, amount * shake_multiplier)
+	_shake_timer  = maxf(_shake_timer, duration if shake_multiplier > 0.0 else 0.0)
 
 # ─── Player death ─────────────────────────────────────────────────────────────
 
 func _on_player_died() -> void:
 	GameManager.change_state(GameManager.GameState.DEATH)
 	GameManager.save_data_on_death()
+	spawn_explosion(player.global_position, Explosion.Type.PLAYER)
 	screen_shake(6.0, 0.4)
 	if death_screen_ui:
 		await get_tree().create_timer(2.0).timeout

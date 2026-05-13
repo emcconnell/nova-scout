@@ -1,6 +1,6 @@
 # NOVA SCOUT
 
-> *Survey Probe Seven. Five sectors. Three habitable worlds. One hour to save humanity.*
+> *Survey Probe Seven. Five sectors. Three habitable worlds. One final signal to bring humanity home.*
 
 A top-down arcade space shooter built in **Godot 4** (GDScript), set in the visual and tonal language of 1950s–70s retrofuturist science fiction.
 
@@ -17,11 +17,11 @@ Five sectors. Unknown alien contact. A dwindling fuel gauge. And humanity's futu
 ## Gameplay
 
 - **Top-down arcade shooter** with exploration mechanics
-- **5 procedurally-scribed sectors**, each with a unique encounter sequence
+- **5 authored sectors**, each with a unique encounter sequence
 - **Star Cluster phases** — scan stars to find habitable worlds, triggering alien combat arenas
 - **Upgrade system** — spend Data Crystals between sectors on hull, fuel, shield regen, missiles, and laser damage
-- **Mothership boss fight** — 3-phase adaptive battle at the end of Sector 5
-- **Dual endings** — True Ending (all 3 beacons found) vs Standard Ending (mission complete)
+- **Mothership boss fight** — 3-phase adaptive battle unlocked by the final beacon in Sector 5
+- **True ending campaign spine** — find all 3 beacons, survive the Mothership, and transmit the final data home
 
 ### Controls
 
@@ -96,7 +96,7 @@ nova-scout/
 
 ## Audio
 
-Audio assets are **not yet included** in this repository (they require sourcing or composition). The game runs silently without them — all audio paths fail gracefully.
+Audio assets are included under `assets/audio/music/` and `assets/audio/sfx/`, with import files generated for Godot. Missing audio paths still fail gracefully during development.
 
 See `assets/audio/AUDIO_MANIFEST.md` for the complete list of required files, their exact filenames, and sourcing recommendations.
 

@@ -61,11 +61,11 @@ Ask the user ONLY when:
 
 ## Current Sprint
 
-**Sprint 1** — Foundation & Playable Ship  
-See `production/sprints/sprint-01.md`
+**Sprint 08** — Pre-Release & Launch Prep
+See `production/sprints/sprint-08.md` and the Steam finish docs in `production/`.
 
 ## Win Condition (Game)
 
 Player collects 3 Survey Beacons from human-habitable planets across sectors 3, 4, 5.
 True ending requires defeating the Mothership boss in Sector 5.
-Target playtime: ~60 minutes first clear.
+Target playtime: focused 35-45 minute first clear for Steam, prioritizing density and replayability over stretch.

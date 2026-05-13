@@ -24,15 +24,25 @@ func _ready() -> void:
 	color = Color(0, 0, 0, 0)  # Transparent — shader does the work
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	z_index = 50
+	_apply_accessibility_settings()
 
 func connect_player(p: Player) -> void:
 	_player = p
 	p.health.hull_changed.connect(func(_v): _trigger_aberration())
 
 func _trigger_aberration() -> void:
-	_aberration = ABERRATION_HIT_AMOUNT
+	_apply_accessibility_settings()
+	_aberration = ABERRATION_HIT_AMOUNT * clampf(float(SaveManager.get_setting("flash_intensity")), 0.0, 1.0)
+
+func _apply_accessibility_settings() -> void:
+	visible = bool(SaveManager.get_setting("crt_enabled"))
+	if _mat:
+		var flash_multiplier := clampf(float(SaveManager.get_setting("flash_intensity")), 0.0, 1.0)
+		_mat.set_shader_parameter("scanline_strength", 0.12 * flash_multiplier)
+		_mat.set_shader_parameter("vignette_strength", 0.35 if visible else 0.0)
 
 func _process(delta: float) -> void:
+	_apply_accessibility_settings()
 	if _aberration > 0.0:
 		_aberration = maxf(_aberration - ABERRATION_DECAY * delta * _aberration, 0.0)
 		if _mat:

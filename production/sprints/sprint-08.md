@@ -28,26 +28,31 @@
 - Sourcing options documented (sfxr.me, Suno/Udio, Freesound CC0)
 - **Files:** `assets/audio/AUDIO_MANIFEST.md`
 
-### STORY-051: Core Unit Tests
+### STORY-051: Core Unit Tests ✅ DONE
 - GameManager state machine tests
 - PlayerHealth damage / death / invincibility tests
 - PlayerFuel drain / refuel / depletion tests
 - PlayerWeapons fire rate / ammo tests
 - **Files:** `tests/unit/test_game_manager.gd`, `tests/unit/test_player.gd`
 
-### STORY-052: Economy & Balance Balancing Pass
-- Review crystal drop rates against upgrade costs
-- Confirm fuel tension: player should be at <40% fuel at least once per sector
-- Enemy HP values validated against laser damage (8 base) + missile damage
-- Wave difficulty curve: Sector 1 easy → Sector 5 hard confirmed in encounter JSONs
-- **Files:** `assets/data/encounters/*.json`, `design/gdd/gameplay-mechanics.md` tuning knobs
+### STORY-052: Economy, Balance, and Onboarding Pass 🟡 IN PROGRESS
+- Sector 1 opening retuned so the first star cluster appears at distance 4400 (~110s base scroll speed)
+- Removed pre-scan Sector 1 leviathan set pieces from the authored opening so movement/shoot/pickup/scan are taught before late-game pressure
+- Added `design/quick-specs/first-five-minutes.md`
+- Added data validation for the Sector 1 first-discovery pacing bar
+- Added persistent, one-time mission-control prompts for movement, firing, pickups, scanning, aborting scans, alien combat, and upgrades
+- Added automated full-campaign spine smoke test covering required sector scans, alien arena clears, final Mothership reveal, and true ending
+- Added settings/accessibility save defaults, main-menu settings overlay, runtime audio/fullscreen hooks, and runtime hooks for screen shake, CRT, flash intensity, and hold/toggle boost
+- Installed Godot 4.6.2 export templates locally and verified Linux release export creation plus native macOS export/launch smoke via `scripts/export_smoke.py`
+- Remaining: manual timed playthrough, pause-menu settings access/manual settings QA, color-friendly/text-scale runtime polish, upgrade/economy feel check
+- **Files:** `assets/data/encounters/sector_1.json`, `scripts/validate_data.py`, `scripts/export_smoke.py`, `design/quick-specs/first-five-minutes.md`, `src/ui/mission_prompt.gd`, `src/ui/hud.gd`, `src/ui/crt_overlay.gd`, `src/core/save_manager.gd`, `src/core/main_menu.gd`, `src/core/game_world.gd`, `src/gameplay/player/player.gd`
 
-### STORY-053: .gitignore & Build Hygiene
+### STORY-053: .gitignore & Build Hygiene ✅ DONE
 - Add proper `.gitignore` for Godot 4 projects
 - Exclude build artifacts, `.godot/` cache, export templates
 - **Files:** `.gitignore`
 
-### STORY-054: README Polish
+### STORY-054: README Polish ✅ DONE
 - Update README with gameplay summary, controls, how to run, build instructions
 - **Files:** `README.md`
 
@@ -72,9 +77,9 @@
 | Audio asset manifest | ✅ |
 | Version bumped to 1.0.0 | ✅ |
 | Audio assets sourced | ⬜ (requires external sourcing) |
-| Unit tests | ⬜ Story-051 |
-| Balance pass | ⬜ Story-052 |
-| .gitignore | ⬜ Story-053 |
-| README | ⬜ Story-054 |
-| Platform export templates installed | ⬜ (Godot editor required) |
+| Unit tests | ✅ 64/64 passing via `./scripts/verify.sh` |
+| Balance/onboarding pass | 🟡 Sector 1 first scan now lands around 110s and prompts/settings are wired; manual timing remains |
+| .gitignore | ✅ Story-053 |
+| README | ✅ Story-054 |
+| Platform export templates installed | ✅ Godot 4.6.2 templates installed locally; Linux export and native macOS export/launch smoke pass |
 | Final playthrough: all 5 sectors | ⬜ Manual QA |

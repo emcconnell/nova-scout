@@ -7,6 +7,7 @@ extends Area2D
 signal scan_completed(result: String, star_data: Dictionary)
 signal scan_aborted()
 signal player_in_range(in_range: bool)
+signal scan_pressure_pulse(pulse: Dictionary, star_data: Dictionary)
 
 # ─── Config ───────────────────────────────────────────────────────────────────
 const APPROACH_RADIUS := 35.0
@@ -28,6 +29,9 @@ var _player_nearby: bool = false
 var _scanning: bool = false
 var _scan_progress: float = 0.0
 var _scan_duration: float = 25.0
+var _scan_pressure: Dictionary = {}
+var _scan_pulses: Array = []
+var _fired_scan_pulses: Dictionary = {}
 var _wobble: float = 0.0
 var _scanned: bool = false
 
@@ -42,6 +46,9 @@ func _ready() -> void:
 func setup(data: Dictionary) -> void:
 	star_data = data
 	_scan_duration = float(data.get("scan_duration", 25.0))
+	_scan_pressure = data.get("scan_pressure", {}).duplicate(true)
+	_scan_pulses = _scan_pressure.get("pulses", [])
+	_fired_scan_pulses.clear()
 
 func _set_nearby(val: bool) -> void:
 	_player_nearby = val
@@ -66,6 +73,7 @@ func _process(delta: float) -> void:
 func _start_scan() -> void:
 	_scanning = true
 	_scan_progress = 0.0
+	_fired_scan_pulses.clear()
 	var player := _get_player()
 	if player and player.has_method("enter_orbit"):
 		player.enter_orbit(self, APPROACH_RADIUS * 0.8)
@@ -81,7 +89,8 @@ func _abort_scan() -> void:
 	AudioManager.play_sfx("scan_abort")
 
 func _advance_scan(delta: float) -> void:
-	_scan_progress += delta / _scan_duration
+	_scan_progress += delta / maxf(_scan_duration, 0.001)
+	_emit_due_pressure_pulses()
 	# Auto-abort only if nearly dead (hull <= 5) to avoid frustrating cancels
 	var player := _get_player()
 	if player and player.health.hull <= 5:
@@ -89,6 +98,16 @@ func _advance_scan(delta: float) -> void:
 		return
 	if _scan_progress >= 1.0:
 		_complete_scan()
+
+func _emit_due_pressure_pulses() -> void:
+	for i in _scan_pulses.size():
+		if _fired_scan_pulses.has(i):
+			continue
+		var pulse: Dictionary = _scan_pulses[i]
+		var threshold := clampf(float(pulse.get("at", 1.0)), 0.0, 1.0)
+		if _scan_progress >= threshold:
+			_fired_scan_pulses[i] = true
+			scan_pressure_pulse.emit(pulse, star_data)
 
 func _complete_scan() -> void:
 	_scanning = false
@@ -106,6 +125,9 @@ func _get_player() -> Node2D:
 
 func get_scan_progress() -> float:
 	return _scan_progress
+
+func get_scan_pressure() -> Dictionary:
+	return _scan_pressure
 
 func is_scanning() -> bool:
 	return _scanning

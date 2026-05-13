@@ -300,6 +300,7 @@ func _explode() -> void:
 		get_tree().call_group("game_world", "spawn_pickup", global_position, "crystal")
 
 	AudioManager.play_sfx("mine_explode")
+	get_tree().call_group("game_world", "spawn_explosion", global_position, Explosion.Type.MINE)
 	call_deferred("queue_free")
 
 func _spawn_cluster_children() -> void:

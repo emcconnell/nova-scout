@@ -76,6 +76,9 @@ func _apply_effect(player: Node2D) -> void:
 		"emp_cartridge":
 			player.weapons.add_emp(1)
 			GameManager.add_score(20)
+		"energy_cell":
+			player.weapons.add_energy(40.0)
+			GameManager.add_score(10)
 		"crystal":
 			GameManager.add_crystal(1)
 			GameManager.add_score(25)

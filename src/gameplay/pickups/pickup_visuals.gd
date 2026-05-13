@@ -8,6 +8,7 @@ const COLORS := {
 	"repair_kit":   Color(0.90, 0.10, 0.10),
 	"missile_pack": Color(0.85, 0.85, 0.85),
 	"emp_cartridge":Color(0.20, 0.60, 1.00),
+	"energy_cell":  Color(0.40, 1.00, 0.20),
 	"crystal":      Color(0.00, 0.90, 1.00),
 	"shield_booster":Color(0.00, 0.50, 1.00),
 	"survey_beacon":Color(1.00, 0.85, 0.00),
@@ -88,6 +89,22 @@ func _draw_pickup(alpha: float) -> void:
 				var arc_alpha := (0.3 + 0.3 * sin(_wobble * 4.0 + arc_i)) * alpha
 				draw_line(arc_start, arc_mid, Color(0.6, 0.8, 1.0, arc_alpha), 0.5)
 				draw_line(arc_mid, arc_end, Color(0.6, 0.8, 1.0, arc_alpha), 0.5)
+
+		"energy_cell":
+			# Green lightning bolt icon
+			var energy_glow := 5.0 + 1.0 * sin(_wobble * 3.0)
+			draw_circle(Vector2.ZERO, energy_glow, Color(col.r, col.g, col.b, 0.12 * alpha))
+			# Bolt shape
+			var bolt := PackedVector2Array([
+				Vector2(1, -6), Vector2(3, -6), Vector2(0, -1),
+				Vector2(2, -1), Vector2(-1, 6), Vector2(-1, 1), Vector2(-3, 1)
+			])
+			draw_colored_polygon(bolt, col)
+			# Bright core
+			draw_circle(Vector2(0, -1), 1.5, Color(1.0, 1.0, 1.0, 0.4 * alpha))
+			# Outer ring
+			var ring_a := 0.2 + 0.15 * sin(_wobble * 2.5)
+			draw_arc(Vector2.ZERO, 7.0, 0, TAU, 16, Color(col.r, col.g, col.b, ring_a * alpha), 1.0)
 
 		"crystal":
 			# Cyan spinning diamond with inner facets and sparkle

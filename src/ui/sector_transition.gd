@@ -137,9 +137,9 @@ func _draw() -> void:
 				"WARP TRANSIT",
 				HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(COL_WARN.r, COL_WARN.g, COL_WARN.b, content_a))
 		PHASE_STATS:
-			_draw_stats(cx, cy, font, content_a)
+			_draw_stats(cx, cy, _font_body, content_a)
 		PHASE_LOG:
-			_draw_log(cx, cy, font, content_a)
+			_draw_log(cx, cy, _font_body, content_a)
 
 func _draw_door_panel(x: float, y: float, w: float, dh: float, is_top: bool) -> void:
 	if dh < 1:

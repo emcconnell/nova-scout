@@ -6,43 +6,56 @@ extends RefCounted
 # ─── Drop tables per enemy/hazard type ────────────────────────────────────────
 const TABLES := {
 	"scout": [
-		{"type": "fuel_cell",   "weight": 30},
-		{"type": "crystal",     "weight": 20},
-		{"type": "nothing",     "weight": 50},
+		{"type": "fuel_cell",    "weight": 20},
+		{"type": "energy_cell",  "weight": 20},
+		{"type": "crystal",      "weight": 15},
+		{"type": "nothing",      "weight": 45},
 	],
 	"warrior": [
-		{"type": "missile_pack","weight": 25},
-		{"type": "crystal",     "weight": 25},
-		{"type": "repair_kit",  "weight": 10},
-		{"type": "nothing",     "weight": 40},
+		{"type": "missile_pack", "weight": 20},
+		{"type": "energy_cell",  "weight": 15},
+		{"type": "crystal",      "weight": 20},
+		{"type": "repair_kit",   "weight": 10},
+		{"type": "nothing",      "weight": 35},
 	],
 	"destroyer": [
-		{"type": "repair_kit",  "weight": 50},
-		{"type": "crystal",     "weight": 50},
+		{"type": "repair_kit",   "weight": 35},
+		{"type": "energy_cell",  "weight": 20},
+		{"type": "crystal",      "weight": 45},
 	],
 	"elite": [
-		{"type": "repair_kit",  "weight": 33},
-		{"type": "emp_cartridge","weight": 33},
-		{"type": "crystal",     "weight": 34},
+		{"type": "repair_kit",   "weight": 25},
+		{"type": "emp_cartridge","weight": 25},
+		{"type": "energy_cell",  "weight": 15},
+		{"type": "crystal",      "weight": 35},
 	],
 	"mothership": [
-		{"type": "repair_kit",   "weight": 12},
-		{"type": "fuel_cell",    "weight": 12},
-		{"type": "emp_cartridge","weight": 12},
-		{"type": "crystal",      "weight": 64},
+		{"type": "repair_kit",    "weight": 12},
+		{"type": "fuel_cell",     "weight": 12},
+		{"type": "emp_cartridge", "weight": 12},
+		{"type": "crystal",       "weight": 50},
+		{"type": "energy_cell",   "weight": 14},
 	],
 	"shield_drone": [
-		{"type": "crystal",     "weight": 60},
-		{"type": "nothing",     "weight": 40},
+		{"type": "energy_cell",  "weight": 35},
+		{"type": "crystal",      "weight": 35},
+		{"type": "nothing",      "weight": 30},
+	],
+	"leviathan": [
+		{"type": "energy_cell",  "weight": 30},
+		{"type": "repair_kit",   "weight": 25},
+		{"type": "missile_pack", "weight": 20},
+		{"type": "crystal",      "weight": 25},
 	],
 	"asteroid": [
-		{"type": "fuel_cell",   "weight": 30},
-		{"type": "crystal",     "weight": 20},
-		{"type": "nothing",     "weight": 50},
+		{"type": "fuel_cell",    "weight": 25},
+		{"type": "energy_cell",  "weight": 20},
+		{"type": "crystal",      "weight": 15},
+		{"type": "nothing",      "weight": 40},
 	],
 }
 
-# Returns the pickup type to spawn (or "nothing")
+## Returns the pickup type to spawn (or "nothing").
 static func roll(table_key: String) -> String:
 	var table: Array = TABLES.get(table_key, TABLES["scout"])
 	var total := 0
@@ -56,7 +69,7 @@ static func roll(table_key: String) -> String:
 			return entry["type"]
 	return "nothing"
 
-# For mothership — multiple guaranteed drops
+## For mothership — multiple guaranteed drops.
 static func roll_multiple(table_key: String, count: int) -> Array[String]:
 	var results: Array[String] = []
 	for i in count:
@@ -65,7 +78,7 @@ static func roll_multiple(table_key: String, count: int) -> Array[String]:
 			results.append(r)
 	return results
 
-# For guaranteed loot from wave clear
+## For guaranteed loot from wave clear.
 static func from_loot_list(loot_list: Array) -> Array[String]:
 	var results: Array[String] = []
 	for entry in loot_list:

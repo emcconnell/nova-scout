@@ -82,7 +82,6 @@ func _on_body_entered(body: Node2D) -> void:
 		return
 	if body.is_in_group("player"):
 		body.take_damage(contact_damage, "hull")
-		_die()
 
 func _die() -> void:
 	if _dead:

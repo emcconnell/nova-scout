@@ -34,6 +34,7 @@ const VIEWPORT_H := 180
 var current_state: GameState = GameState.MENU
 var current_sector: int = 1
 var survey_beacons: int = 0
+var mothership_defeated: bool = false
 var score: int = 0
 var score_multiplier: int = 1
 var data_crystals: int = 0
@@ -50,6 +51,8 @@ var player_max_missiles: int = 12
 var player_max_emp: int = 4
 var player_shield_regen: float = 5.0
 var player_laser_damage: int = 8
+var player_laser_energy: float = 100.0
+var player_max_laser_energy: float = 100.0
 
 # Session stats
 var enemies_destroyed: int = 0
@@ -81,6 +84,7 @@ func is_state(state: GameState) -> bool:
 func start_new_game() -> void:
 	current_sector = 1
 	survey_beacons = 0
+	mothership_defeated = false
 	score = 0
 	score_multiplier = 1
 	data_crystals = 0
@@ -103,6 +107,8 @@ func _reset_player_stats() -> void:
 	player_max_emp = 4
 	player_shield_regen = 5.0
 	player_laser_damage = 8
+	player_laser_energy = 100.0
+	player_max_laser_energy = 100.0
 
 func restart_sector() -> void:
 	# Reset to sector start stats (partial reset — sector/score preserved)
@@ -111,6 +117,7 @@ func restart_sector() -> void:
 	player_fuel = player_max_fuel
 	player_missiles = 6
 	player_emp = 2
+	player_laser_energy = player_max_laser_energy
 	score_multiplier = 1
 	kill_streak = 0
 	streak_multiplier = 1
@@ -144,7 +151,19 @@ func collect_beacon() -> void:
 		pass
 
 func has_won() -> bool:
+	return is_campaign_complete()
+
+## Return true once enough survey beacons have been collected to unlock the finale.
+func has_required_beacons() -> bool:
 	return survey_beacons >= BEACONS_TO_WIN
+
+## Return true only after the beacon requirement and Mothership defeat are complete.
+func is_campaign_complete() -> bool:
+	return has_required_beacons() and mothership_defeated
+
+## Mark the final Mothership as defeated; safe to call more than once.
+func mark_mothership_defeated() -> void:
+	mothership_defeated = true
 
 # ─── Sector Progression ──────────────────────────────────────────────────────
 func advance_sector() -> void:

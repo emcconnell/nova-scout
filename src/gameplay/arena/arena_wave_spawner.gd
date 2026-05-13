@@ -128,6 +128,8 @@ func _spawn_enemy(type: String, index: int, total: int) -> void:
 
 func _on_enemy_died(_pos: Vector2, _drop: String) -> void:
 	_enemies_alive = max(_enemies_alive - 1, 0)
+	if _drop == "mothership":
+		get_tree().call_group("game_world", "on_mothership_defeated")
 
 func _try_escape() -> void:
 	var player := get_tree().get_first_node_in_group("player")

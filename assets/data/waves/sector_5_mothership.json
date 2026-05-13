@@ -1,0 +1,12 @@
+{
+  "system": "Epsilon-4 Mothership",
+  "note": "Final mandatory boss encounter revealed after E3 once all survey beacons are secured.",
+  "waves": [
+    {
+      "wave": 1,
+      "enemies": [{ "type": "mothership", "count": 1 }],
+      "is_boss": true,
+      "loot": []
+    }
+  ]
+}

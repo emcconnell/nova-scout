@@ -8,6 +8,8 @@ var _shooting_stars: Array[Dictionary] = []
 var _next_shoot: float = 1.0
 var _typewriter_pos: int = 0
 var _typewriter_timer: float = 0.0
+var _show_settings: bool = false
+var _settings_selection: int = 0
 
 # Fonts
 var _font_title: Font = null    # Orbitron — bold techy title
@@ -29,6 +31,17 @@ const C_WHITE    := Color(0.85, 0.88, 0.92)
 const C_RED      := Color(0.80, 0.12, 0.08)
 
 const TAGLINE := "SURVEY PROBE SEVEN  —  DEEP SPACE RECON"
+const SETTINGS_ITEMS := [
+	{"key": "music_volume", "label": "MUSIC", "kind": "float", "step": 0.1},
+	{"key": "sfx_volume", "label": "SFX", "kind": "float", "step": 0.1},
+	{"key": "screen_shake", "label": "SHAKE", "kind": "float", "step": 0.25},
+	{"key": "crt_enabled", "label": "CRT", "kind": "bool"},
+	{"key": "flash_intensity", "label": "FLASH", "kind": "float", "step": 0.25},
+	{"key": "text_scale", "label": "TEXT", "kind": "float", "step": 0.25, "min": 0.75, "max": 1.5},
+	{"key": "hold_to_boost", "label": "BOOST", "kind": "bool"},
+	{"key": "color_friendly", "label": "COLOR", "kind": "bool"},
+	{"key": "fullscreen", "label": "FULLSCREEN", "kind": "bool"},
+]
 
 func _ready() -> void:
 	# Load fonts
@@ -48,6 +61,7 @@ func _ready() -> void:
 			randf_range(0, vp.size.y),
 			randf_range(0.0, TAU),
 			0.25 + float(layer) * 0.25 + randf_range(0.0, 0.15)))
+	_apply_runtime_settings()
 	AudioManager.play_music("mission_log")
 
 func _process(delta: float) -> void:
@@ -77,6 +91,9 @@ func _process(delta: float) -> void:
 			_shooting_stars.remove_at(i)
 		i -= 1
 	queue_redraw()
+	if _show_settings:
+		_process_settings_input()
+		return
 	if Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("fire_laser"):
 		if _show_scores:
 			_show_scores = false
@@ -89,6 +106,9 @@ func _process(delta: float) -> void:
 			get_tree().quit()
 	if Input.is_key_pressed(KEY_H):
 		_show_scores = true
+	if Input.is_key_pressed(KEY_S):
+		_show_settings = true
+		_settings_selection = 0
 	for key_i in 5:
 		if Input.is_key_pressed(KEY_1 + key_i):
 			_start_at_sector(key_i + 1)
@@ -130,6 +150,9 @@ func _draw() -> void:
 	draw_circle(Vector2(W * 0.3, H * 0.35), 60.0, Color(0.15, 0.10, 0.35, neb_a))
 	draw_circle(Vector2(W * 0.7, H * 0.25), 45.0, Color(0.08, 0.20, 0.35, neb_a))
 
+	if _show_settings:
+		_draw_settings_overlay(vp, cx)
+		return
 	if _show_scores:
 		_draw_scores_overlay(vp, cx)
 		return
@@ -210,9 +233,10 @@ func _draw() -> void:
 	var fy := H - 18.0
 	draw_rect(Rect2(24, fy, W - 48, 14), Color(C_HULL.r, C_HULL.g, C_HULL.b, 0.85))
 	draw_line(Vector2(24, fy), Vector2(W - 24, fy), C_SEAM, 1.0)
-	_draw_centered_text(_font_body, "H SCORES", W * 0.22, fy + 10, 5, C_DIM)
-	_draw_centered_text(_font_body, "1-5 SECTOR", cx, fy + 10, 5, C_DIM)
-	_draw_centered_text(_font_body, "ESC QUIT", W * 0.78, fy + 10, 5, C_DIM)
+	_draw_centered_text(_font_body, "H SCORES", W * 0.20, fy + 10, 5, C_DIM)
+	_draw_centered_text(_font_body, "S SETTINGS", W * 0.38, fy + 10, 5, C_DIM)
+	_draw_centered_text(_font_body, "1-5 SECTOR", W * 0.58, fy + 10, 5, C_DIM)
+	_draw_centered_text(_font_body, "ESC QUIT", W * 0.80, fy + 10, 5, C_DIM)
 
 	# Status indicators
 	_draw_indicator(Vector2(30, 22), "SYS", true)
@@ -312,6 +336,89 @@ func _draw_scores_overlay(vp: Rect2, cx: float) -> void:
 	if scores.is_empty():
 		_draw_centered_text(_font_body, "NO DATA RECORDED", cx, py + 52, 6, C_DIM)
 	_draw_centered_text(_font_body, "SPACE / ESC  BACK", cx, H - 26, 6, C_DIM)
+
+func _draw_settings_overlay(vp: Rect2, cx: float) -> void:
+	var W := vp.size.x
+	var H := vp.size.y
+	_draw_cockpit_frame(W, H)
+	var px := 30.0
+	var pw := W - 60.0
+	var py := 18.0
+	var ph := H - 38.0
+	draw_rect(Rect2(px, py, pw, ph), Color(0.01, 0.015, 0.03, 0.96))
+	draw_rect(Rect2(px, py, pw, ph), Color(C_CYAN.r, C_CYAN.g, C_CYAN.b, 0.5), false, 1.0)
+	_draw_centered_text(_font_title, "SETTINGS", cx, py + 15, 10, C_CYAN)
+	draw_line(Vector2(px + 6, py + 20), Vector2(px + pw - 6, py + 20), Color(C_CYAN.r, C_CYAN.g, C_CYAN.b, 0.3), 1.0)
+	for si in SETTINGS_ITEMS.size():
+		var item: Dictionary = SETTINGS_ITEMS[si]
+		var y := py + 34.0 + si * 11.0
+		var selected := si == _settings_selection
+		if selected:
+			draw_rect(Rect2(px + 6, y - 7, pw - 12, 9), Color(C_CYAN.r, C_CYAN.g, C_CYAN.b, 0.12))
+			draw_string(_font_body, Vector2(px + 10, y), ">", HORIZONTAL_ALIGNMENT_LEFT, -1, 5, C_CYAN)
+		var label_col := C_WHITE if selected else C_GREEN
+		draw_string(_font_body, Vector2(px + 20, y), String(item["label"]), HORIZONTAL_ALIGNMENT_LEFT, -1, 5, label_col)
+		draw_string(_font_body, Vector2(px + 92, y), _format_setting_value(item), HORIZONTAL_ALIGNMENT_LEFT, -1, 5, C_AMBER if selected else C_DIM)
+	_draw_centered_text(_font_body, "W/S SELECT   A/D CHANGE   SPACE TOGGLE   ESC BACK", cx, H - 26, 5, C_DIM)
+
+func _process_settings_input() -> void:
+	if Input.is_action_just_pressed("pause"):
+		_show_settings = false
+		return
+	if Input.is_action_just_pressed("move_up"):
+		_settings_selection = (_settings_selection - 1 + SETTINGS_ITEMS.size()) % SETTINGS_ITEMS.size()
+		AudioManager.play_sfx("ui_navigate")
+	elif Input.is_action_just_pressed("move_down"):
+		_settings_selection = (_settings_selection + 1) % SETTINGS_ITEMS.size()
+		AudioManager.play_sfx("ui_navigate")
+	elif Input.is_action_just_pressed("move_left"):
+		_change_setting(-1.0)
+	elif Input.is_action_just_pressed("move_right"):
+		_change_setting(1.0)
+	elif Input.is_action_just_pressed("ui_accept") or Input.is_action_just_pressed("fire_laser"):
+		_toggle_or_advance_setting()
+
+func _toggle_or_advance_setting() -> void:
+	var item: Dictionary = SETTINGS_ITEMS[_settings_selection]
+	if String(item["kind"]) == "bool":
+		_change_setting(1.0)
+	else:
+		_change_setting(1.0)
+
+func _change_setting(direction: float) -> void:
+	var item: Dictionary = SETTINGS_ITEMS[_settings_selection]
+	var key := String(item["key"])
+	var kind := String(item["kind"])
+	var new_value: Variant
+	if kind == "bool":
+		new_value = not bool(SaveManager.get_setting(key))
+	else:
+		var step := float(item.get("step", 0.1))
+		var min_value := float(item.get("min", 0.0))
+		var max_value := float(item.get("max", 1.0))
+		new_value = clampf(float(SaveManager.get_setting(key)) + step * direction, min_value, max_value)
+	if SaveManager.set_setting(key, new_value):
+		_apply_runtime_settings()
+		AudioManager.play_sfx("ui_confirm")
+
+func _format_setting_value(item: Dictionary) -> String:
+	var key := String(item["key"])
+	var kind := String(item["kind"])
+	var value: Variant = SaveManager.get_setting(key)
+	if kind == "bool":
+		if key == "hold_to_boost":
+			return "HOLD" if bool(value) else "TOGGLE"
+		if key == "color_friendly":
+			return "ALT" if bool(value) else "NORMAL"
+		return "ON" if bool(value) else "OFF"
+	return "%3d%%" % int(round(float(value) * 100.0))
+
+func _apply_runtime_settings() -> void:
+	AudioManager.set_music_volume(float(SaveManager.get_setting("music_volume")))
+	AudioManager.set_sfx_volume(float(SaveManager.get_setting("sfx_volume")))
+	var mode := DisplayServer.WINDOW_MODE_FULLSCREEN if bool(SaveManager.get_setting("fullscreen")) else DisplayServer.WINDOW_MODE_WINDOWED
+	if DisplayServer.window_get_mode() != mode:
+		DisplayServer.window_set_mode(mode)
 
 func _start_game() -> void:
 	GameManager.start_new_game()

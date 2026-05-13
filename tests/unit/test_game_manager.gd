@@ -75,15 +75,38 @@ func test_spend_crystals_insufficient() -> void:
 
 # ─── Beacons & Win Condition ─────────────────────────────────────────────────
 
-func test_has_won_false_at_start() -> void:
+func test_campaign_not_complete_at_start() -> void:
+	assert_false(GameManager.has_required_beacons())
+	assert_false(GameManager.is_campaign_complete())
 	assert_false(GameManager.has_won())
 
-func test_has_won_after_three_beacons() -> void:
+func test_three_beacons_are_finale_ready_not_campaign_complete() -> void:
 	GameManager.collect_beacon()
 	GameManager.collect_beacon()
-	assert_false(GameManager.has_won(), "2 beacons should not win yet")
+	assert_false(GameManager.has_required_beacons(), "2 beacons should not be finale-ready yet")
+	assert_false(GameManager.is_campaign_complete(), "2 beacons should not complete the campaign")
 	GameManager.collect_beacon()
-	assert_true(GameManager.has_won(), "3 beacons should trigger win")
+	assert_true(GameManager.has_required_beacons(), "3 beacons should make the finale available")
+	assert_false(GameManager.is_campaign_complete(), "3 beacons alone should not complete the campaign")
+	assert_false(GameManager.has_won(), "Compatibility has_won should not bypass the Mothership finale")
+
+func test_mothership_defeat_completes_campaign_after_required_beacons() -> void:
+	for i in GameManager.BEACONS_TO_WIN:
+		GameManager.collect_beacon()
+	GameManager.mark_mothership_defeated()
+	assert_true(GameManager.mothership_defeated)
+	assert_true(GameManager.is_campaign_complete())
+	assert_true(GameManager.has_won())
+
+func test_mothership_defeat_is_idempotent() -> void:
+	GameManager.mark_mothership_defeated()
+	GameManager.mark_mothership_defeated()
+	assert_true(GameManager.mothership_defeated)
+
+func test_start_new_game_resets_mothership_defeat() -> void:
+	GameManager.mark_mothership_defeated()
+	GameManager.start_new_game()
+	assert_false(GameManager.mothership_defeated)
 
 func test_beacon_gives_score() -> void:
 	GameManager.score = 0

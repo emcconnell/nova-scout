@@ -68,6 +68,7 @@ func _die() -> void:
 		return
 	_dead = true
 	AudioManager.play_sfx("asteroid_large")
+	get_tree().call_group("game_world", "spawn_explosion", global_position, Explosion.Type.DERELICT)
 	destroyed.emit(global_position)
 	GameManager.add_score(50)
 	get_tree().call_group("game_world", "spawn_score_popup", global_position, "+50")

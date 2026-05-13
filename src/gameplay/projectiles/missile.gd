@@ -13,6 +13,7 @@ var _target: Node2D = null
 var _velocity: Vector2 = Vector2.UP * SPEED
 var _lifetime: float = 0.0
 var _trail: Array[Vector2] = []
+var _returning_to_pool: bool = false
 const MAX_LIFETIME := 4.0
 const TRAIL_LEN := 8
 
@@ -25,6 +26,7 @@ func setup(damage: int, target: Node2D) -> void:
 	_target = target
 	_lifetime = 0.0
 	_trail.clear()
+	_returning_to_pool = false
 
 func _process(delta: float) -> void:
 	_lifetime += delta
@@ -130,9 +132,19 @@ func _explode() -> void:
 			obj.take_damage(DAMAGE)
 
 	AudioManager.play_sfx("missile_explode")
+	get_tree().call_group("game_world", "spawn_explosion", global_position, Explosion.Type.MISSILE_HIT)
 	_return_to_pool()
 
 func _return_to_pool() -> void:
+	if _returning_to_pool:
+		return
+	_returning_to_pool = true
+	if Engine.is_in_physics_frame():
+		call_deferred("_apply_return_to_pool")
+		return
+	_apply_return_to_pool()
+
+func _apply_return_to_pool() -> void:
 	process_mode = Node.PROCESS_MODE_DISABLED
 	hide()
 
@@ -140,3 +152,4 @@ func reset() -> void:
 	_target = null
 	_lifetime = 0.0
 	_trail.clear()
+	_returning_to_pool = false

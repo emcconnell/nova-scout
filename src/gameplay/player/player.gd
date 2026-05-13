@@ -36,6 +36,7 @@ var _engine_anim: float = 0.0
 var _dead: bool = false
 var _invincible: bool = false
 var _invincible_timer: float = 0.0
+var _boost_toggled: bool = false
 
 # ─── Lifecycle ───────────────────────────────────────────────────────────────
 func _ready() -> void:
@@ -68,7 +69,9 @@ func _physics_process(delta: float) -> void:
 	var dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	_bank_dir = dir.x
 
-	_is_boosting = Input.is_action_pressed("boost") and fuel_sys.fuel > 0.0
+	_is_boosting = _wants_boost() and fuel_sys.fuel > 0.0
+	if fuel_sys.fuel <= 0.0:
+		_boost_toggled = false
 	var speed := (BOOST_SPEED if _is_boosting else BASE_SPEED) * _speed_mult
 
 	if _is_boosting:
@@ -87,6 +90,14 @@ func _wrap_horizontal() -> void:
 		position.x = vp.size.x + 10
 	elif position.x > vp.size.x + 10:
 		position.x = -10
+
+func _wants_boost() -> bool:
+	if bool(SaveManager.get_setting("hold_to_boost")):
+		_boost_toggled = false
+		return Input.is_action_pressed("boost")
+	if Input.is_action_just_pressed("boost"):
+		_boost_toggled = not _boost_toggled
+	return _boost_toggled
 
 # ─── Drawing ─────────────────────────────────────────────────────────────────
 func _draw() -> void:

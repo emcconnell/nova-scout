@@ -40,8 +40,8 @@ const SECTOR_STARS := {
 	],
 	5: [
 		{"id":"E1","result":"alien_territory","scan_duration":0, "wave_path":"res://assets/data/waves/sector_5_star_e1.json"},
-		{"id":"E2","result":"barren",        "scan_duration":12,"wave_path":"","reward":"repair_kit+missile4", "scan_pressure":{"pulses":[{"at":0.33,"type":"mine","count":1},{"at":0.66,"type":"asteroid","count":2}]}},
-		{"id":"E3","result":"human_viable",  "scan_duration":12,"wave_path":"res://assets/data/waves/sector_5_star_e3.json","guaranteed":true, "scan_pressure":{"pulses":[{"at":0.30,"type":"asteroid","count":2},{"at":0.60,"type":"scout","count":2},{"at":0.85,"type":"mine","count":1}]}},
+		{"id":"E2","result":"barren",        "scan_duration":12,"wave_path":"","reward":"repair_kit+missile_pack", "scan_pressure":{"pulses":[{"at":0.33,"type":"mine","count":1},{"at":0.66,"type":"asteroid","count":2}]}},
+		{"id":"E3","result":"human_viable",  "scan_duration":12,"wave_path":"","guaranteed":true, "scan_pressure":{"pulses":[{"at":0.30,"type":"asteroid","count":2},{"at":0.60,"type":"scout","count":2},{"at":0.85,"type":"mine","count":1}]}},
 		{"id":"E4","result":"mothership",    "scan_duration":0, "wave_path":"res://assets/data/waves/sector_5_mothership.json","mandatory_after":"E3"},
 	],
 }

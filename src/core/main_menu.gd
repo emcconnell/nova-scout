@@ -10,6 +10,7 @@ var _typewriter_pos: int = 0
 var _typewriter_timer: float = 0.0
 var _show_settings: bool = false
 var _settings_selection: int = 0
+var _menu_selection: int = 0
 
 # Fonts
 var _font_title: Font = null    # Orbitron — bold techy title
@@ -31,6 +32,7 @@ const C_WHITE    := Color(0.85, 0.88, 0.92)
 const C_RED      := Color(0.80, 0.12, 0.08)
 
 const TAGLINE := "SURVEY PROBE SEVEN  —  DEEP SPACE RECON"
+const MENU_ITEMS := ["LAUNCH", "SCORES", "SETTINGS", "QUIT"]
 const SETTINGS_ITEMS := [
 	{"key": "music_volume", "label": "MUSIC", "kind": "float", "step": 0.1},
 	{"key": "sfx_volume", "label": "SFX", "kind": "float", "step": 0.1},
@@ -42,6 +44,13 @@ const SETTINGS_ITEMS := [
 	{"key": "color_friendly", "label": "COLOR", "kind": "bool"},
 	{"key": "fullscreen", "label": "FULLSCREEN", "kind": "bool"},
 ]
+
+func _exit_tree() -> void:
+	AudioManager.stop_music(false)
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE or what == NOTIFICATION_WM_CLOSE_REQUEST:
+		AudioManager.stop_music(false)
 
 func _ready() -> void:
 	# Load fonts
@@ -98,21 +107,34 @@ func _process(delta: float) -> void:
 		if _show_scores:
 			_show_scores = false
 		else:
-			_start_game()
+			_activate_menu_selection()
+	if Input.is_action_just_pressed("move_left"):
+		_menu_selection = (_menu_selection - 1 + MENU_ITEMS.size()) % MENU_ITEMS.size()
+		AudioManager.play_sfx("ui_navigate")
+	if Input.is_action_just_pressed("move_right"):
+		_menu_selection = (_menu_selection + 1) % MENU_ITEMS.size()
+		AudioManager.play_sfx("ui_navigate")
 	if Input.is_action_just_pressed("pause"):
 		if _show_scores:
 			_show_scores = false
-		else:
+		elif _menu_selection == 3:
 			get_tree().quit()
+		else:
+			_menu_selection = 3
 	if Input.is_key_pressed(KEY_H):
 		_show_scores = true
 	if Input.is_key_pressed(KEY_S):
 		_show_settings = true
 		_settings_selection = 0
-	for key_i in 5:
-		if Input.is_key_pressed(KEY_1 + key_i):
-			_start_at_sector(key_i + 1)
-			return
+
+func _activate_menu_selection() -> void:
+	match _menu_selection:
+		0: _start_game()
+		1: _show_scores = true
+		2:
+			_show_settings = true
+			_settings_selection = 0
+		3: get_tree().quit()
 
 var _show_scores: bool = false
 
@@ -191,7 +213,7 @@ func _draw() -> void:
 
 	# ═══ LAUNCH BUTTON — centered via measurement ═══
 	var pulse := 0.5 + 0.5 * sin(_blink * 2.8)
-	var launch_text := "SPACE  LAUNCH"
+	var launch_text: String = "A / SPACE  " + String(MENU_ITEMS[_menu_selection])
 	var launch_size := 11
 	var launch_w := _font_title.get_string_size(launch_text, HORIZONTAL_ALIGNMENT_LEFT, -1, launch_size).x
 	var btn_pad := 14.0
@@ -219,24 +241,23 @@ func _draw() -> void:
 	var lx := 32.0
 	draw_string(_font_body, Vector2(lx, sys_y + 10), "FLIGHT",
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 5, C_GREEN_DM)
-	_draw_key_pair(lx, sys_y + 20, "WASD", "MOVE")
-	_draw_key_pair(lx, sys_y + 29, "SHIFT", "BOOST")
-	_draw_key_pair(lx, sys_y + 38, "E", "SCAN")
+	_draw_key_pair(lx, sys_y + 20, "WASD/L-STICK", "MOVE")
+	_draw_key_pair(lx, sys_y + 29, "SHIFT/LB", "BOOST")
+	_draw_key_pair(lx, sys_y + 38, "E/LT", "SCAN")
 	var rx2 := cx + 20.0
 	draw_string(_font_body, Vector2(rx2, sys_y + 10), "WEAPONS",
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 5, C_GREEN_DM)
-	_draw_key_pair(rx2, sys_y + 20, "SPACE", "LASER")
-	_draw_key_pair(rx2, sys_y + 29, "X", "MISSILE")
-	_draw_key_pair(rx2, sys_y + 38, "Z", "EMP")
+	_draw_key_pair(rx2, sys_y + 20, "SPACE/RT", "LASER")
+	_draw_key_pair(rx2, sys_y + 29, "X/RB", "MISSILE")
+	_draw_key_pair(rx2, sys_y + 38, "Z/Y", "EMP")
 
 	# ═══ Footer — three items evenly spaced ═══
 	var fy := H - 18.0
 	draw_rect(Rect2(24, fy, W - 48, 14), Color(C_HULL.r, C_HULL.g, C_HULL.b, 0.85))
 	draw_line(Vector2(24, fy), Vector2(W - 24, fy), C_SEAM, 1.0)
-	_draw_centered_text(_font_body, "H SCORES", W * 0.20, fy + 10, 5, C_DIM)
-	_draw_centered_text(_font_body, "S SETTINGS", W * 0.38, fy + 10, 5, C_DIM)
-	_draw_centered_text(_font_body, "1-5 SECTOR", W * 0.58, fy + 10, 5, C_DIM)
-	_draw_centered_text(_font_body, "ESC QUIT", W * 0.80, fy + 10, 5, C_DIM)
+	_draw_centered_text(_font_body, "←/→ SELECT", W * 0.22, fy + 10, 5, C_DIM)
+	_draw_centered_text(_font_body, "A / SPACE CONFIRM", W * 0.50, fy + 10, 5, C_DIM)
+	_draw_centered_text(_font_body, "ESC / START BACK", W * 0.80, fy + 10, 5, C_DIM)
 
 	# Status indicators
 	_draw_indicator(Vector2(30, 22), "SYS", true)
@@ -422,19 +443,4 @@ func _apply_runtime_settings() -> void:
 
 func _start_game() -> void:
 	GameManager.start_new_game()
-	get_tree().change_scene_to_file("res://scenes/game_world.tscn")
-
-func _start_at_sector(sector: int) -> void:
-	GameManager.start_new_game()
-	GameManager.current_sector = sector
-	if sector >= 3:
-		GameManager.player_max_hull = 140
-		GameManager.player_hull = 140
-		GameManager.player_laser_damage = 16
-		GameManager.player_max_missiles = 18
-		GameManager.player_missiles = 12
-		GameManager.data_crystals = 15
-		GameManager.survey_beacons = sector - 3
-	elif sector == 2:
-		GameManager.data_crystals = 5
 	get_tree().change_scene_to_file("res://scenes/game_world.tscn")

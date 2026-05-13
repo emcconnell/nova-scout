@@ -59,8 +59,33 @@ func _on_body_entered(body: Node2D) -> void:
 		_dead = true
 		_apply_effect(body)
 		collected.emit(pickup_type)
+		get_tree().call_group("game_world", "spawn_score_popup", global_position, get_feedback_text(), true)
 		AudioManager.play_sfx("pickup_collect")
 		call_deferred("queue_free")
+
+func get_score_value_for_type(type: String) -> int:
+	match type:
+		"fuel_cell": return 10
+		"repair_kit": return 15
+		"missile_pack": return 20
+		"emp_cartridge": return 20
+		"energy_cell": return 10
+		"crystal": return 25
+		"shield_booster": return 20
+		"survey_beacon": return 3000
+		_: return 0
+
+func get_feedback_text() -> String:
+	match pickup_type:
+		"fuel_cell": return "+25 FUEL"
+		"repair_kit": return "+20 HULL"
+		"missile_pack": return "+3 MSL"
+		"emp_cartridge": return "+1 EMP"
+		"energy_cell": return "+40 ENERGY"
+		"crystal": return "+1 DATA"
+		"shield_booster": return "+30 SHIELD"
+		"survey_beacon": return "+3000 BEACON"
+		_: return "+%d" % get_score_value_for_type(pickup_type)
 
 func _apply_effect(player: Node2D) -> void:
 	match pickup_type:
@@ -87,7 +112,6 @@ func _apply_effect(player: Node2D) -> void:
 			GameManager.add_score(20)
 		"survey_beacon":
 			GameManager.collect_beacon()
-			GameManager.add_score(3000)
 
 func _find_player() -> Node2D:
 	return get_tree().get_first_node_in_group("player") as Node2D
@@ -105,4 +129,26 @@ func _draw() -> void:
 	_draw_pickup(alpha)
 
 func _draw_pickup(_alpha: float) -> void:
-	draw_circle(Vector2.ZERO, 4.0, Color(0.0, 1.0, 1.0, _alpha))
+	draw_circle(Vector2.ZERO, 4.0, _pickup_color(_alpha))
+
+func _pickup_color(alpha: float = 1.0) -> Color:
+	var color_friendly := bool(SaveManager.get_setting("color_friendly"))
+	if color_friendly:
+		match pickup_type:
+			"fuel_cell": return Color(1.0, 0.75, 0.10, alpha)
+			"repair_kit": return Color(0.10, 0.78, 1.0, alpha)
+			"missile_pack": return Color(0.95, 0.95, 0.95, alpha)
+			"emp_cartridge": return Color(0.92, 0.75, 1.0, alpha)
+			"energy_cell": return Color(0.10, 0.78, 1.0, alpha)
+			"shield_booster": return Color(0.92, 0.75, 1.0, alpha)
+			"survey_beacon": return Color(1.0, 0.55, 0.10, alpha)
+			_: return Color(0.95, 0.95, 0.95, alpha)
+	match pickup_type:
+		"fuel_cell": return Color(1.0, 0.7, 0.0, alpha)
+		"repair_kit": return Color(0.1, 1.0, 0.25, alpha)
+		"missile_pack": return Color(0.85, 0.85, 0.8, alpha)
+		"emp_cartridge": return Color(0.2, 0.6, 1.0, alpha)
+		"energy_cell": return Color(0.3, 1.0, 0.2, alpha)
+		"shield_booster": return Color(0.0, 0.7, 1.0, alpha)
+		"survey_beacon": return Color(1.0, 0.95, 0.2, alpha)
+		_: return Color(0.0, 1.0, 1.0, alpha)

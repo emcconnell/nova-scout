@@ -16,11 +16,11 @@ const COL_BORDER  := Color(0.08, 0.22, 0.12)
 const COL_RIVET   := Color(0.08, 0.10, 0.14)
 
 const UPGRADES := [
-	{"id": "hull",         "label": "HULL REINFORCEMENT", "cost": 5,  "desc": "Max Hull +20"},
-	{"id": "fuel",         "label": "FUEL TANK EXPANSION","cost": 5,  "desc": "Max Fuel +25"},
-	{"id": "shield_regen", "label": "SHIELD EMITTER",     "cost": 8,  "desc": "Shield Regen +3/s"},
-	{"id": "missiles",     "label": "MISSILE BAY",        "cost": 8,  "desc": "Max Missiles +3"},
-	{"id": "laser",        "label": "LASER FOCUS",        "cost": 10, "desc": "Laser Damage +4"},
+	{"id": "hull",         "branch": "SURVIVOR", "label": "HULL REINFORCEMENT", "cost": 5,  "desc": "Max Hull +20"},
+	{"id": "fuel",         "branch": "EXPLORER", "label": "FUEL TANK EXPANSION","cost": 5,  "desc": "Max Fuel +25"},
+	{"id": "shield_regen", "branch": "SURVIVOR", "label": "SHIELD EMITTER",     "cost": 8,  "desc": "Shield Regen +3/s"},
+	{"id": "missiles",     "branch": "FIGHTER",  "label": "MISSILE BAY",        "cost": 8,  "desc": "Max Missiles +3"},
+	{"id": "laser",        "branch": "FIGHTER",  "label": "LASER FOCUS",        "cost": 10, "desc": "Laser Damage +4"},
 ]
 
 var _selection: int = 0
@@ -142,7 +142,9 @@ func _draw() -> void:
 		# Selector arrow
 		var label_col := COL_SEL if is_sel else (COL_LABEL if can_afford else COL_CANT)
 		var prefix := "> " if is_sel else "  "
-		draw_string(font, Vector2(18, item_y + 6), prefix + upg["label"],
+		draw_string(font, Vector2(18, item_y + 6), prefix + "[%s]" % String(upg.get("branch", "CORE")),
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 4, COL_COST if is_sel else COL_DIM)
+		draw_string(font, Vector2(74, item_y + 6), upg["label"],
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 6, label_col)
 
 		# Cost
@@ -154,10 +156,21 @@ func _draw() -> void:
 		if is_sel:
 			draw_string(font, Vector2(32, item_y + 15), upg["desc"],
 				HORIZONTAL_ALIGNMENT_LEFT, -1, 4, Color(0.50, 0.80, 0.50))
+			draw_string(font, Vector2(w - 132, item_y + 15), _upgrade_comparison_text(String(upg["id"])),
+				HORIZONTAL_ALIGNMENT_LEFT, -1, 4, COL_COST if can_afford else COL_DIM)
 
 	# === Footer ===
 	draw_line(Vector2(14, h - 28), Vector2(w - 14, h - 28), COL_BORDER, 1.0)
 	var hint_a := 0.5 + 0.3 * sin(_anim * 3.0)
-	draw_string(font, Vector2(cx - 56, h - 18),
-		"[SPACE] INSTALL    [ESC] SKIP",
+	draw_string(font, Vector2(cx - 84, h - 18),
+		"W/S OR STICK SELECT    A / SPACE INSTALL    ESC / START SKIP",
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color(COL_DIM.r, COL_DIM.g, COL_DIM.b, hint_a))
+
+func _upgrade_comparison_text(upgrade_id: String) -> String:
+	match upgrade_id:
+		"hull": return "CURRENT → NEXT  HULL %d → %d" % [GameManager.player_max_hull, GameManager.player_max_hull + 20]
+		"fuel": return "CURRENT → NEXT  FUEL %d → %d" % [GameManager.player_max_fuel, GameManager.player_max_fuel + 25]
+		"shield_regen": return "CURRENT → NEXT  REGEN %.1f → %.1f" % [GameManager.player_shield_regen, GameManager.player_shield_regen + 3.0]
+		"missiles": return "CURRENT → NEXT  MSL %d → %d" % [GameManager.player_max_missiles, GameManager.player_max_missiles + 3]
+		"laser": return "CURRENT → NEXT  DMG %d → %d" % [GameManager.player_laser_damage, GameManager.player_laser_damage + 4]
+		_: return "CURRENT → NEXT"

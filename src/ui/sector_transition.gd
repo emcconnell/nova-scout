@@ -190,9 +190,25 @@ func _draw_stats(cx: float, cy: float, _font_unused: Font, a: float) -> void:
 		"CRYSTALS  %d" % GameManager.data_crystals,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 6, cyan_col)
 
+	var bonus_lines := _sector_bonus_lines()
+	for i in bonus_lines.size():
+		draw_string(_font_body, Vector2(cx + 12, cy - 6 + i * 12), bonus_lines[i],
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 5, label_col if i == 0 else cyan_col)
+
 	if sin(_anim * 3.0) > 0.0:
-		draw_string(_font_body, Vector2(cx - 30, cy + 40), "[SPACE] CONTINUE",
+		draw_string(_font_body, Vector2(cx - 30, cy + 40), "A / SPACE CONTINUE",
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 5, dim_col)
+
+func _sector_bonus_lines() -> Array[String]:
+	var fuel_bonus := int(maxf(0.0, GameManager.player_fuel) * 2.0)
+	var beacon_bonus := GameManager.survey_beacons * 750
+	var streak_bonus := GameManager.kill_streak * 25
+	return [
+		"BONUS BREAKDOWN",
+		"FUEL RESERVE  +%d" % fuel_bonus,
+		"BEACON DATA   +%d" % beacon_bonus,
+		"STREAK CACHE  +%d" % streak_bonus,
+	]
 
 func _draw_log(cx: float, cy: float, _font_unused: Font, a: float) -> void:
 	var dim_col := Color(COL_DIM.r, COL_DIM.g, COL_DIM.b, a)
@@ -218,5 +234,5 @@ func _draw_log(cx: float, cy: float, _font_unused: Font, a: float) -> void:
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 5, dim_col)
 
 	if sin(_anim * 3.0) > 0.0:
-		draw_string(_font_body, Vector2(cx - 30, cy + 38), "[SPACE] CONTINUE",
+		draw_string(_font_body, Vector2(cx - 30, cy + 38), "A / SPACE CONTINUE",
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 5, dim_col)

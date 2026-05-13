@@ -153,6 +153,16 @@ func _setup_mission_prompts() -> void:
 		if hud_display and hud_display.has_method("clear_mission_prompt"):
 			hud_display.clear_mission_prompt())
 
+func request_mission_prompt(prompt_id: String) -> void:
+	_request_mission_prompt(prompt_id)
+
+func show_scan_reveal(pos: Vector2, label: String, reward: String = "") -> void:
+	var text := label
+	if not reward.is_empty():
+		text += " +" + reward.to_upper()
+	spawn_score_popup(pos, text)
+	_request_mission_prompt("first_discovery")
+
 ## Request a one-time mission-control prompt if the prompt system is available.
 func _request_mission_prompt(prompt_id: String) -> void:
 	if _mission_prompt:
@@ -750,6 +760,7 @@ func spawn_pickup(pos: Vector2, type: String) -> void:
 			"crystal":      GameManager.add_crystal(1)
 			"energy_cell":  player.weapons.add_energy(40.0)
 		GameManager.add_score(15)
+		spawn_score_popup(pos, _pickup_feedback_text(type), true)
 		return
 	# Spawn a physical pickup entity — deferred add_child avoids
 	# "can't change monitoring state" errors from physics callbacks.
@@ -789,11 +800,23 @@ func _maybe_drop_loot(pos: Vector2, table_key: String) -> void:
 	var type := DropTable.roll(table_key)
 	spawn_pickup(pos, type)
 
-func spawn_score_popup(pos: Vector2, text: String) -> void:
+func _pickup_feedback_text(type: String) -> String:
+	match type:
+		"fuel_cell": return "+25 FUEL"
+		"repair_kit": return "+20 HULL"
+		"missile_pack": return "+3 MSL"
+		"emp_cartridge": return "+1 EMP"
+		"energy_cell": return "+40 ENERGY"
+		"crystal": return "+1 DATA"
+		"shield_booster": return "+30 SHIELD"
+		"survey_beacon": return "+3000 BEACON"
+		_: return "+ITEM"
+
+func spawn_score_popup(pos: Vector2, text: String, is_item: bool = false) -> void:
 	var popup := ScorePopupScene.instantiate() as ScorePopup
 	add_child(popup)
 	popup.global_position = pos
-	popup.setup(text)
+	popup.setup(text, is_item)
 
 # ─── Screen Shake ─────────────────────────────────────────────────────────────
 

@@ -17,6 +17,7 @@ var _current_track: String = ""
 var _music_volume: float = 0.8
 var _sfx_volume: float = 1.0
 var _mothership_phase: int = 0
+var _audio_enabled: bool = true
 
 # Tween for crossfade
 var _fade_tween: Tween = null
@@ -24,6 +25,9 @@ var _fade_tween: Tween = null
 # ─── Lifecycle ───────────────────────────────────────────────────────────────
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_audio_enabled = DisplayServer.get_name() != "headless"
+	if not _audio_enabled:
+		return
 
 	# Music players
 	_music_player_a = AudioStreamPlayer.new()
@@ -46,8 +50,34 @@ func _ready() -> void:
 		add_child(player)
 		_sfx_pool.append(player)
 
+func _exit_tree() -> void:
+	_cleanup_audio_streams()
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE or what == NOTIFICATION_WM_CLOSE_REQUEST:
+		_cleanup_audio_streams()
+
+func _cleanup_audio_streams() -> void:
+	if _fade_tween:
+		_fade_tween.kill()
+		_fade_tween = null
+	_stop_and_clear_player(_music_player_a)
+	_stop_and_clear_player(_music_player_b)
+	for player in _sfx_pool:
+		_stop_and_clear_player(player)
+	_current_track = ""
+
+func _stop_and_clear_player(player: AudioStreamPlayer) -> void:
+	if not is_instance_valid(player):
+		return
+	player.stop()
+	player.stream = null
+	player.volume_db = -80.0
+
 # ─── Music ───────────────────────────────────────────────────────────────────
 func play_music(track_name: String, fade: bool = true) -> void:
+	if not _audio_enabled:
+		return
 	if _current_track == track_name:
 		return
 	_current_track = track_name
@@ -76,21 +106,34 @@ func play_music(track_name: String, fade: bool = true) -> void:
 func _crossfade_to(target: AudioStreamPlayer) -> void:
 	if _fade_tween:
 		_fade_tween.kill()
-	_fade_tween = create_tween()
 	var old := _active_music
+	_fade_tween = create_tween()
 	_fade_tween.tween_property(old, "volume_db", -80.0, MUSIC_FADE_TIME)
 	_fade_tween.parallel().tween_property(target, "volume_db", linear_to_db(_music_volume), MUSIC_FADE_TIME)
+	_fade_tween.finished.connect(func() -> void:
+		if is_instance_valid(old) and old != _active_music:
+			old.stop()
+			old.stream = null
+		_fade_tween = null
+	)
 	_active_music = target
 
 func stop_music(fade: bool = true) -> void:
+	if not _audio_enabled:
+		return
 	_current_track = ""
 	if fade:
 		if _fade_tween:
 			_fade_tween.kill()
+		var player := _active_music
 		_fade_tween = create_tween()
-		_fade_tween.tween_property(_active_music, "volume_db", -80.0, MUSIC_FADE_TIME)
+		_fade_tween.tween_property(player, "volume_db", -80.0, MUSIC_FADE_TIME)
+		_fade_tween.finished.connect(func() -> void:
+			_stop_and_clear_player(player)
+			_fade_tween = null
+		)
 	else:
-		_active_music.stop()
+		_stop_and_clear_player(_active_music)
 
 func set_mothership_phase(phase: int) -> void:
 	if _mothership_phase == phase:
@@ -118,6 +161,8 @@ func play_music_for_state(state: GameManager.GameState) -> void:
 
 # ─── SFX ─────────────────────────────────────────────────────────────────────
 func play_sfx(sound_name: String, volume_scale: float = 1.0) -> void:
+	if not _audio_enabled:
+		return
 	var path := "res://assets/audio/sfx/%s.wav" % sound_name
 	if not ResourceLoader.exists(path):
 		# Try OGG
@@ -146,7 +191,8 @@ func _get_free_sfx_player() -> AudioStreamPlayer:
 # ─── Volume ───────────────────────────────────────────────────────────────────
 func set_music_volume(vol: float) -> void:
 	_music_volume = clampf(vol, 0.0, 1.0)
-	_active_music.volume_db = linear_to_db(_music_volume)
+	if _audio_enabled and is_instance_valid(_active_music):
+		_active_music.volume_db = linear_to_db(_music_volume)
 
 func set_sfx_volume(vol: float) -> void:
 	_sfx_volume = clampf(vol, 0.0, 1.0)

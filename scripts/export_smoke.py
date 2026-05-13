@@ -31,12 +31,26 @@ def _print_output(proc: subprocess.CompletedProcess[str]) -> None:
     print(proc.stderr or "", end="", file=sys.stderr)
 
 
+def _combined_output(proc: subprocess.CompletedProcess[str]) -> str:
+    return (proc.stdout or "") + (proc.stderr or "")
+
+
+def _has_runtime_error(output: str) -> bool:
+    fatal_markers = ["SCRIPT ERROR:", "Parse Error:", "ERROR: Failed to load script"]
+    benign_markers = []
+    return any(marker in output for marker in fatal_markers) and not any(marker in output for marker in benign_markers)
+
+
 def _run_export(godot: str, preset: str, output_path: Path) -> int:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     proc = _run([godot, "--headless", "--export-release", preset, str(output_path)])
+    output = _combined_output(proc)
+    if _has_runtime_error(output):
+        _print_output(proc)
+        print(f"export smoke failed: Godot reported script/runtime errors while exporting {preset}")
+        return 1
     if proc.returncode != 0:
         _print_output(proc)
-        output = (proc.stdout or "") + (proc.stderr or "")
         if "No export template found" in output:
             print("\nexport smoke blocked: install Godot 4.6.2 export templates, then rerun scripts/export_smoke.py")
         return proc.returncode
@@ -58,6 +72,10 @@ def _launch_executable(executable: Path) -> int:
     executable.chmod(executable.stat().st_mode | 0o111)
     launch = _run([str(executable), "--headless", "--quit"], timeout=20)
     _print_output(launch)
+    output = _combined_output(launch)
+    if _has_runtime_error(output):
+        print(f"export smoke failed: launched executable reported script/runtime errors: {executable}")
+        return 1
     if launch.returncode != 0:
         print(f"export smoke failed: launched executable exited with {launch.returncode}")
         return launch.returncode

@@ -12,7 +12,7 @@
 - Language: GDScript.
 - Core autoloads: `GameManager`, `AudioManager`, `SaveManager`.
 - Current repo path: `/Users/sqyer/star-finder/nova-scout`.
-- Tests present: GUT tests under `tests/unit`.
+- Tests present: GUT tests under `tests/unit`; latest verified run passes 74/74 tests and 207 asserts.
 - Audio assets are present under `assets/audio/music/` and `assets/audio/sfx/`; missing paths still fail gracefully.
 - Sector 1 now has an authored opening pass documented in `design/quick-specs/first-five-minutes.md`; the first star cluster appears at distance 4400 (~110 seconds at base scroll speed).
 - Mission-control tutorial prompts are wired for movement, fire, pickups, scan, abort, alien combat, and upgrades. They are one-time, non-blocking, and persist dismissal state through `SaveManager.prompt_history`.
@@ -71,9 +71,9 @@ Implementation plan: `docs/plans/sector-5-mothership-ending-flow.md`
 - Malformed `settings`, `high_scores`, and tutorial prompt history payload types are ignored/sanitized.
 - Settings now include safe defaults for audio, fullscreen, screen shake, CRT, flash intensity, text scale, hold-to-boost, and color-friendly mode.
 - Main menu now exposes a compact settings overlay for audio, fullscreen, screen shake, CRT, flash intensity, text scale, hold/toggle boost, and color-friendly mode.
-- Runtime hooks now apply music/SFX volume, fullscreen/windowed, screen shake multiplier, CRT toggle, flash intensity on CRT aberration/scanlines, and hold/toggle boost.
-- Color-friendly palette and broad text-scale application still need full gameplay/menu runtime hooks.
-- Covered by `tests/unit/test_save_manager.gd`.
+- Runtime hooks now apply music/SFX volume, fullscreen/windowed, screen shake multiplier, CRT toggle, flash intensity on CRT aberration/scanlines, hold/toggle boost, HUD/menu text scale, and color-friendly pickup/HUD palette hooks.
+- Pause menu now exposes runtime settings for text scale, color-friendly mode, CRT overlay, flash intensity, and boost mode.
+- Covered by `tests/unit/test_save_manager.gd` plus release-facing UI tests.
 
 ---
 
@@ -83,6 +83,17 @@ Implementation plan: `docs/plans/sector-5-mothership-ending-flow.md`
 - `scripts/export_smoke.py` exports Linux and validates native launch on supported hosts.
 - Godot 4.6.2 export templates are installed on this host at `~/Library/Application Support/Godot/export_templates/4.6.2.stable/`.
 - Latest macOS-host run passed Linux release export creation, macOS zip export creation, and native macOS executable launch smoke from `builds/macos/smoke/Nova Scout.app/Contents/MacOS/Nova Scout`.
+- Export smoke now scans Godot export/launch output for script/runtime errors so a parse error cannot be hidden by a zero export exit code.
+
+---
+
+## Recent Polish Pass
+
+- Star scans now hide final result color before completion, expose risk-flavored signal labels, lose stability under scan pressure, and show a reveal popup/mission-control beat on completion.
+- Main menu and pause/upgrade flows have controller-friendly hints; release-visible sector-skip shortcuts were removed from the main menu.
+- Pickups now show readable reward popups, use color-friendly palette hooks, and avoid double-counting survey beacon score.
+- Upgrade screen now shows branch tags, current-to-next stat comparisons, and controller-friendly install/skip hints.
+- Sector transition now displays a bonus breakdown panel for fuel reserve, beacon data, and streak cache.
 
 ---
 

@@ -37,18 +37,18 @@
 | P1-001 | Build authored first-five-minutes opening arc | Onboarding | P0-001 | IN PROGRESS | Quick spec exists; Sector 1 reaches first star cluster at distance 4400 (~110s); one-time mission-control prompts are wired; manual timing QA remains |
 | P1-002 | Add mission-control tutorial prompts | UX | P1-001 | DONE | Prompts are short, contextual, one-time, non-blocking, and persist dismissal state |
 | P1-003 | Add scan hazard pulses | Star Scan | P0-002 | DONE | Scan pressure pulses fire once at configured thresholds; GameWorld spawns asteroid/mine/enemy pressure from pulse data |
-| P1-004 | Add scan stability/damage consequences | Star Scan | P1-003 | TODO | Damage slows, destabilizes, or risks aborting scan without feeling random |
-| P1-005 | Add scan result reveal presentation | Presentation | P1-003 | TODO | Results have spectrum/planet/mission-control reveal beats |
-| P1-006 | Add star risk/reward labels | UX | P1-003 | TODO | Optional stars communicate danger/reward without exact spoilers |
-| P1-007 | Add upgrade stat comparison UI | Upgrades | none | TODO | UI shows current value -> upgraded value and cost |
+| P1-004 | Add scan stability/damage consequences | Star Scan | P1-003 | DONE | Scan pressure pulses reduce progress/stability and can abort a scan |
+| P1-005 | Add scan result reveal presentation | Presentation | P1-003 | DONE | Scan completion shows signal/reward reveal popup and first-discovery mission-control beat |
+| P1-006 | Add star risk/reward labels | UX | P1-003 | DONE | Unscanned stars show signal/risk labels without final-result color spoilers |
+| P1-007 | Add upgrade stat comparison UI | Upgrades | none | DONE | UI shows branch identity, current value -> upgraded value, and cost |
 | P1-008 | Add upgrade branches | Upgrades | P1-007 | TODO | Explorer/Fighter/Survivor paths include at least two feel-changing upgrades each |
 | P1-009 | Add rare anomaly tech reward | Progression | P1-008 | TODO | At least one rare upgrade can appear from anomaly content per run |
-| P1-010 | Add end-of-sector bonus breakdown | Scoring | none | TODO | Sector transition scores no-damage/fuel/all-stars/fast-scan/near-miss bonuses |
+| P1-010 | Add end-of-sector bonus breakdown | Scoring | none | IN PROGRESS | Sector transition now presents fuel/beacon/streak bonus breakdown; expanded no-damage/all-stars/fast-scan scoring remains future work |
 | P1-011 | Add near-miss scoring | Scoring | P1-010 | TODO | Bullets/asteroids can award readable near-miss bonuses with anti-spam cooldown |
-| P1-012 | Improve physical pickup collection | Pickups | none | TODO | Crystals/fuel visibly spawn when practical; magnet behavior supports collection dopamine |
-| P1-013 | Add settings menu expansion | Settings | P0-010 | IN PROGRESS | Main menu settings overlay exists for audio, fullscreen, screen shake, CRT, flash, text scale, boost mode, and color-friendly mode; pause-menu access/manual UI QA still needed |
-| P1-014 | Add accessibility toggles | Accessibility | P1-013 | IN PROGRESS | Screen shake, CRT, flash intensity, and hold/toggle boost have runtime hooks; color-friendly palette and broad text scale still need completion |
-| P1-015 | Gamepad QA and input help | Platform | P1-013 | TODO | Controller can complete a full run; prompts adapt or help screen lists controls |
+| P1-012 | Improve physical pickup collection | Pickups | none | DONE | Pickups show reward popups, color-friendly colors, and maintain collectible physical behavior |
+| P1-013 | Add settings menu expansion | Settings | P0-010 | DONE | Main menu and pause menu expose release-facing settings; manual full-run QA still recommended |
+| P1-014 | Add accessibility toggles | Accessibility | P1-013 | DONE | Screen shake, CRT, flash intensity, boost mode, HUD/menu text scale, and pickup/HUD color-friendly hooks are wired |
+| P1-015 | Gamepad QA and input help | Platform | P1-013 | IN PROGRESS | Main, pause, upgrade, and sector transition hints are controller-friendly; exported full-run controller QA remains manual |
 | P1-016 | Audio cue completeness pass | Audio | none | TODO | Beacon, scan, interrupt, lock, overheat, shield, low fuel, warp all have cues |
 | P1-017 | Steam Deck/performance stress pass | Performance | P0-005 | TODO | Worst-case scene sustains target FPS without allocation spikes where measurable |
 

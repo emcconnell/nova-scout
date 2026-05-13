@@ -117,7 +117,25 @@ func clear_mission_prompt() -> void:
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
+func _text_scale() -> float:
+	return clampf(float(SaveManager.get_setting("text_scale")), 0.75, 1.5)
+
+func _fs(base_size: int) -> int:
+	return maxi(1, int(round(float(base_size) * _text_scale())))
+
+func _friendly_color(col: Color) -> Color:
+	if not bool(SaveManager.get_setting("color_friendly")):
+		return col
+	if col == COL_HULL or col == COL_GREEN or col == COL_SCORE or col == COL_ENERGY:
+		return Color(0.10, 0.78, 1.00, col.a)
+	if col == COL_FUEL or col == COL_CRIT:
+		return Color(1.00, 0.72, 0.10, col.a)
+	if col == COL_SHIELD or col == COL_EMP:
+		return Color(0.92, 0.75, 1.00, col.a)
+	return col
+
 func _flicker(col: Color) -> Color:
+	col = _friendly_color(col)
 	var a: float = 0.45 + 0.55 * abs(sin(_wobble * 2.5))
 	return Color(col.r, col.g, col.b, a)
 
@@ -183,29 +201,29 @@ func _draw_status_panel(font: Font) -> void:
 	# Header strip
 	draw_rect(Rect2(px + 1, py + 1, pw - 2, 9), COL_HEADER)
 	draw_string(font, Vector2(px + 5, py + 7.5), "SHIP STATUS",
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 4, COL_HDR_TXT)
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(4), COL_HDR_TXT)
 
 	# Bars
 	var hull_pct: float = float(_hull) / maxf(_max_hull, 1)
 	var fuel_pct: float = _fuel / maxf(_max_fuel, 1)
 	_draw_bar(font, px + 3, py + 13,
 		"HULL", float(_hull), float(_max_hull),
-		COL_HULL if hull_pct > 0.25 else _flicker(COL_CRIT))
+		_friendly_color(COL_HULL) if hull_pct > 0.25 else _flicker(COL_CRIT))
 	_draw_bar(font, px + 3, py + 22,
-		"SHLD", float(_shield), 100.0, COL_SHIELD)
+		"SHLD", float(_shield), 100.0, _friendly_color(COL_SHIELD))
 	_draw_bar(font, px + 3, py + 31,
 		"FUEL", _fuel, _max_fuel,
-		COL_FUEL if fuel_pct > 0.15 else _flicker(COL_CRIT))
+		_friendly_color(COL_FUEL) if fuel_pct > 0.15 else _flicker(COL_CRIT))
 	# Energy bar — flashes red when overheated
 	_overheated = _player.weapons.is_overheated() if _player and _player.weapons else false
-	var energy_col := _flicker(COL_CRIT) if _overheated else COL_ENERGY
+	var energy_col := _flicker(COL_CRIT) if _overheated else _friendly_color(COL_ENERGY)
 	_draw_bar(font, px + 3, py + 40,
 		"ENRG", _energy, _max_energy, energy_col)
 
 func _draw_bar(font: Font, x: float, y: float,
 			   lbl: String, val: float, max_val: float, col: Color) -> void:
 	draw_string(font, Vector2(x, y + BAR_H), lbl,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 4, COL_GREEN)
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(4), COL_GREEN)
 
 	var bx := x + 22.0
 	# Track background
@@ -241,7 +259,7 @@ func _draw_bar(font: Font, x: float, y: float,
 		Color(col.r, col.g, col.b, 0.18), false)
 	# Percentage label
 	draw_string(font, Vector2(bx + BAR_W + 3, y + BAR_H), "%d%%" % int(pct * 100),
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 4, Color(col.r, col.g, col.b, 0.58))
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(4), Color(col.r, col.g, col.b, 0.58))
 
 # ─── Weapons panel — bottom-left ──────────────────────────────────────────────
 
@@ -253,7 +271,7 @@ func _draw_weapons_panel(font: Font) -> void:
 
 	# Missiles label
 	draw_string(font, Vector2(px + 3, py + 10), "MSL",
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 4, COL_GREEN)
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(4), COL_GREEN)
 	# Missile icons — small upward triangles with glow
 	for i in 8:
 		var ix: float = px + 22.0 + i * 5.5
@@ -277,7 +295,7 @@ func _draw_weapons_panel(font: Font) -> void:
 	# EMP label
 	var ex: float = px + 74.0
 	draw_string(font, Vector2(ex, py + 10), "EMP",
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 4, COL_GREEN)
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(4), COL_GREEN)
 	# EMP icons — small squares with glow
 	for i in 4:
 		var rx: float = ex + 17.0 + i * 7.0
@@ -309,10 +327,10 @@ func _draw_score_display(font: Font) -> void:
 
 	# "SCORE" subheader
 	draw_string(font, Vector2(px + pw * 0.5 - 9, py + 6.5), "SCORE",
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 4, COL_HDR_TXT)
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(4), COL_HDR_TXT)
 	# 7-digit score
 	draw_string(font, Vector2(px + pw * 0.5 - 21, py + 13.5), "%07d" % _score,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 6, COL_SCORE)
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(6), COL_SCORE)
 
 func _on_streak_changed(streak: int, mult: int) -> void:
 	_streak = streak
@@ -347,7 +365,7 @@ func _draw_mission_prompt(font: Font) -> void:
 	draw_string(font, Vector2(px + 6, py + 8), "MISSION CONTROL",
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 5, title_col)
 	draw_string(font, Vector2(px + 6, py + 17), _mission_prompt_text,
-		HORIZONTAL_ALIGNMENT_LEFT, panel_w - 12.0, 5, Color(0.72, 1.00, 0.72, 0.92))
+		HORIZONTAL_ALIGNMENT_LEFT, panel_w - 12.0, _fs(5), Color(0.72, 1.00, 0.72, 0.92))
 
 # ─── Sector display — top-right ───────────────────────────────────────────────
 
@@ -361,11 +379,11 @@ func _draw_sector_display(font: Font) -> void:
 	# "SECTOR N" subheader
 	draw_string(font, Vector2(px + 4, py + 6.5),
 		"SECTOR %d" % GameManager.current_sector,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 4, COL_HDR_TXT)
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(4), COL_HDR_TXT)
 	# Sector name
 	draw_string(font, Vector2(px + 4, py + 13.5),
 		GameManager.get_sector_name(),
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color(COL_GREEN.r, COL_GREEN.g, COL_GREEN.b, 0.88))
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(5), Color(COL_GREEN.r, COL_GREEN.g, COL_GREEN.b, 0.88))
 
 # ─── Context hint — bottom-centre state-aware prompt ─────────────────────────
 
@@ -377,12 +395,12 @@ func _draw_context_hint(font: Font) -> void:
 		GameManager.GameState.STAR_CLUSTER:
 			draw_string(font, Vector2(cx - 54, y),
 				"FLY TO STAR  \u25b6  PRESS [E] TO SCAN",
-				HORIZONTAL_ALIGNMENT_LEFT, -1, 4, Color(0.22, 1.0, 0.08, 0.75))
+				HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(4), Color(0.22, 1.0, 0.08, 0.75))
 		GameManager.GameState.SCANNING:
 			draw_string(font, Vector2(cx - 34, y),
 				"SCANNING \u2014 HOLD ORBIT",
-				HORIZONTAL_ALIGNMENT_LEFT, -1, 4, Color(0.00, 0.80, 1.00, 0.85))
+				HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(4), Color(0.00, 0.80, 1.00, 0.85))
 		GameManager.GameState.ALIEN_COMBAT:
 			draw_string(font, Vector2(cx - 46, y),
 				"CLEAR ALL ENEMIES  \u25b6  HOLD [E] TO ESCAPE",
-				HORIZONTAL_ALIGNMENT_LEFT, -1, 4, Color(1.0, 0.27, 0.0, 0.85))
+				HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(4), Color(1.0, 0.27, 0.0, 0.85))

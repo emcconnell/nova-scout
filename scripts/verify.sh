@@ -8,6 +8,7 @@ python3 scripts/validate_data.py
 
 if command -v godot >/dev/null 2>&1; then
   python3 - <<'PY'
+import re
 import subprocess
 import sys
 
@@ -16,25 +17,32 @@ try:
     proc = subprocess.run(cmd, timeout=60, text=True, capture_output=True)
     out = proc.stdout or ""
     err = proc.stderr or ""
+    returncode = proc.returncode
 except subprocess.TimeoutExpired as exc:
     out = exc.stdout.decode() if isinstance(exc.stdout, bytes) else (exc.stdout or "")
     err = exc.stderr.decode() if isinstance(exc.stderr, bytes) else (exc.stderr or "")
-    # GUT/Godot can hang after printing the summary on this setup. Treat a
-    # complete passing summary as success; otherwise fail loudly.
-    print(out, end="")
-    if err:
-        print(err, end="", file=sys.stderr)
-    if "---- All tests passed! ----" in out:
-        sys.exit(0)
-    sys.exit(124)
+    returncode = 0 if "---- All tests passed! ----" in out else 124
 
 print(out, end="")
 if err:
     print(err, end="", file=sys.stderr)
-if proc.returncode != 0:
-    sys.exit(proc.returncode)
+combined = out + "\n" + err
+if returncode != 0:
+    sys.exit(returncode)
+if "---- All tests passed! ----" not in out:
+    print("verify failed: GUT success summary missing", file=sys.stderr)
+    sys.exit(1)
 if "Failing Tests" in out and "Failing Tests      none" not in out and "Failing Tests         0" not in out:
     sys.exit(1)
+strict_patterns = [
+    r"SCRIPT ERROR:",
+    r"^ERROR:",
+    r"\nERROR:",
+]
+for pattern in strict_patterns:
+    if re.search(pattern, combined):
+        print(f"verify failed: unexpected Godot error matched {pattern!r}", file=sys.stderr)
+        sys.exit(1)
 PY
 else
   echo "godot not found; skipped GUT tests"

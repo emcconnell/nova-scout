@@ -40,7 +40,7 @@ Use this document after the major finish-roadmap milestones are implemented. A b
 - [ ] Scan prompt appears near first star. Automated: prompt hook exists when a star cluster starts.
 - [ ] Scan abort behavior is taught or discoverable. Automated: prompt hook exists when player enters star scan range.
 - [ ] Upgrade screen explains costs and effects. Automated: prompt hook exists before upgrade screen display.
-- [ ] Player sees a memorable discovery/danger beat within first five minutes.
+- [ ] Player sees a memorable discovery/danger beat within first five minutes. Automated: scan completion now shows risk-label reveal popup and first-discovery prompt; manual timing/presentation QA remains.
 - [ ] First star cluster appears by distance 4800 (~120 seconds at base scroll speed); currently enforced by `scripts/validate_data.py`.
 - [ ] No late-game set-piece enemy appears before the first scan.
 - [ ] No tutorial prompt blocks control during danger.
@@ -60,8 +60,8 @@ Use this document after the major finish-roadmap milestones are implemented. A b
 
 - [ ] Movement works with stick/d-pad.
 - [ ] Fire/boost/scan/missile/EMP work.
-- [ ] Menus are navigable without mouse.
-- [ ] Upgrade screen is navigable without mouse.
+- [ ] Menus are navigable without mouse. Automated: release UI test covers controller-friendly main/pause hints and absence of release-visible sector skip UI.
+- [ ] Upgrade screen is navigable without mouse. Automated: upgrade UI test covers controller-friendly install/skip hints and current-to-next stat comparisons.
 - [ ] Pause/death/win screens are navigable without mouse.
 - [ ] Controller can complete a full run.
 
@@ -75,8 +75,8 @@ Use this document after the major finish-roadmap milestones are implemented. A b
 - [ ] Screen shake amount/toggle works. Automated: default persists and `GameWorld.screen_shake()` applies the saved multiplier.
 - [ ] CRT/scanline toggle works. Automated: main menu setting persists and `CRTOverlay` applies visibility/scanline strength at runtime.
 - [ ] Flash intensity reduction works. Automated: main menu setting persists and `CRTOverlay` scales scanline/aberration intensity.
-- [ ] Color-friendly bullets/pickups mode is readable. Save/menu setting exists; runtime palette hook still requires implementation.
-- [ ] Text scale setting is readable in HUD and menus. Save/menu setting exists; broad runtime scaling still requires implementation.
+- [ ] Color-friendly bullets/pickups mode is readable. Runtime pickup/HUD palette hooks exist; full visual QA remains manual.
+- [ ] Text scale setting is readable in HUD and menus. Runtime HUD/pause-menu scaling hooks exist; full visual QA remains manual.
 - [ ] Hold/toggle boost option works if implemented. Automated: main menu setting persists and `Player` switches between hold and toggle boost behavior.
 - [ ] Settings survive restart.
 - [ ] Corrupted settings file falls back to defaults.
@@ -103,7 +103,7 @@ Use this document after the major finish-roadmap milestones are implemented. A b
 - [ ] Sector 5 feels climactic before the boss.
 - [ ] Fuel tension occurs without frequent unavoidable deaths.
 - [ ] Upgrade economy allows meaningful choices, not everything every run.
-- [ ] Physical pickups are collectible without forcing reckless movement every time.
+- [ ] Physical pickups are collectible without forcing reckless movement every time. Automated: pickup reward labels/score scales are covered; manual magnet/readability QA remains.
 - [ ] Optional stars are tempting but not mandatory for a normal clear.
 
 ---
@@ -144,7 +144,7 @@ Run `./scripts/verify.sh` for fast validation. Run `python3 scripts/export_smoke
 - [ ] Star result types are known.
 - [ ] No progression-critical ignored fields remain, e.g. unhandled `mandatory_after`.
 - [ ] Drop table weights are valid.
-- [ ] Balance JSON loads with no missing required keys.
+- [ ] Balance JSON loads with no missing required keys. Current validator covers reward tokens, wave path/result compatibility, scan pressure pulses, and encounter param enums/ranges.
 
 ---
 
@@ -166,7 +166,7 @@ Run `./scripts/verify.sh` for fast validation. Run `python3 scripts/export_smoke
 The build can be called an RC only when:
 
 - [ ] All P0 items pass.
-- [ ] No known crash, softlock, save corruption, or progression blocker remains. Automated: campaign spine smoke reaches true ending through required scans, arena clears, final reveal, and Mothership defeat.
+- [ ] No known crash, softlock, save corruption, or progression blocker remains. Automated: campaign spine smoke reaches true ending through required scans, arena clears, final reveal, and Mothership defeat; latest full verification is 74/74 GUT tests plus export smoke.
 - [ ] Full campaign has been completed at least twice from a clean save.
 - [ ] Full campaign has been completed once with gamepad.
 - [ ] Exported build, not editor run, has been used for final smoke testing.

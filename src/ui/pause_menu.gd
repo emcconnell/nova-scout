@@ -21,9 +21,14 @@ var _font_title: Font = null
 var _font_body: Font = null
 
 const ITEMS := [
-	{"label": "RESUME MISSION",  "desc": "Return to active flight"},
-	{"label": "RESTART SECTOR",  "desc": "Reset current sector from checkpoint"},
-	{"label": "ABORT TO MENU",   "desc": "Return to command center"},
+	{"label": "RESUME MISSION",  "desc": "Return to active flight", "kind": "action"},
+	{"label": "TEXT SCALE", "desc": "Adjust HUD and menu readability", "kind": "float", "key": "text_scale", "step": 0.25, "min": 0.75, "max": 1.5},
+	{"label": "COLOR FRIENDLY", "desc": "Use colorblind-safer combat and pickup colors", "kind": "bool", "key": "color_friendly"},
+	{"label": "CRT OVERLAY", "desc": "Toggle CRT shader treatment", "kind": "bool", "key": "crt_enabled"},
+	{"label": "FLASH INTENSITY", "desc": "Reduce screen flash strength", "kind": "float", "key": "flash_intensity", "step": 0.25, "min": 0.0, "max": 1.0},
+	{"label": "BOOST MODE", "desc": "Switch between hold and toggle boost", "kind": "bool_label", "key": "hold_to_boost", "true_label": "HOLD", "false_label": "TOGGLE"},
+	{"label": "RESTART SECTOR",  "desc": "Reset current sector from checkpoint", "kind": "action"},
+	{"label": "ABORT TO MENU",   "desc": "Return to command center", "kind": "action"},
 ]
 
 var _draw_node: Control = null
@@ -44,6 +49,23 @@ func _ready() -> void:
 	add_child(_draw_node)
 	_draw_node.draw.connect(_on_draw)
 	hide()
+
+func _text_scale() -> float:
+	return clampf(float(SaveManager.get_setting("text_scale")), 0.75, 1.5)
+
+func _fs(base_size: int) -> int:
+	return maxi(1, int(round(float(base_size) * _text_scale())))
+
+func _setting_value_text(item: Dictionary) -> String:
+	var kind := String(item.get("kind", "action"))
+	if kind == "bool" or kind == "bool_label":
+		var enabled := bool(SaveManager.get_setting(String(item.get("key", ""))))
+		if kind == "bool_label":
+			return String(item.get("true_label", "ON")) if enabled else String(item.get("false_label", "OFF"))
+		return "ON" if enabled else "OFF"
+	if kind == "float":
+		return "%.2f" % float(SaveManager.get_setting(String(item.get("key", ""))))
+	return ""
 
 func _on_draw() -> void:
 	if not _visible_flag:
@@ -74,7 +96,7 @@ func _on_draw() -> void:
 
 	# ═══ Header ═══
 	d.draw_string(_font_title, Vector2(cx - 48, 32), "SYSTEMS PAUSE",
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 12, C_AMBER)
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(12), C_AMBER)
 	d.draw_line(Vector2(22, 36), Vector2(W - 22, 36),
 		Color(C_AMBER.r, C_AMBER.g, C_AMBER.b, 0.4), 1.0)
 
@@ -82,7 +104,7 @@ func _on_draw() -> void:
 	var stat_x := 24.0
 	var stat_y := 46.0
 	d.draw_string(_font_body, Vector2(stat_x, stat_y), "SHIP STATUS",
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 6, C_GREEN_DM)
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(6), C_GREEN_DM)
 
 	var hull_pct: float = float(GameManager.player_hull) / maxf(float(GameManager.player_max_hull), 1)
 	_draw_stat_bar(d, stat_x, stat_y + 12, "HULL", hull_pct, C_GREEN if hull_pct > 0.25 else C_RED)
@@ -90,19 +112,19 @@ func _on_draw() -> void:
 	_draw_stat_bar(d, stat_x, stat_y + 24, "FUEL", fuel_pct, C_AMBER if fuel_pct > 0.15 else C_RED)
 
 	d.draw_string(_font_body, Vector2(stat_x, stat_y + 42), "SCORE",
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 5, C_GREEN_DM)
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(5), C_GREEN_DM)
 	d.draw_string(_font_body, Vector2(stat_x + 32, stat_y + 42), "%07d" % GameManager.score,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 6, C_CYAN)
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(6), C_CYAN)
 
 	d.draw_string(_font_body, Vector2(stat_x, stat_y + 54), "SECTOR",
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 5, C_GREEN_DM)
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(5), C_GREEN_DM)
 	d.draw_string(_font_body, Vector2(stat_x + 32, stat_y + 54), GameManager.get_sector_name(),
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 5, C_CYAN)
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(5), C_CYAN)
 
 	d.draw_string(_font_body, Vector2(stat_x, stat_y + 66), "BEACONS",
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 5, C_GREEN_DM)
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(5), C_GREEN_DM)
 	d.draw_string(_font_body, Vector2(stat_x + 38, stat_y + 66), "%d / 3" % GameManager.survey_beacons,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 6, C_CYAN)
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(6), C_CYAN)
 
 	# ═══ Divider ═══
 	d.draw_line(Vector2(cx + 4, 42), Vector2(cx + 4, H - 22), C_SEAM, 1.0)
@@ -111,7 +133,7 @@ func _on_draw() -> void:
 	var menu_x := cx + 14.0
 	var menu_y := 46.0
 	d.draw_string(_font_body, Vector2(menu_x, menu_y), "OPTIONS",
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 6, C_GREEN_DM)
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(6), C_GREEN_DM)
 
 	for mi in ITEMS.size():
 		var item: Dictionary = ITEMS[mi]
@@ -127,33 +149,37 @@ func _on_draw() -> void:
 			# Arrow
 			var arrow_a := 0.6 + 0.4 * sin(_anim * 5.0)
 			d.draw_string(_font_body, Vector2(menu_x, iy + 6), ">",
-				HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(C_SEL.r, C_SEL.g, C_SEL.b, arrow_a))
+				HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(8), Color(C_SEL.r, C_SEL.g, C_SEL.b, arrow_a))
 
 		var lbl_col := C_WHITE if is_sel else C_GREEN
+		var value_text := _setting_value_text(item)
 		d.draw_string(_font_body, Vector2(menu_x + 12, iy + 7), item["label"],
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 7, lbl_col)
+			HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(7), lbl_col)
+		if not value_text.is_empty():
+			d.draw_string(_font_body, Vector2(W - 74, iy + 7), value_text,
+				HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(6), C_AMBER if is_sel else C_DIM)
 
 		if is_sel:
 			d.draw_string(_font_body, Vector2(menu_x + 12, iy + 17), item["desc"],
-				HORIZONTAL_ALIGNMENT_LEFT, -1, 4, C_DIM)
+				HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(4), C_DIM)
 
 	# ═══ Footer ═══
 	d.draw_line(Vector2(22, H - 24), Vector2(W - 22, H - 24), C_SEAM, 1.0)
 	var hint_a := 0.5 + 0.3 * sin(_anim * 3.0)
-	d.draw_string(_font_body, Vector2(cx - 56, H - 12),
-		"W/S SELECT    SPACE CONFIRM",
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color(C_DIM.r, C_DIM.g, C_DIM.b, hint_a))
+	d.draw_string(_font_body, Vector2(cx - 78, H - 12),
+		"W/S OR STICK SELECT    A/SPACE CONFIRM    ←/→ ADJUST",
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(5), Color(C_DIM.r, C_DIM.g, C_DIM.b, hint_a))
 
 	# Paused indicator
 	if sin(_anim * 3.0) > 0.0:
 		d.draw_circle(Vector2(W - 36, H - 9), 2.0, C_AMBER)
 		d.draw_circle(Vector2(W - 36, H - 9), 3.5, Color(C_AMBER.r, C_AMBER.g, C_AMBER.b, 0.15))
 	d.draw_string(_font_body, Vector2(W - 30, H - 6), "HOLD",
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 4, Color(C_AMBER.r, C_AMBER.g, C_AMBER.b, 0.5))
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(4), Color(C_AMBER.r, C_AMBER.g, C_AMBER.b, 0.5))
 
 func _draw_stat_bar(d: Control, x: float, y: float, label: String, pct: float, col: Color) -> void:
 	d.draw_string(_font_body, Vector2(x, y + 4), label,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 5, C_GREEN_DM)
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(5), C_GREEN_DM)
 	var bx := x + 30.0
 	var bw := 60.0
 	var bh := 4.0
@@ -165,7 +191,7 @@ func _draw_stat_bar(d: Control, x: float, y: float, label: String, pct: float, c
 			Color(minf(col.r * 1.5, 1), minf(col.g * 1.5, 1), minf(col.b * 1.5, 1)))
 	d.draw_rect(Rect2(bx, y, bw, bh), Color(col.r, col.g, col.b, 0.2), false)
 	d.draw_string(_font_body, Vector2(bx + bw + 4, y + 4), "%d%%" % int(pct * 100),
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color(col.r, col.g, col.b, 0.6))
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(5), Color(col.r, col.g, col.b, 0.6))
 
 func _process(delta: float) -> void:
 	if _visible_flag:
@@ -203,14 +229,48 @@ func _unhandled_input(event: InputEvent) -> void:
 		if _draw_node: _draw_node.queue_redraw()
 	elif event.is_action("ui_accept"):
 		_activate()
+	elif event.is_action("move_left"):
+		_adjust_selected_setting(-1.0)
+	elif event.is_action("move_right"):
+		_adjust_selected_setting(1.0)
+
+func _adjust_selected_setting(dir: float) -> void:
+	var item: Dictionary = ITEMS[_selection]
+	if String(item.get("kind", "action")) == "float":
+		AudioManager.play_sfx("ui_navigate")
+		_adjust_float_setting(item, dir)
 
 func _activate() -> void:
 	AudioManager.play_sfx("ui_confirm")
+	var item: Dictionary = ITEMS[_selection]
+	var kind := String(item.get("kind", "action"))
+	if kind == "bool" or kind == "bool_label":
+		var key := String(item.get("key", ""))
+		SaveManager.set_setting(key, not bool(SaveManager.get_setting(key)))
+		if _draw_node: _draw_node.queue_redraw()
+		return
+	if kind == "float":
+		_adjust_float_setting(item, 1.0)
+		return
 	match _selection:
 		0: toggle()
-		1:
+		6:
 			get_tree().paused = false
 			get_tree().reload_current_scene()
-		2:
+		7:
 			get_tree().paused = false
 			get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
+
+func _adjust_float_setting(item: Dictionary, dir: float) -> void:
+	var key := String(item.get("key", ""))
+	var current := float(SaveManager.get_setting(key))
+	var step := float(item.get("step", 0.25)) * dir
+	var min_v := float(item.get("min", 0.0))
+	var max_v := float(item.get("max", 1.0))
+	var next := current + step
+	if next > max_v + 0.001:
+		next = min_v
+	elif next < min_v - 0.001:
+		next = max_v
+	SaveManager.set_setting(key, clampf(next, min_v, max_v))
+	if _draw_node: _draw_node.queue_redraw()

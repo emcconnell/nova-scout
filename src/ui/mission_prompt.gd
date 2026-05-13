@@ -11,6 +11,7 @@ const PROMPTS := {
 	"boost": "Boost burns fuel. Use it to escape pressure.",
 	"pickup": "Crystals fund upgrades. Fuel keeps the probe alive.",
 	"scan": "Approach the star and press Scan.",
+	"first_discovery": "Signal resolved. Even quiet stars can hide resources, hazards, or a way home.",
 	"abort": "Scan locks orbit. Press Scan again to abort.",
 	"alien": "Signal spike. Weapons free.",
 	"upgrade": "Spend crystals between sectors to shape the run.",

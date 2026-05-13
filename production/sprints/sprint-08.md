@@ -42,9 +42,13 @@
 - Added data validation for the Sector 1 first-discovery pacing bar
 - Added persistent, one-time mission-control prompts for movement, firing, pickups, scanning, aborting scans, alien combat, and upgrades
 - Added automated full-campaign spine smoke test covering required sector scans, alien arena clears, final Mothership reveal, and true ending
-- Added settings/accessibility save defaults, main-menu settings overlay, runtime audio/fullscreen hooks, and runtime hooks for screen shake, CRT, flash intensity, and hold/toggle boost
+- Added settings/accessibility save defaults, main-menu and pause-menu settings access, runtime audio/fullscreen hooks, and runtime hooks for screen shake, CRT, flash intensity, hold/toggle boost, HUD/menu text scale, and color-friendly pickup/HUD palettes
+- Added stricter release verification/export smoke handling for Godot script/runtime errors
+- Added star-scan polish: pre-scan signal labels, hidden final-result colors, scan stability loss under pressure, and first-discovery reveal popup/prompt
+- Added controller-friendly main/pause/upgrade/transition hints and removed release-visible sector skip UI
+- Added upgrade branch labels, current-to-next stat comparisons, pickup reward popups, and sector transition bonus breakdown presentation
 - Installed Godot 4.6.2 export templates locally and verified Linux release export creation plus native macOS export/launch smoke via `scripts/export_smoke.py`
-- Remaining: manual timed playthrough, pause-menu settings access/manual settings QA, color-friendly/text-scale runtime polish, upgrade/economy feel check
+- Remaining: manual timed playthrough, exported full-run gamepad QA, manual Mothership phase/end-state QA, audio asset completeness/source review
 - **Files:** `assets/data/encounters/sector_1.json`, `scripts/validate_data.py`, `scripts/export_smoke.py`, `design/quick-specs/first-five-minutes.md`, `src/ui/mission_prompt.gd`, `src/ui/hud.gd`, `src/ui/crt_overlay.gd`, `src/core/save_manager.gd`, `src/core/main_menu.gd`, `src/core/game_world.gd`, `src/gameplay/player/player.gd`
 
 ### STORY-053: .gitignore & Build Hygiene ✅ DONE
@@ -77,8 +81,8 @@
 | Audio asset manifest | ✅ |
 | Version bumped to 1.0.0 | ✅ |
 | Audio assets sourced | ⬜ (requires external sourcing) |
-| Unit tests | ✅ 64/64 passing via `./scripts/verify.sh` |
-| Balance/onboarding pass | 🟡 Sector 1 first scan now lands around 110s and prompts/settings are wired; manual timing remains |
+| Unit tests | ✅ 74/74 passing via `./scripts/verify.sh` |
+| Balance/onboarding pass | ✅ Automated opening pacing, prompts, scan reveal/stability, settings/accessibility hooks, controller-safe UI, pickup/upgrade/bonus presentation are wired; manual timing remains |
 | .gitignore | ✅ Story-053 |
 | README | ✅ Story-054 |
 | Platform export templates installed | ✅ Godot 4.6.2 templates installed locally; Linux export and native macOS export/launch smoke pass |

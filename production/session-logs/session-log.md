@@ -107,3 +107,9 @@ src/ui/sector_transition.gd
 src/ui/win_screen.gd
 ---
 
+## Session End: 20260706_193239
+### Commits
+de11a89 feat: Dark Directive v2.0 — full tonal overhaul (gameplay/story/gfx/audio)
+ec3f9c7 more
+---
+

@@ -34,6 +34,13 @@ var _score_pulse: float = 0.0
 var _mission_prompt_text: String = ""
 var _mission_prompt_pulse: float = 0.0
 
+# ─── Recovered log fragment state (dark-directive.md §4.4) ────────────────────
+var _log_title: String = ""
+var _log_text: String = ""
+var _log_reveal: float = 0.0      # characters revealed (typewriter)
+var _log_hold: float = 0.0        # seconds to hold after full reveal
+var _log_click_acc: int = 0       # chars since last typewriter click
+
 # ─── Palette ──────────────────────────────────────────────────────────────────
 const COL_HULL    := Color(0.10, 0.90, 0.25)
 const COL_SHIELD  := Color(0.00, 0.70, 1.00)
@@ -66,6 +73,7 @@ func _ready() -> void:
 	mouse_filter  = Control.MOUSE_FILTER_IGNORE
 	GameManager.score_changed.connect(func(v): _score = v; _score_pulse = 0.8; queue_redraw())
 	GameManager.streak_changed.connect(_on_streak_changed)
+	GameManager.danger_pay_changed.connect(func(_a): queue_redraw())
 
 func _process(delta: float) -> void:
 	_wobble += delta * 5.0
@@ -76,12 +84,41 @@ func _process(delta: float) -> void:
 	if _streak_flash > 0.0:
 		_streak_flash -= delta
 		queue_redraw()
+	if _streak >= 3 or GameManager.danger_pay_active:
+		queue_redraw()   # Fuse bar and danger flicker animate continuously
 	if _score_pulse > 0.0:
 		_score_pulse -= delta
 		queue_redraw()
 	if not _mission_prompt_text.is_empty():
 		_mission_prompt_pulse += delta * 3.0
 		queue_redraw()
+	_update_log_fragment(delta)
+
+## Advance the typewriter reveal; dismiss after the hold expires.
+func _update_log_fragment(delta: float) -> void:
+	if _log_text.is_empty():
+		return
+	if _log_reveal < float(_log_text.length()):
+		_log_reveal = minf(_log_reveal + delta * 26.0, float(_log_text.length()))
+		_log_click_acc += 1
+		if _log_click_acc >= 3:
+			_log_click_acc = 0
+			AudioManager.play_sfx("typewriter_click", 0.35)
+	else:
+		_log_hold -= delta
+		if _log_hold <= 0.0:
+			_log_title = ""
+			_log_text = ""
+	queue_redraw()
+
+## Display a recovered probe log with a typewriter reveal.
+func show_log_fragment(title: String, text: String) -> void:
+	_log_title = title
+	_log_text = text
+	_log_reveal = 0.0
+	_log_hold = 6.5
+	_log_click_acc = 0
+	queue_redraw()
 
 func connect_player(p: Player) -> void:
 	_player   = p
@@ -189,8 +226,49 @@ func _draw() -> void:
 	_draw_score_display(font)
 	_draw_sector_display(font)
 	_draw_streak_display(font)
+	_draw_danger_pay(font)
 	_draw_mission_prompt(font)
+	_draw_log_fragment(font)
 	_draw_context_hint(font)
+
+# ─── Recovered log — amber teletype panel, lower third ───────────────────────
+
+func _draw_log_fragment(font: Font) -> void:
+	if _log_text.is_empty():
+		return
+	var vp := get_viewport_rect()
+	var lines := _wrap_text(_log_text.substr(0, int(_log_reveal)), 50)
+	var panel_w := 236.0
+	var panel_h := 16.0 + float(maxi(lines.size(), 1)) * 8.0
+	var px: float = vp.size.x * 0.5 - panel_w * 0.5
+	var py: float = vp.size.y - panel_h - 22.0
+	_panel(px, py, panel_w, panel_h, 5.0)
+	var amber := Color(1.00, 0.69, 0.00, 0.85)
+	draw_string(font, Vector2(px + 6, py + 8), _log_title,
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 5, amber)
+	for i in lines.size():
+		draw_string(font, Vector2(px + 6, py + 17 + i * 8.0), lines[i],
+			HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(5), Color(0.62, 0.82, 0.62, 0.92))
+	# Cursor block while typing
+	if _log_reveal < float(_log_text.length()) and fmod(_wobble, 0.5) < 0.3:
+		var last_line: String = lines[lines.size() - 1] if not lines.is_empty() else ""
+		var cx := px + 6 + font.get_string_size(last_line, HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(5)).x
+		draw_rect(Rect2(cx + 1, py + 12 + float(maxi(lines.size(), 1) - 1) * 8.0, 3, 5), amber)
+
+## Greedy word-wrap at a character budget per line.
+func _wrap_text(text: String, chars_per_line: int) -> Array[String]:
+	var lines: Array[String] = []
+	var current := ""
+	for word in text.split(" "):
+		var candidate := word if current.is_empty() else current + " " + word
+		if candidate.length() > chars_per_line and not current.is_empty():
+			lines.append(current)
+			current = word
+		else:
+			current = candidate
+	if not current.is_empty():
+		lines.append(current)
+	return lines
 
 # ─── Status panel — top-left ──────────────────────────────────────────────────
 
@@ -350,6 +428,22 @@ func _draw_streak_display(font: Font) -> void:
 	var label: String = "x%d STREAK" % _streak_mult if _streak_mult > 1 else "%d HITS" % _streak
 	draw_string(font, Vector2(cx - 18.0, 32.0), label,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 5, col)
+	# Streak fuse — the multiplier is burning down; kill to refill it
+	var decay: float = float(GameManager.dread_value("streak", "decay_time", 6.0))
+	var fuse_pct: float = clampf(GameManager.streak_fuse / maxf(decay, 0.01), 0.0, 1.0)
+	var fuse_w := 36.0
+	draw_rect(Rect2(cx - fuse_w * 0.5, 35.0, fuse_w, 1.5), Color(0.25, 0.20, 0.02, 0.6))
+	var fuse_col := Color(1.0, 0.80, 0.0, 0.75) if fuse_pct > 0.35 else _flicker(COL_CRIT)
+	draw_rect(Rect2(cx - fuse_w * 0.5, 35.0, fuse_w * fuse_pct, 1.5), fuse_col)
+
+## Danger pay — hull-critical score bonus flag, drawn under the status panel.
+## Red is reserved for threat; riding the edge for +50% is a threat you chose.
+func _draw_danger_pay(font: Font) -> void:
+	if not GameManager.danger_pay_active:
+		return
+	var flick := 0.62 + 0.38 * absf(sin(_wobble * 3.2))
+	draw_string(font, Vector2(6.0, 58.0), "! DANGER PAY x1.5",
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(4), Color(1.0, 0.20, 0.10, flick))
 
 func _draw_mission_prompt(font: Font) -> void:
 	if _mission_prompt_text.is_empty():

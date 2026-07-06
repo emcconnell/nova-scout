@@ -33,8 +33,8 @@ func setup(type: int) -> void:
 	_time = 0.0
 	match type:
 		Type.PLAYER:      _init_player()
-		Type.SCOUT:       _init_small(Color(0.80, 0.10, 0.90), Color(1.0, 0.50, 0.80), 12, 0.7)
-		Type.WARRIOR:     _init_medium(Color(0.60, 0.00, 0.80), Color(0.80, 0.30, 1.0), 16, 0.8)
+		Type.SCOUT:       _init_small(Color(0.70, 0.10, 0.35), Color(0.95, 0.35, 0.45), 12, 0.7)
+		Type.WARRIOR:     _init_medium(Color(0.55, 0.06, 0.40), Color(0.80, 0.25, 0.55), 16, 0.8)
 		Type.DESTROYER:   _init_destroyer()
 		Type.ELITE:       _init_elite()
 		Type.MOTHERSHIP:  _init_mothership()
@@ -45,6 +45,25 @@ func setup(type: int) -> void:
 		Type.DERELICT:    _init_medium(Color(0.40, 0.45, 0.50), Color(0.00, 0.70, 0.90), 10, 0.7)
 		Type.MISSILE_HIT: _init_small(Color(1.0, 0.50, 0.10), Color(1.0, 0.80, 0.30), 6, 0.35)
 		Type.LEVIATHAN:   _init_leviathan()
+	# Lingering embers — dying light drifts after the blast (dark-directive.md §4.2)
+	match type:
+		Type.PLAYER, Type.MOTHERSHIP: _add_embers(9, 1.9)
+		Type.DESTROYER, Type.ELITE, Type.MINE: _add_embers(6, 1.5)
+		Type.WARRIOR, Type.DERELICT, Type.LEVIATHAN: _add_embers(4, 1.2)
+		Type.SCOUT: _add_embers(3, 1.0)
+		_: pass
+
+## Slow, long-lived embers that outlast the flash and cool from orange to red.
+func _add_embers(count: int, life: float) -> void:
+	_duration = maxf(_duration, life + 0.1)
+	for i in count:
+		var a := randf_range(0, TAU)
+		var spd := randf_range(4, 18)
+		_particles.append({"x": randf_range(-3, 3), "y": randf_range(-3, 3),
+			"vx": cos(a) * spd, "vy": sin(a) * spd + 6.0,
+			"life": 0.0, "max_life": randf_range(life * 0.6, life),
+			"color": Color(1.0, randf_range(0.25, 0.45), 0.06), "size": randf_range(0.5, 1.1),
+			"shape": "ember", "angle": randf_range(0.0, 10.0)})
 
 func _process(delta: float) -> void:
 	_time += delta
@@ -112,6 +131,12 @@ func _draw() -> void:
 				draw_line(Vector2(p["x"], p["y"]), tail,
 					Color(col.r, col.g, col.b, pa * 0.8), 1.0)
 				draw_circle(Vector2(p["x"], p["y"]), 0.8, Color(1.0, 1.0, 1.0, pa))
+			"ember":
+				# Flickering dying light, cooling toward deep red
+				var flick := 0.55 + 0.45 * sin(_time * 11.0 + float(p["angle"]))
+				var cool := col.lerp(Color(0.55, 0.05, 0.02), pp)
+				draw_circle(Vector2(p["x"], p["y"]), size,
+					Color(cool.r, cool.g, cool.b, pa * flick))
 
 	# Smoke (for larger explosions)
 	if _type in [Type.PLAYER, Type.DESTROYER, Type.MOTHERSHIP, Type.MINE]:

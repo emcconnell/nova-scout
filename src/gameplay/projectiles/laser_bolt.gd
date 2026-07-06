@@ -77,7 +77,10 @@ func _draw() -> void:
 func _on_area_entered(area: Area2D) -> void:
 	if _owner_type == "player":
 		if area.is_in_group("enemies") or area.is_in_group("hazards"):
-			if area.has_method("take_damage"):
+			if area is EnemyBase:
+				# Pass hit origin so light enemies take knockback
+				(area as EnemyBase).take_damage(_damage, global_position)
+			elif area.has_method("take_damage"):
 				area.take_damage(_damage)
 			_return_to_pool()
 	elif area.is_in_group("player"):
@@ -88,7 +91,9 @@ func _on_area_entered(area: Area2D) -> void:
 func _on_body_entered(body: Node2D) -> void:
 	if _owner_type == "player":
 		if body.is_in_group("enemies") or body.is_in_group("hazards"):
-			if body.has_method("take_damage"):
+			if body is EnemyBase:
+				(body as EnemyBase).take_damage(_damage, global_position)
+			elif body.has_method("take_damage"):
 				body.take_damage(_damage)
 			_return_to_pool()
 	elif body.is_in_group("player"):

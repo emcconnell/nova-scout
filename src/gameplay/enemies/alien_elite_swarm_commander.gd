@@ -12,7 +12,7 @@ const MISSILE_DAMAGE   := 40
 
 const COL_HULL  := Color(0.45, 0.00, 0.60)
 const COL_PORT  := Color(0.80, 0.00, 1.00, 0.7)
-const COL_GLOW  := Color(0.60, 0.00, 0.90, 0.5)
+const COL_GLOW  := Color(0.55, 0.08, 0.42, 0.5)
 
 var _spawn_timer: float = 5.0
 var _missile_timer: float = 2.0

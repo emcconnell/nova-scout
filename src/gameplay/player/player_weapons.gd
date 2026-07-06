@@ -94,7 +94,12 @@ func _fire_laser() -> void:
 	if bullet == null:
 		return
 	bullet.global_position = get_parent().global_position + Vector2(0, -12)
-	bullet.setup(GameManager.player_laser_damage, Vector2.UP, 400.0, "player")
+	# ±1.8° spread — imperfect streams read as force, not sterile lines
+	var dir := Vector2.UP.rotated(deg_to_rad(randf_range(-1.8, 1.8)))
+	bullet.setup(GameManager.player_laser_damage, dir, 400.0, "player")
+	var p := get_parent() as Player
+	if p:
+		p.on_laser_fired()
 	AudioManager.play_sfx("laser_fire")
 
 func _fire_missile() -> void:

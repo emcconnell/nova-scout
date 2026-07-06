@@ -11,6 +11,7 @@ var _damage: int = 8
 var _velocity: Vector2 = Vector2.DOWN * 180.0
 var _color: Color = COLOR_ORANGE
 var _lifetime: float = 0.0
+var _grazed: bool = false   # One graze reward per bolt (dark-directive.md §5)
 const MAX_LIFETIME := 3.0
 
 func _ready() -> void:
@@ -32,12 +33,34 @@ func _process(delta: float) -> void:
 		queue_free()
 		return
 	global_position += _velocity * delta
+	_check_graze()
 	var vp := get_viewport_rect()
 	if global_position.y > vp.size.y + 24 or global_position.y < -24 \
 	or global_position.x < -10 or global_position.x > vp.size.x + 10:
 		queue_free()
 		return
 	queue_redraw()
+
+## Graze — passing close by the player without hitting rewards nerve.
+## One reward per bolt; bolts younger than min_bolt_age don't count.
+func _check_graze() -> void:
+	if _grazed:
+		return
+	if _lifetime < float(GameManager.dread_value("graze", "min_bolt_age", 0.15)):
+		return
+	var player := get_tree().get_first_node_in_group("player") as Player
+	if player == null or not is_instance_valid(player):
+		return
+	var radius: float = float(GameManager.dread_value("graze", "radius", 6.0))
+	# Graze band: just outside the hit zone (player collision ~5px core)
+	var d := global_position.distance_to(player.global_position)
+	if d < radius + 5.0 and d > 4.0:
+		_grazed = true
+		GameManager.add_score(int(GameManager.dread_value("graze", "score", 5)))
+		if player.weapons:
+			player.weapons.add_energy(float(GameManager.dread_value("graze", "energy", 1.0)))
+		player.on_graze()
+		AudioManager.play_sfx("graze_spark", 0.4)
 
 func _draw() -> void:
 	# Trail — 3 fading copies behind the bolt

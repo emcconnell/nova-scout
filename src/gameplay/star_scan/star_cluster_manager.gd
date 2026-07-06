@@ -17,7 +17,8 @@ signal scan_pressure_pulse(pulse: Dictionary, star_data: Dictionary)
 const SECTOR_STARS := {
 	1: [
 		{"id":"A1","result":"barren",        "scan_duration":8, "wave_path":""},
-		{"id":"A2","result":"barren",        "scan_duration":8, "wave_path":"","reward":"crystal2"},
+		# A2 carries the teaching pulse: every broadcast draws something (dark-directive.md §4.1)
+		{"id":"A2","result":"barren",        "scan_duration":8, "wave_path":"","reward":"crystal2", "scan_pressure":{"pulses":[{"at":0.60,"type":"asteroid","count":1,"stability_loss":0.05}]}},
 		{"id":"A3","result":"barren",        "scan_duration":8, "wave_path":"","reward":"repair_kit","optional":true},
 	],
 	2: [

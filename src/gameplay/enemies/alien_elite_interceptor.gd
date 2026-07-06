@@ -13,7 +13,7 @@ const BOLT_SPEED     := 240.0
 
 const COL_HULL  := Color(0.50, 0.00, 0.70)
 const COL_BLINK := Color(1.00, 0.80, 0.00, 0.8)
-const COL_GLOW  := Color(0.90, 0.20, 1.00, 0.6)
+const COL_GLOW  := Color(0.75, 0.12, 0.45, 0.6)
 const COL_TRAIL := Color(0.80, 0.60, 1.00, 0.4)
 
 var _fire_timer: float = 0.8

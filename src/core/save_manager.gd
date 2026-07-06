@@ -14,6 +14,7 @@ const DEFAULT_SETTINGS := {
 	"text_scale": 1.0,
 	"hold_to_boost": true,
 	"color_friendly": false,
+	"dread_intensity": 1.0,
 }
 
 var high_scores: Array[Dictionary] = []

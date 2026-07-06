@@ -132,7 +132,12 @@ func _complete_scan() -> void:
 	GameManager.stars_scanned += 1
 	get_tree().call_group("game_world", "show_scan_reveal", global_position, get_signal_label(), String(star_data.get("reward", "")))
 	scan_completed.emit(result, star_data)
-	AudioManager.play_sfx("scan_complete")
+	# Sector 5: the familiar chime plays a semitone flat — the ship knows
+	# something is wrong (dark-directive.md "imperfect familiarity")
+	if GameManager.current_sector >= 5:
+		AudioManager.play_sfx("scan_complete", 1.0, 0.9439)
+	else:
+		AudioManager.play_sfx("scan_complete")
 
 func _get_player() -> Node2D:
 	return get_tree().get_first_node_in_group("player") as Node2D

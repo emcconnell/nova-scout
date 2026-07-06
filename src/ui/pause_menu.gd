@@ -26,6 +26,7 @@ const ITEMS := [
 	{"label": "COLOR FRIENDLY", "desc": "Use colorblind-safer combat and pickup colors", "kind": "bool", "key": "color_friendly"},
 	{"label": "CRT OVERLAY", "desc": "Toggle CRT shader treatment", "kind": "bool", "key": "crt_enabled"},
 	{"label": "FLASH INTENSITY", "desc": "Reduce screen flash strength", "kind": "float", "key": "flash_intensity", "step": 0.25, "min": 0.0, "max": 1.0},
+	{"label": "DREAD INTENSITY", "desc": "Scale darkness, interference and heartbeat", "kind": "float", "key": "dread_intensity", "step": 0.25, "min": 0.0, "max": 1.0},
 	{"label": "BOOST MODE", "desc": "Switch between hold and toggle boost", "kind": "bool_label", "key": "hold_to_boost", "true_label": "HOLD", "false_label": "TOGGLE"},
 	{"label": "RESTART SECTOR",  "desc": "Reset current sector from checkpoint", "kind": "action"},
 	{"label": "ABORT TO MENU",   "desc": "Return to command center", "kind": "action"},

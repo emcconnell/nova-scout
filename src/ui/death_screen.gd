@@ -16,6 +16,18 @@ var _blink: float = 0.0
 var _ready_to_input: bool = false
 var _font_title: Font = null
 var _font_body: Font = null
+var _final_words: String = ""
+
+## Last fragments of Probe Seven's transmission — one per death, at random.
+## Restraint: implication only (dark-directive.md §4.4).
+const FINAL_WORDS := [
+	"...hull breach forward of the cabin. it's quiet now...",
+	"...tell them the worlds are real. tell them that first...",
+	"...the tracker was right. it was always right...",
+	"...engines gone. drifting. the stars are wrong here...",
+	"...if you find this, don't answer the ping...",
+	"...porch light's still on, Mara. i can see it from here...",
+]
 
 func _ready() -> void:
 	hide()
@@ -32,6 +44,7 @@ func show_death() -> void:
 	show()
 	_show_timer = 0.0
 	_ready_to_input = false
+	_final_words = FINAL_WORDS[randi() % FINAL_WORDS.size()]
 	queue_redraw()
 
 func _process(delta: float) -> void:
@@ -119,17 +132,36 @@ func _draw() -> void:
 	draw_line(Vector2(cx - 60, cy - 6), Vector2(cx + 60, cy - 6),
 		Color(COL_DIM_RED.r, COL_DIM_RED.g, COL_DIM_RED.b, fade_in * 0.5), 1.0)
 
+	# Final transmission fragment — fades in under the title
+	draw_string(font, Vector2(cx - 74, cy + 2), _final_words,
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 4,
+		Color(COL_DIM_RED.r + 0.2, COL_DIM_RED.g, COL_DIM_RED.b, fade_in * 0.85))
+
 	# Stats
-	var sy := cy + 10.0
+	var sy := cy + 14.0
 	draw_string(font, Vector2(cx - 52, sy),
 		"SECTOR:  %s" % GameManager.get_sector_name(),
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color(COL_LABEL.r, COL_LABEL.g, COL_LABEL.b, fade_in))
-	draw_string(font, Vector2(cx - 52, sy + 12),
+	draw_string(font, Vector2(cx - 52, sy + 11),
 		"SCORE:   %07d" % GameManager.score,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color(COL_LABEL.r, COL_LABEL.g, COL_LABEL.b, fade_in))
-	draw_string(font, Vector2(cx - 52, sy + 24),
+	draw_string(font, Vector2(cx - 52, sy + 22),
 		"BEACONS: %d / 3" % GameManager.survey_beacons,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color(COL_LABEL.r, COL_LABEL.g, COL_LABEL.b, fade_in))
+	# The sales pitch for the next run: how close was that? (research brief §2)
+	var scores := SaveManager.get_high_scores()
+	if not scores.is_empty():
+		var best := int(scores[0].get("score", 0))
+		if best > 0 and GameManager.score >= best:
+			var pa2 := 0.6 + 0.4 * sin(_blink * 3.0)
+			draw_string(font, Vector2(cx - 52, sy + 33), "NEW RECORD",
+				HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color(1.0, 0.69, 0.0, fade_in * pa2))
+		elif best > 0:
+			var pct := int(round(float(GameManager.score) / float(best) * 100.0))
+			draw_string(font, Vector2(cx - 52, sy + 33),
+				"BEST:    %07d  (%d%%)" % [best, pct],
+				HORIZONTAL_ALIGNMENT_LEFT, -1, 5,
+				Color(COL_LABEL.r, COL_LABEL.g, COL_LABEL.b, fade_in * 0.8))
 
 	# Retry prompt
 	if _ready_to_input:

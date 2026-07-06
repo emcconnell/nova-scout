@@ -20,11 +20,11 @@ const PHASE_LOG   := 2
 
 const SECTOR_LOG := [
 	"",
-	"Inner Rim cleared. Entering uncharted space.",
-	"Beta sector traversed. Alien presence confirmed.",
-	"Survey Beacon secured. Nova Prima data locked.",
-	"2 of 3 beacons secured. Deep Blue locked.",
-	"Approaching final coordinates. Stay sharp.",
+	"Inner Rim cleared. Eleven probes came this way. None reported back past Beta.",
+	"Beta traversed. Wreckage catalogued: human alloys. Control's reply is late.",
+	"Beacon secured. Nova Prima is real. Something answered the scan. Control didn't.",
+	"Two of three beacons locked. Control silent 31 hours. Standing orders: proceed.",
+	"Final coordinates. The tracker reads one contact, everywhere. Finish it, Seven.",
 ]
 
 var _phase: int = PHASE_WARP

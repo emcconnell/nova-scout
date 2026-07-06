@@ -12,11 +12,11 @@ const BOOST_SPEED := 320.0
 const FUEL_DRAIN_BOOST := 8.0   # per second while boosting
 const FUEL_DRAIN_IDLE := 0.5    # per second always
 
-# Colors (art bible palette)
-const COLOR_HULL := Color(0.91, 0.93, 1.0)      # Star White
+# Colors (dark directive palette — a working ship, not a showroom one)
+const COLOR_HULL := Color(0.72, 0.75, 0.84)     # Weathered steel
 const COLOR_ENGINE := Color(1.0, 0.45, 0.1)     # Orange-red
-const COLOR_COCKPIT := Color(0.0, 0.9, 1.0)     # Probe Cyan
-const COLOR_WING := Color(0.75, 0.78, 0.9)      # Slightly dimmer white
+const COLOR_COCKPIT := Color(0.0, 0.78, 0.90)   # Probe Cyan, dimmed
+const COLOR_WING := Color(0.58, 0.61, 0.72)     # Duller plating
 const COLOR_SHIELD := Color(0.0, 0.9, 1.0, 0.35)
 const COLOR_HIT := Color(1.0, 1.0, 1.0)
 
@@ -29,6 +29,8 @@ const COLOR_HIT := Color(1.0, 1.0, 1.0)
 # ─── State ───────────────────────────────────────────────────────────────────
 var _is_boosting: bool = false
 var _hit_flash_timer: float = 0.0
+var _graze_flash_timer: float = 0.0   # Near-miss spark ring (dark-directive.md §4.1)
+var _muzzle_flash_timer: float = 0.0  # Laser muzzle flash (dark-directive.md §4.2)
 var _bank_dir: float = 0.0           # -1 left, 0 center, 1 right
 var _scan_orbit_path: Node2D = null  # Set during scanning
 var _in_orbit: bool = false
@@ -52,6 +54,10 @@ func _process(delta: float) -> void:
 
 	if _hit_flash_timer > 0.0:
 		_hit_flash_timer -= delta
+	if _graze_flash_timer > 0.0:
+		_graze_flash_timer -= delta
+	if _muzzle_flash_timer > 0.0:
+		_muzzle_flash_timer -= delta
 	if _invincible_timer > 0.0:
 		_invincible_timer -= delta
 		if _invincible_timer <= 0.0:
@@ -253,6 +259,30 @@ func _draw() -> void:
 		draw_circle(Vector2(tilt * 0.5 - 0.5, -8), 0.7,
 			Color(1.0, 1.0, 1.0, 0.5 + sin(t * 0.5) * 0.2))
 
+	# ─── Emergency lighting — cabin bleeds red below 40% hull ────────
+	var hull_pct := float(health.hull) / maxf(float(GameManager.player_max_hull), 1.0)
+	if hull_pct < 0.4 and not flash:
+		var urgency := clampf((0.4 - hull_pct) / 0.4, 0.0, 1.0)
+		var blink := 0.5 + 0.5 * sin(t * (2.0 + urgency * 4.0))
+		draw_circle(Vector2(0, -3), 4.5, Color(0.9, 0.08, 0.05, 0.10 + 0.22 * urgency * blink))
+		# Damage sparks crawl the hull when critical
+		if hull_pct < 0.25 and fmod(t, 0.9) < 0.12:
+			var sx := sin(t * 31.7) * 4.0
+			draw_circle(Vector2(sx, 1.0 + cos(t * 17.3) * 3.0), 0.7,
+				Color(1.0, 0.85, 0.4, 0.8))
+
+	# ─── Muzzle flash — capacitor snap at the nose ───────────────────
+	if _muzzle_flash_timer > 0.0:
+		var ma := _muzzle_flash_timer / 0.05
+		draw_circle(Vector2(tilt * 0.5, -13.5), 2.4, Color(1.0, 1.0, 0.95, ma * 0.85))
+		draw_circle(Vector2(tilt * 0.5, -13.5), 4.0, Color(0.6, 0.9, 1.0, ma * 0.3))
+
+	# ─── Graze spark ring — a razor pass acknowledged ────────────────
+	if _graze_flash_timer > 0.0:
+		var ga := _graze_flash_timer / 0.22
+		var gr := 8.0 + (1.0 - ga) * 6.0
+		draw_arc(Vector2.ZERO, gr, 0, TAU, 20, Color(0.9, 0.95, 1.0, ga * 0.6), 1.0)
+
 	# ─── Shield visualization (energy arc with ripple) ──────────────
 	if health.shield > 0 and not flash:
 		var shield_strength := health.shield / 100.0
@@ -285,11 +315,25 @@ func _draw() -> void:
 					base_alpha + node_pulse * 0.3))
 
 # ─── Public API ──────────────────────────────────────────────────────────────
+## A bolt grazed past — flash the near-miss ring (reward handled by the bolt).
+func on_graze() -> void:
+	_graze_flash_timer = 0.22
+
+## Laser fired — flash the muzzle for 2 frames (dark-directive.md §4.2).
+func on_laser_fired() -> void:
+	_muzzle_flash_timer = 0.05
+
+## True while boost is active — the DarknessVeil flares the light radius.
+func is_boosting() -> bool:
+	return _is_boosting
+
 func take_damage(amount: int, source: String = "") -> void:
 	if _invincible or _dead:
 		return
 	health.take_damage(amount)
 	AudioManager.play_sfx("hull_hit" if source == "hull" else "shield_hit")
+	# Impact feedback — hitstop + shake handled by the world (dark-directive.md §4.2)
+	get_tree().call_group("game_world", "on_player_hull_hit")
 	_hit_flash_timer = 0.1
 	# Brief invincibility to prevent multi-hit
 	_invincible = true

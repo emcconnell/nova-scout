@@ -9,6 +9,7 @@ signal beacon_collected(total: int)
 signal score_changed(score: int)
 signal crystals_changed(crystals: int)
 signal streak_changed(streak: int, multiplier: int)
+signal danger_pay_changed(active: bool)
 
 # ─── Enums ───────────────────────────────────────────────────────────────────
 enum GameState {
@@ -62,6 +63,13 @@ var sector_start_time: float = 0.0
 # Kill streak (Change 7c)
 var kill_streak: int = 0
 var streak_multiplier: int = 1
+var streak_fuse: float = 0.0        # Seconds left before streak decays (Dark Directive)
+
+# ─── Dark Directive state (see design/gdd/dark-directive.md) ────────────────
+var dread: Dictionary = {}          # Balance data loaded from assets/data/dread.json
+var danger_pay_active: bool = false # Hull-critical score bonus state
+var _threat_sources: Dictionary = {}  # source name -> 0..1 threat level
+var log_fragment_index: int = 0     # Cursor into LogFragments.FRAGMENTS (per run)
 
 # ─── References ──────────────────────────────────────────────────────────────
 var game_world: Node = null  # Set by GameWorld when it loads
@@ -69,6 +77,39 @@ var game_world: Node = null  # Set by GameWorld when it loads
 # ─── Lifecycle ───────────────────────────────────────────────────────────────
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_load_dread_config()
+
+func _process(delta: float) -> void:
+	# Streak decay fuse — aggression pressure (Dark Directive §4.1)
+	if kill_streak > 0 and current_state in [GameState.TRAVEL, GameState.STAR_CLUSTER, GameState.ALIEN_COMBAT]:
+		streak_fuse -= delta
+		if streak_fuse <= 0.0:
+			reset_streak()
+
+## Load Dark Directive balance data; keeps {} on failure (callers use dread_value fallbacks).
+func _load_dread_config() -> void:
+	var path := "res://assets/data/dread.json"
+	if not FileAccess.file_exists(path):
+		return
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return
+	var data: Variant = JSON.parse_string(file.get_as_text())
+	file.close()
+	if data is Dictionary:
+		dread = data
+
+## Fetch a nested dread balance value with a safe default, e.g. dread_value("graze", "radius", 6.0).
+func dread_value(section: String, key: String, default: Variant) -> Variant:
+	var sec: Variant = dread.get(section, {})
+	if sec is Dictionary:
+		var v: Variant = (sec as Dictionary).get(key, default)
+		# JSON numbers arrive as floats; coerce to the default's type
+		if typeof(default) == TYPE_INT and typeof(v) == TYPE_FLOAT:
+			return int(v)
+		if typeof(v) == typeof(default) or default == null:
+			return v
+	return default
 
 # ─── State Machine ───────────────────────────────────────────────────────────
 func change_state(new_state: GameState) -> void:
@@ -92,6 +133,10 @@ func start_new_game() -> void:
 	stars_scanned = 0
 	kill_streak = 0
 	streak_multiplier = 1
+	streak_fuse = 0.0
+	danger_pay_active = false
+	log_fragment_index = 0
+	clear_threats()
 	_reset_player_stats()
 	sector_start_time = Time.get_ticks_msec() / 1000.0
 
@@ -121,11 +166,29 @@ func restart_sector() -> void:
 	score_multiplier = 1
 	kill_streak = 0
 	streak_multiplier = 1
+	streak_fuse = 0.0
+	danger_pay_active = false
+	clear_threats()
 
 # ─── Score ───────────────────────────────────────────────────────────────────
-func add_score(amount: int) -> void:
-	score += amount * score_multiplier
+## Add score with streak multiplier; danger pay (hull-critical bonus) applies
+## unless exempt (beacons are exempt — see dark-directive.md §6 Edge Cases).
+func add_score(amount: int, danger_exempt: bool = false) -> void:
+	var total := amount * score_multiplier
+	refresh_danger_pay()
+	if danger_pay_active and not danger_exempt:
+		total = int(round(total * float(dread_value("danger_pay", "score_multiplier", 1.5))))
+	score += total
 	score_changed.emit(score)
+
+## Re-evaluate hull-critical danger pay state; emits danger_pay_changed on flip.
+func refresh_danger_pay() -> void:
+	var threshold: float = float(dread_value("danger_pay", "hull_threshold", 0.25))
+	var active := current_state != GameState.MENU \
+		and float(player_hull) / maxf(float(player_max_hull), 1.0) < threshold
+	if active != danger_pay_active:
+		danger_pay_active = active
+		danger_pay_changed.emit(active)
 
 func set_multiplier(mult: int) -> void:
 	score_multiplier = clampi(mult, 1, 8)
@@ -145,7 +208,7 @@ func spend_crystals(amount: int) -> bool:
 func collect_beacon() -> void:
 	survey_beacons += 1
 	beacon_collected.emit(survey_beacons)
-	add_score(3000)
+	add_score(3000, true)   # Beacons exempt from danger pay (no self-damage cheese)
 	if survey_beacons >= BEACONS_TO_WIN:
 		# Win triggered by level_design after final escape/boss
 		pass
@@ -213,6 +276,7 @@ func get_sector_intensity() -> float:
 # ─── Kill Streak (Change 7c) ───────────────────────────────────────────────
 func on_enemy_killed() -> void:
 	kill_streak += 1
+	streak_fuse = float(dread_value("streak", "decay_time", 6.0))
 	var new_mult: int = 1
 	if kill_streak >= 6:
 		new_mult = 3
@@ -221,6 +285,12 @@ func on_enemy_killed() -> void:
 	if new_mult != streak_multiplier:
 		streak_multiplier = new_mult
 		set_multiplier(streak_multiplier)
+		# Streak thresholds pay in survivability, not just score — cautious
+		# play is literally weaker (dark-directive.md §4.1 / Downwell rule)
+		if new_mult > 1:
+			var player: Node = game_world.player if game_world != null and "player" in game_world else null
+			if player != null and is_instance_valid(player) and player.weapons:
+				player.weapons.add_energy(10.0 * float(new_mult - 1))
 	streak_changed.emit(kill_streak, streak_multiplier)
 
 func reset_streak() -> void:
@@ -228,8 +298,29 @@ func reset_streak() -> void:
 		return
 	kill_streak = 0
 	streak_multiplier = 1
+	streak_fuse = 0.0
 	set_multiplier(1)
 	streak_changed.emit(0, 1)
+
+# ─── Threat level (Dark Directive) ───────────────────────────────────────────
+## Report a named threat source's intensity (0..1). CRT interference and audio
+## dread read the aggregate via get_threat(). Set 0 to clear a source.
+func set_threat(source: String, value: float) -> void:
+	if value <= 0.0:
+		_threat_sources.erase(source)
+	else:
+		_threat_sources[source] = clampf(value, 0.0, 1.0)
+
+## Aggregate threat level — the maximum across all active sources.
+func get_threat() -> float:
+	var m := 0.0
+	for v in _threat_sources.values():
+		m = maxf(m, float(v))
+	return m
+
+## Clear all threat sources (scene reload / new game).
+func clear_threats() -> void:
+	_threat_sources.clear()
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 func get_sector_name() -> String:

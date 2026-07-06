@@ -16,7 +16,7 @@ const BOLT_SPEED    := 220.0
 
 # ─── Colors (art bible) ──────────────────────────────────────────────────────
 const COL_HULL  := Color(0.30, 0.00, 0.50)
-const COL_GLOW  := Color(1.00, 0.10, 0.80)
+const COL_GLOW  := Color(0.85, 0.12, 0.25)
 const COL_EYE   := Color(1.00, 0.20, 0.20)
 const COL_RING  := Color(0.80, 0.00, 1.00, 0.55)
 

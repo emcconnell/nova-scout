@@ -12,7 +12,7 @@ const SHIELD_PULSE_DUR := 2.0    # seconds of invincibility on pattern 5
 # ─── Colors ──────────────────────────────────────────────────────────────────
 const COL_HULL    := Color(0.22, 0.00, 0.38)
 const COL_ARMOR   := Color(0.35, 0.00, 0.55)
-const COL_GLOW    := Color(0.70, 0.00, 0.90, 0.7)
+const COL_GLOW    := Color(0.62, 0.08, 0.40, 0.7)
 const COL_EXPOSED := Color(0.00, 0.90, 1.00, 0.9)
 const COL_SHIELD  := Color(0.30, 0.50, 1.00, 0.35)
 

@@ -20,18 +20,20 @@ var _font_title: Font = null
 var _font_body: Font = null
 
 const TRUE_LOG := [
-	"Survey Probe Seven returning.",
-	"Three habitable worlds confirmed.",
+	"Survey Probe Seven, returning.",
+	"Three worlds confirmed. The data is clean.",
 	"Golden Shore. Deep Blue. Nova Prima.",
 	"The colony fleet launches in eight days.",
-	"You did it. Rest now.",
+	"Eleven crews bought this map.",
+	"Bring it home. Then rest.",
 ]
 
 const STD_LOG := [
 	"Probe Seven returning with beacon data.",
-	"The mission is complete.",
-	"They'll have questions about the Mothership.",
-	"But you're alive. That counts for everything.",
+	"The worlds are real. That part is done.",
+	"You left something alive out there.",
+	"It knows the way to the watering hole now.",
+	"But you're alive. Hold on to that.",
 ]
 
 func _ready() -> void:

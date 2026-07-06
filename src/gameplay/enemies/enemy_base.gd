@@ -66,6 +66,11 @@ func take_damage(amount: int, from_position: Vector2 = Vector2.ZERO) -> void:
 	var actual := _modify_damage(amount, from_position)
 	hp -= actual
 	_hit_flash_timer = 0.08
+	# Knockback — light enemies visibly shoved by fire (dark-directive.md §4.2).
+	# Heavier classes (destroyers, bosses) don't move for anybody.
+	if from_position != Vector2.ZERO and score_value < 800:
+		var push := (global_position - from_position).normalized() * 3.5
+		global_position += push
 	if hp <= 0:
 		_die()
 

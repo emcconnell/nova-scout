@@ -37,6 +37,7 @@ const EnemyEliteArtillery      = preload("res://scenes/enemies/alien_elite_artil
 const EnemyEliteSwarmCommander = preload("res://scenes/enemies/alien_elite_swarm_commander.tscn")
 const EnemyMothershipScene     = preload("res://scenes/enemies/mothership.tscn")
 const EnemyLeviathanScene      = preload("res://scenes/enemies/space_leviathan.tscn")
+const EnemySilenceScene        = preload("res://scenes/enemies/the_silence.tscn")
 const ExplosionScene           = preload("res://scenes/effects/explosion.tscn")
 const MissionPromptScript      = preload("res://src/ui/mission_prompt.gd")
 
@@ -49,6 +50,15 @@ var _encounter_manager: EncounterManager
 var _star_cluster_mgr:  StarClusterManager
 var _arena_spawner:     ArenaWaveSpawner
 var _mission_prompt:    Node
+var _dread_director:    DreadDirector
+var _threat_tracker:    ThreatTracker
+
+# ─── Hitstop (dark-directive.md §4.2 kill feedback) ──────────────────────────
+var _hitstop_recover_at_msec: int = 0
+
+# ─── Stalker spawning (dark-directive.md §4.1 The Silence) ───────────────────
+var _stalker_timer: float = 0.0
+var _stalker_rolled: bool = false
 
 # ─── Travel phase spawning ────────────────────────────────────────────────────
 const SCROLL_SPEED        := 40.0
@@ -74,6 +84,7 @@ var _cluster_complete_pending: bool = false   # cluster_complete arrived during 
 const LAYER_SPEED := [0.15, 0.40, 1.0]   # fraction of SCROLL_SPEED
 var _stars: Array[Vector4] = []
 var _vp_size: Vector2 = Vector2.ZERO     # cached viewport size (set in _ready)
+var _wrong_star_idx: int = -1            # The star that moves. It's nothing.
 
 # ─── Screen shake ─────────────────────────────────────────────────────────────
 var _shake_amount: float = 0.0
@@ -116,6 +127,22 @@ func _ready() -> void:
 		hud_display.connect_player(player)
 	_setup_mission_prompts()
 
+	# Dread layer — atmosphere director + motion tracker (dark-directive.md)
+	_dread_director = DreadDirector.new()
+	add_child(_dread_director)
+	_dread_director.connect_player(player)
+	_threat_tracker = ThreatTracker.new()
+	$HUD.add_child(_threat_tracker)
+	_stalker_timer = randf_range(18.0, 30.0)
+
+	# Darkness veil — sectors 3+ visibility falloff. Enemy projectiles render
+	# above the veil so incoming fire is never hidden (dark-directive.md §6).
+	var veil := DarknessVeil.new()
+	add_child(veil)
+	veil.connect_player(player)
+	enemy_projectiles_node.z_index = 35
+	projectiles_node.z_index = 35
+
 	# Wire CRT overlay
 	var crt := get_node_or_null("CRTOverlay")
 	if crt and crt.has_method("connect_player"):
@@ -141,6 +168,9 @@ func _ready() -> void:
 	for i in 4:
 		_spawn_asteroid(randi_range(0, 1))
 	_request_mission_prompt("move")
+	# Mission Control decays — by Delta, nobody is answering (dark-directive.md §4.4)
+	if GameManager.current_sector == 4:
+		_request_mission_prompt("control_lost")
 
 ## Create and connect the one-time mission-control onboarding prompt system.
 func _setup_mission_prompts() -> void:
@@ -170,13 +200,17 @@ func _request_mission_prompt(prompt_id: String) -> void:
 
 func _build_starfield(vp: Rect2) -> void:
 	_stars.clear()
-	for i in 80:
+	for i in 64:   # Sparser field — the void should feel empty
 		var layer := i % 3
 		_stars.append(Vector4(
 			randf_range(0, vp.size.x),
 			randf_range(0, vp.size.y),
 			float(layer),
 			randf_range(0.0, TAU)))
+	# The wrong star — one background star that drifts against the parallax.
+	# It's nothing. Probably. (dark-directive.md §4.2)
+	_wrong_star_idx = randi_range(0, _stars.size() - 1) \
+		if GameManager.current_sector >= 2 and randf() < 0.4 else -1
 
 # ─── Per-frame ────────────────────────────────────────────────────────────────
 
@@ -195,15 +229,17 @@ func _process(delta: float) -> void:
 			player.weapons.add_travel_distance(scroll_dist)
 		_update_travel_spawning(delta)
 
-	# Screen shake
+	# Screen shake — translation + slight rotation; rotation reads as force,
+	# not glitch (Vlambeer / dark-directive.md §4.2)
 	if _shake_timer > 0.0:
 		_shake_timer -= delta
 		_shake_amount = lerpf(_shake_amount, 0.0, delta * 8.0)
-		# Apply shake to all game-world children (simple offset)
 		var shake_off := Vector2(randf_range(-1, 1), randf_range(-1, 1)) * _shake_amount
 		position = shake_off
+		rotation = deg_to_rad(randf_range(-0.4, 0.4)) * clampf(_shake_amount / 4.0, 0.0, 1.0)
 	else:
 		position = Vector2.ZERO
+		rotation = 0.0
 
 	queue_redraw()
 
@@ -234,20 +270,46 @@ func _update_travel_spawning(delta: float) -> void:
 		_bg_fill_timer = maxf(8.0 / intensity, 3.0)
 		_spawn_background_filler()
 
+	_update_stalker_spawning(delta)
+
+## The Silence — cloaked stalker rolls once per timer window in sectors 3+.
+## Never more than one concurrent; travel phase only (dark-directive.md §6).
+func _update_stalker_spawning(delta: float) -> void:
+	var sector := GameManager.current_sector
+	if sector < int(GameManager.dread_value("stalker", "min_sector", 3)):
+		return
+	if not get_tree().get_nodes_in_group("silence").is_empty():
+		return
+	_stalker_timer -= delta
+	if _stalker_timer > 0.0:
+		return
+	_stalker_timer = randf_range(25.0, 40.0)
+	if _stalker_rolled:
+		return   # One stalker visit per sector keeps it an event, not a chore
+	var chances: Variant = GameManager.dread_value("stalker", "spawn_chance_per_sector", {})
+	var chance: float = float((chances as Dictionary).get(str(sector), 0.0)) if chances is Dictionary else 0.0
+	if randf() < chance:
+		_stalker_rolled = true
+		_request_mission_prompt("silence")
+		var vp := get_viewport_rect()
+		spawn_enemy_at("silence", Vector2(randf_range(40.0, vp.size.x - 40.0), -30.0))
+
 func _draw() -> void:
 	var t := Time.get_ticks_msec() / 1000.0
 	var h := _vp_size.y
 	var w := _vp_size.x
 
 	# ── Nebula glow based on current sector ──
+	# Dread palette: desaturated, sickly, hue-shifted toward cold — the void
+	# gets less romantic the deeper you go (dark-directive.md §4.2)
 	var sector := clampi(GameManager.current_sector, 1, 5)
 	var nebula_color: Color
 	match sector:
-		1: nebula_color = Color(0.08, 0.12, 0.28, 0.25)   # blue
-		2: nebula_color = Color(0.18, 0.06, 0.25, 0.22)   # purple
-		3: nebula_color = Color(0.04, 0.18, 0.20, 0.22)   # teal
-		4: nebula_color = Color(0.22, 0.08, 0.04, 0.20)   # red-orange
-		_: nebula_color = Color(0.22, 0.18, 0.06, 0.20)   # gold
+		1: nebula_color = Color(0.07, 0.10, 0.20, 0.22)   # cold blue-grey — last safe light
+		2: nebula_color = Color(0.11, 0.06, 0.15, 0.20)   # bruise violet
+		3: nebula_color = Color(0.05, 0.13, 0.10, 0.22)   # sickly phosphor murk
+		4: nebula_color = Color(0.13, 0.05, 0.03, 0.20)   # rust / dried blood
+		_: nebula_color = Color(0.08, 0.04, 0.10, 0.18)   # near-black violet
 
 	# Two soft nebula blobs — slow drift
 	var neb_x1 := w * 0.3 + sin(t * 0.07) * 30.0
@@ -278,13 +340,21 @@ func _draw() -> void:
 	# Layer 0 (far): dim warm yellow / red — distant giants
 	# Layer 1 (mid): white / blue-white mix
 	# Layer 2 (near): bright white / blue, occasional red giant
-	for s in _stars:
+	for si in _stars.size():
+		var s := _stars[si]
 		var layer   := int(s.z)
 		var y_off   := fmod(s.y + _scroll_offset * LAYER_SPEED[layer], h)
+		var x_pos   := s.x
 
-		# Twinkle — more pronounced, varies per star
+		# The wrong star drifts sideways against the parallax and half-ignores
+		# the scroll. Nobody said anything about it in the briefing.
+		if si == _wrong_star_idx:
+			x_pos = fmod(s.x + t * 1.1, w)
+			y_off = fmod(s.y + _scroll_offset * LAYER_SPEED[layer] * 0.4, h)
+
+		# Twinkle — dimmer overall; the void is not friendly (dark-directive.md)
 		var twinkle := sin(t * (1.8 + s.w * 0.5) + s.w) * 0.5 + 0.5  # 0..1 range
-		var bright  := 0.25 + 0.30 * float(layer) + 0.35 * twinkle
+		var bright  := 0.16 + 0.24 * float(layer) + 0.28 * twinkle
 		var radius  := 0.4 + 0.35 * float(layer)
 
 		# Choose star color based on layer + per-star seed
@@ -315,20 +385,20 @@ func _draw() -> void:
 		# Bloom for brighter stars — extra soft circle
 		if bright > 0.7 and layer >= 1:
 			var bloom_a := (bright - 0.7) * 0.4
-			draw_circle(Vector2(s.x, y_off), radius * 2.5, Color(col.r, col.g, col.b, bloom_a))
+			draw_circle(Vector2(x_pos, y_off), radius * 2.5, Color(col.r, col.g, col.b, bloom_a))
 
-		draw_circle(Vector2(s.x, y_off), radius, col)
+		draw_circle(Vector2(x_pos, y_off), radius, col)
 
 		# Cross-flare on the brightest near stars during peak twinkle
 		if layer == 2 and twinkle > 0.85:
 			var flare_a := (twinkle - 0.85) * 3.0 * 0.3  # 0..0.3
 			var fc := Color(col.r, col.g, col.b, flare_a)
-			draw_line(Vector2(s.x - 3.0, y_off), Vector2(s.x + 3.0, y_off), fc, 0.5)
-			draw_line(Vector2(s.x, y_off - 3.0), Vector2(s.x, y_off + 3.0), fc, 0.5)
+			draw_line(Vector2(x_pos - 3.0, y_off), Vector2(x_pos + 3.0, y_off), fc, 0.5)
+			draw_line(Vector2(x_pos, y_off - 3.0), Vector2(x_pos, y_off + 3.0), fc, 0.5)
 
 		# Wrap: also draw star one screen-height above
 		if y_off < 6.0:
-			draw_circle(Vector2(s.x, y_off + h), radius, col)
+			draw_circle(Vector2(x_pos, y_off + h), radius, col)
 
 # ─── Travel hazard spawning ───────────────────────────────────────────────────
 
@@ -458,6 +528,8 @@ func _encounter_enemy_wave(type: String, params: Dictionary) -> void:
 			Vector2((vp.size.x / (count + 1.0)) * (i + 1), -25.0))
 
 func _encounter_elite_wave(params: Dictionary) -> void:
+	# Silence before contact — the mix drops out as elites arrive
+	AudioManager.duck_music(4.5)
 	var variants: Array = params.get("variants", ["interceptor"])
 	var hp_scale: float = params.get("hp_scale", 1.0)
 	var vp := get_viewport_rect()
@@ -547,6 +619,7 @@ func _start_star_cluster() -> void:
 				_wire_scan_bar_to_star(star)
 
 	AudioManager.play_sfx("star_cluster_arrive")
+	get_tree().call_group("crt_overlay", "pulse_signal_roll", 0.5)
 
 func _wire_scan_bar_to_star(star: StarNode) -> void:
 	if scan_bar_ui == null or star.has_meta("scan_bar_wired"):
@@ -689,6 +762,7 @@ func _spawn_enemy_node(type: String, pos: Vector2) -> EnemyBase:
 		"elite_swarm_commander": EnemyEliteSwarmCommander,
 		"mothership":            EnemyMothershipScene,
 		"leviathan":             EnemyLeviathanScene,
+		"silence":               EnemySilenceScene,
 	}
 	var scene: PackedScene = scene_map.get(type, null)
 	if scene == null:
@@ -706,6 +780,11 @@ func _on_derelict_destroyed(pos: Vector2) -> void:
 	spawn_pickup(pos + Vector2(10, 0), "crystal")
 	spawn_pickup(pos + Vector2(0, -8), "crystal")
 	screen_shake(3.0, 0.2)
+	# Derelicts are graves — salvaging one recovers a probe log (dark-directive.md §4.4)
+	var frag := LogFragments.next_fragment()
+	if not frag.is_empty() and hud_display and hud_display.has_method("show_log_fragment"):
+		AudioManager.play_sfx("derelict_log", 0.7)
+		hud_display.show_log_fragment(String(frag["title"]), String(frag["text"]))
 
 func _on_enemy_died(pos: Vector2, drop_table: String, _enemy: EnemyBase) -> void:
 	_maybe_drop_loot(pos, drop_table)
@@ -723,6 +802,11 @@ func _on_enemy_died(pos: Vector2, drop_table: String, _enemy: EnemyBase) -> void
 		"leviathan": exp_type = Explosion.Type.LEVIATHAN
 	spawn_explosion(pos, exp_type)
 	screen_shake(2.5, 0.15)
+	# Kill hitstop — elites and bosses freeze longer (dark-directive.md §4.2)
+	if drop_table in ["elite", "destroyer", "mothership", "leviathan"]:
+		hitstop(int(GameManager.dread_value("hitstop", "elite_kill_ms", 90)))
+	else:
+		hitstop(int(GameManager.dread_value("hitstop", "kill_ms", 40)))
 
 func spawn_mine_at(pos: Vector2) -> void:
 	var m := SpaceMineScene.instantiate() as SpaceMine
@@ -831,6 +915,29 @@ func screen_shake(amount: float, duration: float) -> void:
 	var shake_multiplier := clampf(float(SaveManager.get_setting("screen_shake")), 0.0, 1.0)
 	_shake_amount = maxf(_shake_amount, amount * shake_multiplier)
 	_shake_timer  = maxf(_shake_timer, duration if shake_multiplier > 0.0 else 0.0)
+
+# ─── Hitstop ──────────────────────────────────────────────────────────────────
+
+## Freeze the world for a few milliseconds — the subconscious "thunk" that
+## makes kills land (dark-directive.md §4.2). Respects screen_shake=0 as the
+## accessibility opt-out for all impact effects.
+func hitstop(ms: int) -> void:
+	if clampf(float(SaveManager.get_setting("screen_shake")), 0.0, 1.0) <= 0.0:
+		return
+	var end_msec := Time.get_ticks_msec() + ms
+	if end_msec <= _hitstop_recover_at_msec:
+		return   # Already stopped at least this long
+	_hitstop_recover_at_msec = end_msec
+	Engine.time_scale = 0.05
+	var timer := get_tree().create_timer(float(ms) / 1000.0, true, false, true)
+	timer.timeout.connect(func() -> void:
+		if Time.get_ticks_msec() >= _hitstop_recover_at_msec:
+			Engine.time_scale = 1.0)
+
+## Player took a hull hit — impact feedback (called by Player via group).
+func on_player_hull_hit() -> void:
+	hitstop(int(GameManager.dread_value("hitstop", "player_hit_ms", 55)))
+	screen_shake(3.2, 0.22)
 
 # ─── Player death ─────────────────────────────────────────────────────────────
 

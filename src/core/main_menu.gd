@@ -31,7 +31,7 @@ const C_DIM      := Color(0.22, 0.32, 0.45)
 const C_WHITE    := Color(0.85, 0.88, 0.92)
 const C_RED      := Color(0.80, 0.12, 0.08)
 
-const TAGLINE := "SURVEY PROBE SEVEN  —  DEEP SPACE RECON"
+const TAGLINE := "ELEVEN PROBES WENT SILENT. YOU ARE THE TWELFTH."
 const MENU_ITEMS := ["LAUNCH", "SCORES", "SETTINGS", "QUIT"]
 const SETTINGS_ITEMS := [
 	{"key": "music_volume", "label": "MUSIC", "kind": "float", "step": 0.1},
@@ -39,6 +39,7 @@ const SETTINGS_ITEMS := [
 	{"key": "screen_shake", "label": "SHAKE", "kind": "float", "step": 0.25},
 	{"key": "crt_enabled", "label": "CRT", "kind": "bool"},
 	{"key": "flash_intensity", "label": "FLASH", "kind": "float", "step": 0.25},
+	{"key": "dread_intensity", "label": "DREAD", "kind": "float", "step": 0.25},
 	{"key": "text_scale", "label": "TEXT", "kind": "float", "step": 0.25, "min": 0.75, "max": 1.5},
 	{"key": "hold_to_boost", "label": "BOOST", "kind": "bool"},
 	{"key": "color_friendly", "label": "COLOR", "kind": "bool"},

@@ -39,11 +39,14 @@ func _process(delta: float) -> void:
 		queue_free()
 		return
 
-	# Magnet toward player
+	# Magnet toward player — salvage magnetism: range grows with kill streak
+	# multiplier, rewarding sustained aggression (dark-directive.md §4.1)
 	var player := _find_player()
 	if player:
+		var magnet_range: float = float(GameManager.dread_value("magnet", "base_radius", MAGNET_RANGE)) \
+			+ float(GameManager.streak_multiplier - 1) * float(GameManager.dread_value("magnet", "per_multiplier", 14.0))
 		var d := global_position.distance_to(player.global_position)
-		if d < MAGNET_RANGE:
+		if d < magnet_range:
 			var dir := (player.global_position - global_position).normalized()
 			_velocity = _velocity.lerp(dir * MAGNET_SPEED, 0.15)
 

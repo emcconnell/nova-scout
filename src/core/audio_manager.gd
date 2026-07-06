@@ -210,7 +210,10 @@ func play_music_for_state(state: GameManager.GameState) -> void:
 		GameManager.GameState.DEATH: stop_music()
 
 # ─── SFX ─────────────────────────────────────────────────────────────────────
-func play_sfx(sound_name: String, volume_scale: float = 1.0) -> void:
+## Play a one-shot SFX. Pitch is randomized ±6% by default so repeated samples
+## never machine-gun identically; pass an explicit pitch to override (e.g. the
+## sector-5 detuned scan chime — dark-directive.md §4.2 "imperfect familiarity").
+func play_sfx(sound_name: String, volume_scale: float = 1.0, pitch: float = 0.0) -> void:
 	if not _audio_enabled:
 		return
 	var path := "res://assets/audio/sfx/%s.wav" % sound_name
@@ -228,8 +231,20 @@ func play_sfx(sound_name: String, volume_scale: float = 1.0) -> void:
 	if player == null:
 		return
 	player.volume_db = linear_to_db(_sfx_volume * volume_scale)
+	player.pitch_scale = pitch if pitch > 0.0 else randf_range(0.94, 1.06)
 	player.stream = stream
 	player.play()
+
+## Duck the music bed for a few seconds — silence as a warning sign.
+## Used before elite contact and when The Silence acquires the player.
+func duck_music(duration: float = 3.0, depth_db: float = -26.0) -> void:
+	if not _audio_enabled or not is_instance_valid(_active_music):
+		return
+	var player := _active_music
+	var tween := create_tween()
+	tween.tween_property(player, "volume_db", linear_to_db(_music_volume) + depth_db, 0.35)
+	tween.tween_interval(maxf(duration - 0.35 - 1.2, 0.1))
+	tween.tween_property(player, "volume_db", linear_to_db(_music_volume), 1.2)
 
 func _get_free_sfx_player() -> AudioStreamPlayer:
 	for player in _sfx_pool:

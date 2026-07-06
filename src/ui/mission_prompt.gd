@@ -6,15 +6,17 @@ signal prompt_shown(prompt_id: String, text: String)
 signal prompt_dismissed(prompt_id: String)
 
 const PROMPTS := {
-	"move": "Survey Probe Seven online. WASD / Stick to navigate.",
-	"fire": "Break debris with the laser.",
-	"boost": "Boost burns fuel. Use it to escape pressure.",
-	"pickup": "Crystals fund upgrades. Fuel keeps the probe alive.",
-	"scan": "Approach the star and press Scan.",
-	"first_discovery": "Signal resolved. Even quiet stars can hide resources, hazards, or a way home.",
+	"move": "Systems check complete. WASD / Stick to navigate. You are the twelfth.",
+	"fire": "Debris ahead. The laser is rated for rock.",
+	"boost": "Boost burns fuel. Out here, fuel is life.",
+	"pickup": "Salvage funds upgrades. The dead don't need it.",
+	"scan": "Approach the star and scan. Scanning broadcasts.",
+	"first_discovery": "Signal resolved. Others may have heard it too.",
 	"abort": "Scan locks orbit. Press Scan again to abort.",
-	"alien": "Signal spike. Weapons free.",
-	"upgrade": "Spend crystals between sectors to shape the run.",
+	"alien": "Contact. Weapons free. Crew survival: secondary.",
+	"upgrade": "Refit between sectors. Crystals buy the pieces.",
+	"silence": "Contact matches no catalogued drive signature.",
+	"control_lost": "Relay silent 31 hours. Standing orders: proceed.",
 }
 
 var default_duration: float = 4.5

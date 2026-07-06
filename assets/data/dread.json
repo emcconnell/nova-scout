@@ -1,0 +1,54 @@
+{
+  "comment": "Dark Directive v2.0 balance data — see design/gdd/dark-directive.md",
+  "danger_pay": {
+    "hull_threshold": 0.25,
+    "score_multiplier": 1.5
+  },
+  "graze": {
+    "radius": 6.0,
+    "min_bolt_age": 0.15,
+    "score": 5,
+    "energy": 1.0
+  },
+  "streak": {
+    "decay_time": 6.0
+  },
+  "magnet": {
+    "base_radius": 40.0,
+    "per_multiplier": 14.0
+  },
+  "tracker": {
+    "lookahead_px": 100.0,
+    "ping_interval_far": 1.4,
+    "ping_interval_near": 0.45
+  },
+  "hitstop": {
+    "kill_ms": 40,
+    "elite_kill_ms": 90,
+    "player_hit_ms": 55
+  },
+  "darkness": {
+    "sector_radius": { "1": 0.0, "2": 0.0, "3": 95.0, "4": 120.0, "5": 80.0 },
+    "edge_softness": 55.0,
+    "max_alpha": 0.82
+  },
+  "stalker": {
+    "hp": 45,
+    "contact_damage": 14,
+    "bolt_damage": 12,
+    "score": 600,
+    "attack_interval_min": 7.0,
+    "attack_interval_max": 10.0,
+    "attack_window": 2.2,
+    "attack_cycles": 2,
+    "cruise_speed": 55.0,
+    "attack_speed": 240.0,
+    "min_sector": 3,
+    "spawn_chance_per_sector": { "3": 0.65, "4": 0.85, "5": 1.0 }
+  },
+  "heartbeat": {
+    "hull_threshold": 0.25,
+    "interval_calm": 1.1,
+    "interval_panic": 0.62
+  }
+}

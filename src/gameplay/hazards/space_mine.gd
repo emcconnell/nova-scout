@@ -55,6 +55,7 @@ var _charge_timer: float = 0.0
 
 func _ready() -> void:
 	add_to_group("hazards")
+	add_to_group("mines")   # Tracked by the ThreatTracker HUD (dark-directive.md)
 	# monitoring/monitorable default true — skip explicit set to avoid physics errors
 	collision_layer = 16
 	collision_mask = 5   # 1=player + 4=player bullets

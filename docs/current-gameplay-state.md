@@ -11,7 +11,7 @@
 - Engine: Godot 4.x configured for GL Compatibility.
 - Language: GDScript.
 - Core autoloads: `GameManager`, `AudioManager`, `SaveManager`.
-- Current repo path: `/Users/sqyer/star-finder/nova-scout`.
+- Current repo path: `/Volumes/RepoDrive/Code/star-finder/nova-scout`.
 - Tests present: GUT tests under `tests/unit`; latest verified run passes 74/74 tests and 207 asserts.
 - Audio assets are present under `assets/audio/music/` and `assets/audio/sfx/`; missing paths still fail gracefully.
 - Sector 1 now has an authored opening pass documented in `design/quick-specs/first-five-minutes.md`; the first star cluster appears at distance 4400 (~110 seconds at base scroll speed).

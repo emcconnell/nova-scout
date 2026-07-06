@@ -1,6 +1,6 @@
 # Nova Scout — App Research and Game Improvement Report
 
-Generated from code/design review of `/Users/sqyer/star-finder/nova-scout`.
+Generated from code/design review of `/Volumes/RepoDrive/Code/star-finder/nova-scout`.
 
 ## 1. Executive Summary
 
@@ -52,7 +52,7 @@ Travel through sector
 
 ## 3. Codebase Shape
 
-I reviewed project files under `/Users/sqyer/star-finder/nova-scout`, excluding `.git`, `.godot`, `addons`, `builds`, and the CCGS framework.
+I reviewed project files under `/Volumes/RepoDrive/Code/star-finder/nova-scout`, excluding `.git`, `.godot`, `addons`, `builds`, and the CCGS framework.
 
 Approximate source/content footprint:
 

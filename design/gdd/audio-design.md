@@ -148,6 +148,16 @@ The motif, quieter, more bittersweet. Still resolved, but more reflective.
 - Music: **OGG** with loop points set in metadata
 - Target audio specs: 44.1kHz, stereo, normalized to -14 LUFS integrated
 
+### Current Procedural Asset Pass (2026-05-13)
+
+- Music WAVs have been regenerated as deterministic 44.1kHz stereo procedural tracks, replacing the earlier 5-second mono placeholders with 15-45 second analog sci-fi beds.
+- SFX WAVs have been regenerated with layered transients, filtered noise, pitch sweeps, ring modulation, and stereo widening where useful for explosions, scans, transitions, boss cues, and victory stings.
+- Additional runtime-referenced aliases now exist for events that previously could fail silently, including `emp_fire`, `enemy_laser`, `missile_explode`, `scan_start`, `pickup_collect`, `wave_clear`, `asteroid_break`, `mine_armed`, `mine_explode`, `beacon_collected`, and `elite_blink`.
+- Assets are reproducible through `scripts/generate_audio_assets.py`; run it from the project root after tuning synthesis parameters.
+- After regenerating WAVs, run `godot --headless --path . --import --quit` before playtesting or exporting so Godot refreshes `.godot/imported/*.sample` cache files instead of playing stale imported audio.
+- Level music is intentionally continuous: `AudioManager.play_sector_music()` starts on the sector's theme, restarts a short WAV bed if it ends, and crossfades every 120 seconds through the five sector themes to create a new feeling during long travel/scanning stretches. Menu, combat, boss, win, and death music calls disable that rotation so set-piece cues remain clear.
+- Manual listening QA remains required before release for loudness, fatigue, and balance across headphones, speakers, and exported builds.
+
 ---
 
 ## Audio Budget

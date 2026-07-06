@@ -4,7 +4,15 @@ extends Node
 
 # ─── Constants ───────────────────────────────────────────────────────────────
 const MUSIC_FADE_TIME := 1.5
+const LEVEL_MUSIC_ROTATION_TIME := 120.0
 const SFX_POOL_SIZE := 16
+const LEVEL_MUSIC_ROTATION_TRACKS := [
+	"inner_rim",
+	"asteroid_fields",
+	"nebula_crossing",
+	"alien_territory",
+	"the_frontier",
+]
 
 # ─── Node refs (assigned in _ready) ──────────────────────────────────────────
 var _music_player_a: AudioStreamPlayer
@@ -18,6 +26,9 @@ var _music_volume: float = 0.8
 var _sfx_volume: float = 1.0
 var _mothership_phase: int = 0
 var _audio_enabled: bool = true
+var _level_music_active: bool = false
+var _level_music_timer: float = 0.0
+var _level_music_index: int = 0
 
 # Tween for crossfade
 var _fade_tween: Tween = null
@@ -50,6 +61,19 @@ func _ready() -> void:
 		add_child(player)
 		_sfx_pool.append(player)
 
+func _process(delta: float) -> void:
+	if not _level_music_active:
+		return
+	if not _is_level_music_state():
+		return
+	_restart_current_level_track_if_needed()
+	_level_music_timer += delta
+	if _level_music_timer < LEVEL_MUSIC_ROTATION_TIME:
+		return
+	_level_music_timer = 0.0
+	_level_music_index = (_level_music_index + 1) % LEVEL_MUSIC_ROTATION_TRACKS.size()
+	_play_music_track(LEVEL_MUSIC_ROTATION_TRACKS[_level_music_index])
+
 func _exit_tree() -> void:
 	_cleanup_audio_streams()
 
@@ -66,6 +90,8 @@ func _cleanup_audio_streams() -> void:
 	for player in _sfx_pool:
 		_stop_and_clear_player(player)
 	_current_track = ""
+	_level_music_active = false
+	_level_music_timer = 0.0
 
 func _stop_and_clear_player(player: AudioStreamPlayer) -> void:
 	if not is_instance_valid(player):
@@ -75,8 +101,32 @@ func _stop_and_clear_player(player: AudioStreamPlayer) -> void:
 	player.volume_db = -80.0
 
 # ─── Music ───────────────────────────────────────────────────────────────────
-func play_music(track_name: String, fade: bool = true) -> void:
+func _is_level_music_state() -> bool:
+	return GameManager.current_state in [
+		GameManager.GameState.TRAVEL,
+		GameManager.GameState.STAR_CLUSTER,
+		GameManager.GameState.SCANNING,
+	]
+
+func _restart_current_level_track_if_needed() -> void:
 	if not _audio_enabled:
+		return
+	if _current_track.is_empty():
+		return
+	if not is_instance_valid(_active_music):
+		return
+	if _active_music.stream == null:
+		return
+	if not _active_music.playing:
+		_active_music.play()
+
+func play_music(track_name: String, fade: bool = true) -> void:
+	_level_music_active = false
+	_play_music_track(track_name, fade)
+
+func _play_music_track(track_name: String, fade: bool = true) -> void:
+	if not _audio_enabled:
+		_current_track = track_name
 		return
 	if _current_track == track_name:
 		return
@@ -119,6 +169,8 @@ func _crossfade_to(target: AudioStreamPlayer) -> void:
 	_active_music = target
 
 func stop_music(fade: bool = true) -> void:
+	_level_music_active = false
+	_level_music_timer = 0.0
 	if not _audio_enabled:
 		return
 	_current_track = ""
@@ -145,12 +197,10 @@ func set_mothership_phase(phase: int) -> void:
 		3: play_music("mothership_phase3")
 
 func play_sector_music(sector: int) -> void:
-	match sector:
-		1: play_music("inner_rim")
-		2: play_music("asteroid_fields")
-		3: play_music("nebula_crossing")
-		4: play_music("alien_territory")
-		5: play_music("the_frontier")
+	_level_music_active = true
+	_level_music_timer = 0.0
+	_level_music_index = clampi(sector - 1, 0, LEVEL_MUSIC_ROTATION_TRACKS.size() - 1)
+	_play_music_track(LEVEL_MUSIC_ROTATION_TRACKS[_level_music_index])
 
 func play_music_for_state(state: GameManager.GameState) -> void:
 	match state:

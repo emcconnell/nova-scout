@@ -8,15 +8,13 @@ signal destroyed(pos: Vector2)
 const HULL_HP := 40
 const DRIFT_SPEED := 12.0
 
-const COL_HULL := Color(0.30, 0.28, 0.25)
-const COL_DARK := Color(0.15, 0.13, 0.12)
-const COL_GLOW := Color(0.00, 0.70, 0.90, 0.3)
-
 var _hp: int = HULL_HP
 var _dead: bool = false
 var _hit_flash_timer: float = 0.0
 var _wobble: float = 0.0
 var _velocity: Vector2 = Vector2(0, DRIFT_SPEED)
+## Precomputed hulk geometry — seeded once in _ready, never randf in _draw.
+var _hulk: DerelictShipRenderer.HulkData = null
 
 func _ready() -> void:
 	collision_layer = 16   # hazards layer
@@ -30,6 +28,9 @@ func _ready() -> void:
 	add_child(shape)
 
 	area_entered.connect(_on_area_entered)
+
+	# Seeded wrecked-hulk geometry — precomputed, never randf in _draw.
+	_hulk = DerelictShipRenderer.build(int(get_instance_id()))
 
 func _process(delta: float) -> void:
 	if _dead:
@@ -74,24 +75,8 @@ func _die() -> void:
 	get_tree().call_group("game_world", "spawn_score_popup", global_position, "+50")
 	queue_free()
 
+## Wrecked survey-probe hulk — dead sibling of the SP-7, drawn via DerelictShipRenderer.
 func _draw() -> void:
-	var flash := _hit_flash_timer > 0.0
-	var hull := Color(1, 1, 1) if flash else COL_HULL
-	var dark := Color(1, 1, 1) if flash else COL_DARK
-
-	# Main hull — damaged rectangle
-	draw_colored_polygon(PackedVector2Array([
-		Vector2(-14, -8), Vector2(10, -7),
-		Vector2(14, 2), Vector2(12, 8),
-		Vector2(-10, 7), Vector2(-14, -2)
-	]), hull)
-
-	# Damage hole
-	draw_circle(Vector2(3, -1), 4.0, dark)
-
-	# Broken wing strut
-	draw_line(Vector2(-14, 0), Vector2(-20, 5), hull, 1.5)
-
-	# Flickering emergency light
-	var glow_a: float = 0.15 + 0.25 * abs(sin(_wobble * 3.0))
-	draw_circle(Vector2(-6, -4), 2.0, Color(COL_GLOW.r, COL_GLOW.g, COL_GLOW.b, glow_a))
+	if _hulk == null:
+		return
+	DerelictShipRenderer.draw(self, _hulk, _hit_flash_timer > 0.0, _wobble)

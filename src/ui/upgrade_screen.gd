@@ -1,5 +1,7 @@
 ## UpgradeScreen — Between-sector upgrade selection. Hangar bay aesthetic.
-## GDD Ref: gameplay-mechanics.md §9 — Sector Transitions
+## Selection highlight and cost readouts retint live to VisualState.pal("accent")
+## (Turn 4). Title ghosts at high blend, matching the HUD failure language.
+## GDD Ref: gameplay-mechanics.md §9 — Sector Transitions; art-bible.md Turn 4
 extends Control
 
 signal upgrade_done()
@@ -8,9 +10,7 @@ const COL_BG      := Color(0.03, 0.04, 0.07)
 const COL_METAL   := Color(0.06, 0.08, 0.12)
 const COL_DARK    := Color(0.02, 0.03, 0.05)
 const COL_LABEL   := Color(0.22, 1.00, 0.08)
-const COL_SEL     := Color(0.00, 0.80, 1.00)
 const COL_DIM     := Color(0.08, 0.25, 0.08)
-const COL_COST    := Color(0.00, 0.80, 1.00)
 const COL_CANT    := Color(0.40, 0.15, 0.15)
 const COL_BORDER  := Color(0.08, 0.22, 0.12)
 const COL_RIVET   := Color(0.08, 0.10, 0.14)
@@ -91,6 +91,7 @@ func _draw() -> void:
 	var h   := vp.size.y
 	var cx  := w * 0.5
 	var font := _font_body
+	var accent_col := VisualState.pal("accent")
 
 	# === Fully opaque background ===
 	draw_rect(Rect2(Vector2.ZERO, vp.size), COL_BG)
@@ -113,14 +114,20 @@ func _draw() -> void:
 		draw_circle(Vector2(rx, h - 7), 1.2, COL_RIVET)
 
 	# === Header ===
-	draw_string(_font_title, Vector2(cx - 44, 30), "UPGRADE BAY",
+	var title := "UPGRADE BAY"
+	var title_pos := Vector2(cx - 44, 30)
+	draw_string(_font_title, title_pos, title,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 12, COL_LABEL)
+	var glitch := VisualState.blend()
+	if glitch > 0.5:
+		draw_string(_font_title, title_pos + Vector2(2.5, 1.0), title,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(COL_LABEL.r, COL_LABEL.g, COL_LABEL.b, 0.3 * glitch))
 	draw_line(Vector2(14, 36), Vector2(w - 14, 36), COL_BORDER, 1.0)
 
 	# Crystal count
 	var crystal_str := "DATA CRYSTALS:  %d" % GameManager.data_crystals
 	draw_string(font, Vector2(cx - 38, 48), crystal_str,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 6, COL_COST)
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 6, accent_col)
 
 	# === Upgrade items ===
 	for i in UPGRADES.size():
@@ -135,20 +142,20 @@ func _draw() -> void:
 		if is_sel:
 			var sel_a := 0.08 + 0.04 * sin(_anim * 4.0)
 			draw_rect(Rect2(14, item_y - 4, w - 28, 20),
-				Color(COL_SEL.r, COL_SEL.g, COL_SEL.b, sel_a))
+				Color(accent_col.r, accent_col.g, accent_col.b, sel_a))
 			draw_rect(Rect2(14, item_y - 4, w - 28, 20),
-				Color(COL_SEL.r, COL_SEL.g, COL_SEL.b, 0.2), false, 1.0)
+				Color(accent_col.r, accent_col.g, accent_col.b, 0.2), false, 1.0)
 
 		# Selector arrow
-		var label_col := COL_SEL if is_sel else (COL_LABEL if can_afford else COL_CANT)
+		var label_col := accent_col if is_sel else (COL_LABEL if can_afford else COL_CANT)
 		var prefix := "> " if is_sel else "  "
 		draw_string(font, Vector2(18, item_y + 6), prefix + "[%s]" % String(upg.get("branch", "CORE")),
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 4, COL_COST if is_sel else COL_DIM)
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 4, accent_col if is_sel else COL_DIM)
 		draw_string(font, Vector2(74, item_y + 6), upg["label"],
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 6, label_col)
 
 		# Cost
-		var cost_col := COL_COST if can_afford else COL_CANT
+		var cost_col := accent_col if can_afford else COL_CANT
 		draw_string(font, Vector2(w - 60, item_y + 6), "[%d]" % cost,
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 6, cost_col)
 
@@ -157,7 +164,7 @@ func _draw() -> void:
 			draw_string(font, Vector2(32, item_y + 15), upg["desc"],
 				HORIZONTAL_ALIGNMENT_LEFT, -1, 4, Color(0.50, 0.80, 0.50))
 			draw_string(font, Vector2(w - 132, item_y + 15), _upgrade_comparison_text(String(upg["id"])),
-				HORIZONTAL_ALIGNMENT_LEFT, -1, 4, COL_COST if can_afford else COL_DIM)
+				HORIZONTAL_ALIGNMENT_LEFT, -1, 4, accent_col if can_afford else COL_DIM)
 
 	# === Footer ===
 	draw_line(Vector2(14, h - 28), Vector2(w - 14, h - 28), COL_BORDER, 1.0)

@@ -5,12 +5,12 @@ extends EnemyBase
 
 const ORBIT_SPEED  := 2.2   # radians/sec
 const ORBIT_RADIUS := 45.0
-const COL_HULL     := Color(0.20, 0.60, 1.00)
-const COL_GLOW     := Color(0.40, 0.80, 1.00, 0.6)
+const COL_SHIELD_GLOW := Color(0.40, 0.80, 1.00, 0.6)   # shield-tech tell, not biomech
 
 var _parent: Node2D = null
 var _angle: float = 0.0
 var _wobble: float = 0.0
+var _eye_dots: Array = []   # seeded eye cluster (dead frequency)
 
 func _ready() -> void:
 	super()
@@ -21,6 +21,7 @@ func _ready() -> void:
 	drop_table = "shield_drone"
 	collision_layer = 2
 	collision_mask = 4   # only player bullets
+	_eye_dots = [Vector3(0, -1, 1.4)]
 
 func attach_to(parent: Node2D) -> void:
 	_parent = parent
@@ -37,8 +38,15 @@ func _update(delta: float) -> void:
 
 func _draw() -> void:
 	var flash := _hit_flash_timer > 0.0
-	var hull  := Color(1,1,1) if flash else COL_HULL
+	var lit := _lit_factor()
+	var hull := EnemyRenderer.body_stop(0, lit)
+	if flash:
+		hull = Color(1, 1, 1)
 	draw_circle(Vector2.ZERO, 6.0, hull)
+	# Shield-tech glow ring — a Mothership system, kept blue (not biomech)
 	var ga := 0.4 + 0.4 * sin(_wobble)
-	draw_circle(Vector2.ZERO, 9.0, Color(COL_GLOW.r, COL_GLOW.g, COL_GLOW.b, ga))
-	draw_arc(Vector2.ZERO, 12.0, 0, TAU, 20, Color(COL_HULL.r, COL_HULL.g, COL_HULL.b, 0.4), 1.5)
+	draw_circle(Vector2.ZERO, 9.0, Color(COL_SHIELD_GLOW.r, COL_SHIELD_GLOW.g, COL_SHIELD_GLOW.b, ga))
+	draw_arc(Vector2.ZERO, 12.0, 0, TAU, 20, Color(COL_SHIELD_GLOW.r, COL_SHIELD_GLOW.g, COL_SHIELD_GLOW.b, 0.4), 1.5)
+	# Single eye wakes in dead frequency (combat readability)
+	EnemyRenderer.eye_cluster(self, _eye_dots, lit, [0])
+	_draw_hit_flash()

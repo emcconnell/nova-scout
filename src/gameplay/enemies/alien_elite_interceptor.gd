@@ -11,9 +11,7 @@ const SPREAD_SHOTS   := 5
 const BOLT_DAMAGE    := 12
 const BOLT_SPEED     := 240.0
 
-const COL_HULL  := Color(0.50, 0.00, 0.70)
 const COL_BLINK := Color(1.00, 0.80, 0.00, 0.8)
-const COL_GLOW  := Color(0.75, 0.12, 0.45, 0.6)
 const COL_TRAIL := Color(0.80, 0.60, 1.00, 0.4)
 
 var _fire_timer: float = 0.8
@@ -23,6 +21,8 @@ var _wobble: float = 0.0
 var _target_pos: Vector2 = Vector2.ZERO
 var _moving: bool = true
 var hp_scale: float = 1.0  # For scaled encounters
+var _flecks: Array[Vector3] = []      # seeded chitin flecks (TURN 4)
+var _eye_dots: Array = []             # seeded eye cluster (dead frequency)
 
 func _ready() -> void:
 	super()
@@ -31,6 +31,11 @@ func _ready() -> void:
 	contact_damage = 25
 	score_value = 1500
 	drop_table = "elite"
+	_flecks = EnemyRenderer.seed_flecks(get_instance_id(), 24, Vector2(12, 9))
+	_eye_dots = [
+		Vector3(-4, -4, 1.2), Vector3(4, -4, 1.2), Vector3(0, -8, 1.5),
+		Vector3(-8, 2, 0.8), Vector3(8, 2, 0.8),
+	]
 
 func _update(delta: float) -> void:
 	if _stunned:
@@ -81,23 +86,51 @@ func _update(delta: float) -> void:
 
 func _draw() -> void:
 	var flash := _hit_flash_timer > 0.0 or _blink_flash > 0.0
-	var hull  := Color(1,1,1) if flash else COL_HULL
-	# Arrowhead body
+	var lit := _lit_factor()
+	var blend := VisualState.blend()
+	var hi := EnemyRenderer.body_stop(0, lit)
+	var mid := EnemyRenderer.body_stop(1, lit)
+	var hull := hi
+	if flash:
+		hull = Color(1, 1, 1)
+
+	EnemyRenderer.under_halo(self, Vector2(0, 4), 20.0)
+
+	# Arrowhead body (silhouette unchanged)
 	draw_colored_polygon(PackedVector2Array([
 		Vector2(0, -14), Vector2(10, 6), Vector2(0, 2), Vector2(-10, 6)
 	]), hull)
 	# Wing tips
+	var wing_col := mid if not flash else Color(1, 1, 1)
 	draw_colored_polygon(PackedVector2Array([
 		Vector2(-10, 6), Vector2(-18, 10), Vector2(-12, 12), Vector2(-8, 8)
-	]), hull)
+	]), wing_col)
 	draw_colored_polygon(PackedVector2Array([
 		Vector2(10, 6), Vector2(18, 10), Vector2(12, 12), Vector2(8, 8)
-	]), hull)
-	# Glow core
+	]), wing_col)
+
+	# Plate ridge across the nose
+	EnemyRenderer.plate_ridge_line(self,
+		PackedVector2Array([Vector2(-8, 2), Vector2(0, -4), Vector2(8, 2)]),
+		PackedVector2Array([Vector2(-8, 0.6), Vector2(0, -5.4), Vector2(8, 0.6)]), lit)
+
+	EnemyRenderer.draw_flecks(self, _flecks, lit)
+
+	# Glow core — magenta in SURVEY, dies with blend
 	var pulse: float = 0.5 + 0.5 * abs(sin(_wobble))
-	draw_circle(Vector2(0, -2), 4.0, Color(COL_GLOW.r, COL_GLOW.g, COL_GLOW.b, pulse))
-	# Blink flash
+	var core_col := VisualState.col(Color("B03BFF"), Color("7A0E12"))
+	DrawKit.glow(self, Vector2(0, -2), 4.0, Color(core_col.r, core_col.g, core_col.b, pulse * (1.0 - blend * 0.5)), 3)
+
+	# Eye cluster wakes in dead frequency
+	EnemyRenderer.eye_cluster(self, _eye_dots, lit, [0, 2])
+
+	if lit > 0.01:
+		var rim_pts := PackedVector2Array([Vector2(0, -14), Vector2(-10, 6), Vector2(-18, 10)])
+		EnemyRenderer.lit_rim_stroke(self, rim_pts, lit)
+
+	# Blink flash — kept as a bright teleport tell
 	if _blink_flash > 0.0:
 		draw_circle(Vector2.ZERO, 16.0, Color(COL_BLINK.r, COL_BLINK.g, COL_BLINK.b, _blink_flash * 5.0))
 	if _stunned:
 		draw_circle(Vector2(0, -16), 2.5, Color(0, 1, 1, 0.9))
+	_draw_hit_flash()

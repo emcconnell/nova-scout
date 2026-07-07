@@ -137,6 +137,8 @@ func _die() -> void:
 func _draw() -> void:
 	var vis := 1.0 - _cloak
 	var flash := _hit_flash_timer > 0.0
+	# The cloak beats the beam — cap the flood-cone reveal hard at 0.25.
+	var lit := _lit_factor(0.25)
 	# Even fully cloaked: a heat-haze shimmer, 2–8% alpha
 	var shimmer_a := 0.02 + 0.06 * (0.5 + 0.5 * sin(_shimmer * 7.0)) + vis * 0.75
 	if flash:
@@ -148,18 +150,22 @@ func _draw() -> void:
 		Vector2(8, 10), Vector2(0, 6), Vector2(-9, 11), Vector2(-5, 3),
 		Vector2(-12, 1), Vector2(-6, -4),
 	])
-	var hull_col := Color(0.04, 0.03, 0.06, shimmer_a)
+	# Hull tints toward wet chitin only very faintly — the cloak still wins.
+	var hull_tint := EnemyRenderer.body_stop(2, lit)
+	var hull_col := Color(hull_tint.r * 0.3, hull_tint.g * 0.3, hull_tint.b * 0.3, shimmer_a)
 	if flash:
 		hull_col = Color(1, 1, 1, 0.9)
 	draw_colored_polygon(body, hull_col)
 	# Violet edge trace — only reads when partially decloaked
 	if vis > 0.05 or flash:
 		var edge_a := clampf(vis * 0.8 + (0.3 if flash else 0.0), 0.0, 0.9)
+		var edge_col := VisualState.col(COL_EDGE, Color("7A0E12")).lerp(Color(1.0, 0.878, 0.745), lit)
 		for i in body.size():
 			draw_line(body[i], body[(i + 1) % body.size()],
-				Color(COL_EDGE.r, COL_EDGE.g, COL_EDGE.b, edge_a), 0.8)
-	# Single eye — the last thing to disappear
+				Color(edge_col.r, edge_col.g, edge_col.b, edge_a), 0.8)
+	# Single eye — the last thing to disappear, wakes red in dead frequency
 	var eye_a := clampf(0.12 + vis * 0.9, 0.0, 1.0)
-	draw_circle(Vector2(1, -2), 1.4, Color(COL_EYE.r, COL_EYE.g, COL_EYE.b, eye_a * 0.4))
-	draw_circle(Vector2(1, -2), 0.8, Color(COL_EYE.r, COL_EYE.g, COL_EYE.b, eye_a))
+	var eye_col := VisualState.col(COL_EYE, Color("FF2A3C")).lerp(Color("FF6A70"), lit)
+	draw_circle(Vector2(1, -2), 1.4, Color(eye_col.r, eye_col.g, eye_col.b, eye_a * 0.4))
+	draw_circle(Vector2(1, -2), 0.8, Color(eye_col.r, eye_col.g, eye_col.b, eye_a))
 	_draw_hit_flash()

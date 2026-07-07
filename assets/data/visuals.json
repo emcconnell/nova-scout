@@ -1,0 +1,33 @@
+{
+  "comment": "TURN 4 'Punched-Up Realism + The Fade' visual tuning — see design/gdd/art-bible.md. One 0..1 blend crossfades the world from SURVEY (4A) to DEAD FREQUENCY (4B).",
+  "fade": {
+    "sector_blend": { "1": 0.0, "2": 0.1, "3": 0.4, "4": 0.7, "5": 1.0 },
+    "hull_dead_bonus": 0.18,
+    "threat_bonus": 0.08,
+    "lerp_speed": 0.55,
+    "menu_blend": 0.25
+  },
+  "beam": {
+    "enable_blend": 0.45,
+    "range": 130.0,
+    "half_angle_deg": 17.0,
+    "edge_softness_deg": 8.0,
+    "strength": 0.85
+  },
+  "film": {
+    "grain_survey": 0.035,
+    "grain_dead": 0.085,
+    "vignette_survey": 0.30,
+    "vignette_dead": 0.72,
+    "hud_glitch_hull_threshold": 0.5
+  },
+  "sun": {
+    "survey_screen_pos": [98.0, 44.0],
+    "dead_screen_pos": [44.0, 140.0],
+    "flare_strength": 0.55
+  },
+  "scan": {
+    "auto_start_delay": 0.5,
+    "grace_flash_duration": 0.15
+  }
+}

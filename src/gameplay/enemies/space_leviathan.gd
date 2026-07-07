@@ -16,10 +16,8 @@ const BODY_SPEED    := 22.0
 const PURSUE_SPEED  := 40.0
 
 # ─── Colors ──────────────────────────────────────────────────────────────────
-const COL_BODY     := Color(0.30, 0.10, 0.40)
-const COL_BODY_LIT := Color(0.45, 0.18, 0.55)
-const COL_EYE      := Color(0.90, 0.20, 0.00)
-const COL_EYE_GLOW := Color(1.00, 0.40, 0.10, 0.4)
+# Tentacle/blood keep their own organic-purple identity (distinct from the
+# shared chitin ramp) — the beast bleeds, it doesn't glow like the drones.
 const COL_TENTACLE := Color(0.35, 0.12, 0.45)
 const COL_TENT_TIP := Color(0.50, 0.20, 0.60)
 const COL_BLOOD    := Color(0.55, 0.05, 0.70)
@@ -41,6 +39,8 @@ const NUM_TENTACLES := 6
 
 # Blood splatter particles
 var _blood_particles: Array[Dictionary] = []
+var _flecks: Array[Vector3] = []      # seeded chitin flecks (TURN 4)
+var _eye_dots: Array = []             # seeded eye cluster (dead frequency)
 
 func _ready() -> void:
 	super()
@@ -51,6 +51,8 @@ func _ready() -> void:
 	drop_table = "leviathan"
 	collision_layer = 2
 	collision_mask = 5
+	_flecks = EnemyRenderer.seed_flecks(get_instance_id(), 30, Vector2(9, 6))
+	_eye_dots = [Vector3(0, 0, 2.2)]
 
 	# Initialize tentacles
 	for i in NUM_TENTACLES:
@@ -220,8 +222,10 @@ func _update_blood(delta: float) -> void:
 
 func _draw() -> void:
 	var flash := _hit_flash_timer > 0.0
+	var lit := _lit_factor()
+	var eye_col := VisualState.col(Color("B03BFF"), Color("FF2A3C")).lerp(Color("FF6A70"), lit)
 
-	# ─── Blood particles (behind body) ───────────────────────────────
+	# ─── Blood particles (behind body) — organic, keeps its own purple ──
 	for p in _blood_particles:
 		var pct: float = float(p["life"]) / float(p["max_life"])
 		var alpha := (1.0 - pct)
@@ -275,11 +279,13 @@ func _draw() -> void:
 		# Grabbing glow at tips
 		if _grabbing:
 			var ga := 0.3 + 0.3 * sin(_wobble * 5.0)
-			draw_circle(seg3_end, 3.0, Color(COL_EYE.r, COL_EYE.g, COL_EYE.b, ga))
+			draw_circle(seg3_end, 3.0, Color(eye_col.r, eye_col.g, eye_col.b, ga))
 
-	# ─── Main body — organic blob ────────────────────────────────────
-	var body_col := Color(1, 1, 1) if flash else COL_BODY
-	var lit_col := Color(1, 1, 1) if flash else COL_BODY_LIT
+	# ─── Main body — organic blob, retextured to the shared chitin ramp ──
+	var hi := EnemyRenderer.body_stop(0, lit)
+	var mid := EnemyRenderer.body_stop(1, lit)
+	var body_col := Color(1, 1, 1) if flash else hi
+	var lit_col := Color(1, 1, 1) if flash else mid
 
 	# Body: organic irregular shape
 	var body_pts := PackedVector2Array()
@@ -297,32 +303,39 @@ func _draw() -> void:
 		inner_pts.append(Vector2(cos(a) * r, sin(a) * r * 0.65))
 	draw_colored_polygon(inner_pts, lit_col)
 
-	# Pulsing veins
-	var vein_a := 0.3 + 0.2 * sin(_wobble * 2.0)
+	# Seeded chitin flecks over the hide
+	EnemyRenderer.draw_flecks(self, _flecks, lit)
+
+	# Pulsing veins — magenta bioluminescence, dies with blend
+	var vein_a := (0.3 + 0.2 * sin(_wobble * 2.0)) * (1.0 - VisualState.blend() * 0.5)
 	for vi in 4:
 		var va := TAU / 4.0 * vi + _wobble * 0.2
 		var vstart := Vector2(cos(va) * 4.0, sin(va) * 3.0)
 		var vend := Vector2(cos(va) * 9.0, sin(va) * 6.0)
-		draw_line(vstart, vend, Color(0.60, 0.10, 0.35, vein_a), 1.0)
+		draw_line(vstart, vend, Color(eye_col.r, eye_col.g, eye_col.b, vein_a), 1.0)
+	EnemyRenderer.dead_vein_line(self, Vector2(-8, 5), Vector2(8, 5))
 
-	# ─── Eye — central glowing eye ───────────────────────────────────
+	if lit > 0.01:
+		EnemyRenderer.lit_rim_stroke(self, body_pts, lit)
+
+	# ─── Eye — central glowing eye, tracks player, always visible ────
 	draw_circle(Vector2.ZERO, 4.0, Color(0.15, 0.05, 0.20))
-	# Eye tracks player
 	var eye_offset := Vector2.ZERO
 	if is_instance_valid(player):
 		eye_offset = player_local.normalized() * 1.5
-	draw_circle(eye_offset, 2.5, COL_EYE)
+	draw_circle(eye_offset, 2.5, eye_col)
 	draw_circle(eye_offset, 1.2, Color(1.0, 0.9, 0.3))
 	# Eye glow
 	var eg := 0.3 + 0.2 * sin(_wobble * 3.0)
-	draw_circle(eye_offset, 5.0, Color(COL_EYE_GLOW.r, COL_EYE_GLOW.g, COL_EYE_GLOW.b, eg))
+	DrawKit.glow(self, eye_offset, 5.0, Color(eye_col.r, eye_col.g, eye_col.b, eg * 0.5), 3)
 
 	# ─── Grab warning ────────────────────────────────────────────────
 	if _grabbing:
 		var warn_a := 0.15 + 0.15 * sin(_wobble * 6.0)
 		draw_arc(Vector2.ZERO, 15.0, 0, TAU, 16,
-			Color(COL_EYE.r, COL_EYE.g, COL_EYE.b, warn_a), 1.0)
+			Color(eye_col.r, eye_col.g, eye_col.b, warn_a), 1.0)
 
 	# ─── Stun indicator ──────────────────────────────────────────────
 	if _stunned:
 		draw_circle(Vector2(0, -14), 2.5, Color(0.0, 1.0, 1.0, 0.8))
+	_draw_hit_flash()

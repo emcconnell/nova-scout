@@ -1,5 +1,8 @@
 ## SectorTransition — Hangar door blast-shield aesthetic between sectors.
-## GDD Ref: gameplay-mechanics.md §9
+## Turn 4: the sector just cleared (outgoing) reads in fixed SURVEY cyan; the
+## sector being entered (incoming) reads in VisualState.pal("hud") — the
+## current blended hue — so the fade itself narrates "signal is degrading".
+## GDD Ref: gameplay-mechanics.md §9; art-bible.md Turn 4
 extends Control
 
 signal transition_complete()
@@ -10,7 +13,7 @@ const COL_DARK    := Color(0.02, 0.03, 0.05)
 const COL_RIVET   := Color(0.08, 0.10, 0.14)
 const COL_LABEL   := Color(0.22, 1.00, 0.08)
 const COL_DIM     := Color(0.08, 0.25, 0.08)
-const COL_CYAN    := Color(0.00, 0.80, 1.00)
+const COL_OUTGOING := Color(0.00, 0.80, 1.00)   # Fixed SURVEY cyan — the sector just cleared
 const COL_BORDER  := Color(0.08, 0.22, 0.12)
 const COL_WARN    := Color(1.00, 0.60, 0.00)
 
@@ -172,28 +175,37 @@ func _draw_door_panel(x: float, y: float, w: float, dh: float, is_top: bool) -> 
 
 func _draw_stats(cx: float, cy: float, _font_unused: Font, a: float) -> void:
 	var label_col := Color(COL_LABEL.r, COL_LABEL.g, COL_LABEL.b, a)
-	var cyan_col  := Color(COL_CYAN.r, COL_CYAN.g, COL_CYAN.b, a)
+	var outgoing_col := Color(COL_OUTGOING.r, COL_OUTGOING.g, COL_OUTGOING.b, a)
 	var dim_col   := Color(COL_DIM.r, COL_DIM.g, COL_DIM.b, a)
 
-	draw_string(_font_title, Vector2(cx - 38, cy - 28), "SECTOR CLEAR",
+	# "SECTOR CLEAR" is the sector just left behind — always fixed SURVEY cyan.
+	var title := "SECTOR CLEAR"
+	draw_string(_font_title, Vector2(cx - 38, cy - 28), title,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 11, label_col)
+	var glitch := VisualState.blend()
+	if glitch > 0.5:
+		draw_string(_font_title, Vector2(cx - 38, cy - 28) + Vector2(2.5, 1.0), title,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(label_col.r, label_col.g, label_col.b, a * 0.3 * glitch))
 	draw_line(Vector2(cx - 60, cy - 20), Vector2(cx + 60, cy - 20),
 		Color(COL_BORDER.r, COL_BORDER.g, COL_BORDER.b, a), 1.0)
 
 	draw_string(_font_body, Vector2(cx - 50, cy - 6),
 		"SCORE     %07d" % GameManager.score,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 6, cyan_col)
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 6, outgoing_col)
 	draw_string(_font_body, Vector2(cx - 50, cy + 8),
 		"ENEMIES   %d" % GameManager.enemies_destroyed,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 6, cyan_col)
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 6, outgoing_col)
 	draw_string(_font_body, Vector2(cx - 50, cy + 22),
 		"CRYSTALS  %d" % GameManager.data_crystals,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 6, cyan_col)
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 6, outgoing_col)
 
+	# Bonus breakdown carries forward into the incoming sector — blended hue.
+	var incoming_hud := VisualState.pal("hud")
+	var incoming_col := Color(incoming_hud.r, incoming_hud.g, incoming_hud.b, a)
 	var bonus_lines := _sector_bonus_lines()
 	for i in bonus_lines.size():
 		draw_string(_font_body, Vector2(cx + 12, cy - 6 + i * 12), bonus_lines[i],
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 5, label_col if i == 0 else cyan_col)
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 5, label_col if i == 0 else incoming_col)
 
 	if sin(_anim * 3.0) > 0.0:
 		draw_string(_font_body, Vector2(cx - 30, cy + 40), "A / SPACE CONTINUE",
@@ -211,12 +223,20 @@ func _sector_bonus_lines() -> Array[String]:
 	]
 
 func _draw_log(cx: float, cy: float, _font_unused: Font, a: float) -> void:
+	# The mission log is transmitted from the sector being entered — blended hue.
+	var incoming_hud := VisualState.pal("hud")
+	var log_col := Color(incoming_hud.r, incoming_hud.g, incoming_hud.b, a * 0.85)
 	var dim_col := Color(COL_DIM.r, COL_DIM.g, COL_DIM.b, a)
 	var log_idx := clampi(_sector_from, 1, SECTOR_LOG.size() - 1)
 	var log_text: String = SECTOR_LOG[log_idx]
 
-	draw_string(_font_title, Vector2(cx - 38, cy - 24), "MISSION LOG",
+	var title := "MISSION LOG"
+	draw_string(_font_title, Vector2(cx - 38, cy - 24), title,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(COL_LABEL.r, COL_LABEL.g, COL_LABEL.b, a))
+	var glitch := VisualState.blend()
+	if glitch > 0.5:
+		draw_string(_font_title, Vector2(cx - 38, cy - 24) + Vector2(2.5, 1.0), title,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(COL_LABEL.r, COL_LABEL.g, COL_LABEL.b, a * 0.3 * glitch))
 	draw_line(Vector2(cx - 60, cy - 16), Vector2(cx + 60, cy - 16),
 		Color(COL_BORDER.r, COL_BORDER.g, COL_BORDER.b, a), 1.0)
 
@@ -226,12 +246,12 @@ func _draw_log(cx: float, cy: float, _font_unused: Font, a: float) -> void:
 		if split == -1:
 			split = 40
 		draw_string(_font_body, Vector2(cx - 68, cy + 2), log_text.substr(0, split),
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 5, dim_col)
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 5, log_col)
 		draw_string(_font_body, Vector2(cx - 68, cy + 14), log_text.substr(split + 1),
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 5, dim_col)
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 5, log_col)
 	else:
 		draw_string(_font_body, Vector2(cx - 68, cy + 2), log_text,
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 5, dim_col)
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 5, log_col)
 
 	if sin(_anim * 3.0) > 0.0:
 		draw_string(_font_body, Vector2(cx - 30, cy + 38), "A / SPACE CONTINUE",

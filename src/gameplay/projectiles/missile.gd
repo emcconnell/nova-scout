@@ -6,8 +6,8 @@ const SPEED := 220.0
 const TURN_SPEED := 3.5   # radians/sec
 const DAMAGE := 60
 const AOE_RADIUS := 40.0
-const COLOR_BODY := Color(0.95, 0.95, 0.95)
-const COLOR_TRAIL := Color(1.0, 0.5, 0.1, 0.7)
+const HULL_DARK  := Color(0.229, 0.251, 0.290)
+const HULL_LIGHT := Color(0.788, 0.812, 0.847)
 
 var _target: Node2D = null
 var _velocity: Vector2 = Vector2.UP * SPEED
@@ -57,8 +57,10 @@ func _process(delta: float) -> void:
 		_return_to_pool()
 	queue_redraw()
 
+## Metal-hull nose cone + proj "flame" exhaust glow + flickering shock diamonds.
 func _draw() -> void:
 	var t := _lifetime
+	var flame := VisualState.proj("flame")
 
 	# ── Smoky fading trail ──
 	for i in _trail.size():
@@ -66,44 +68,42 @@ func _draw() -> void:
 		var frac := float(i) / float(TRAIL_LEN)
 		var alpha := (1.0 - frac) * 0.45
 		var size := 2.0 - frac * 1.2
-		# Smoke: gray-orange fading to transparent
-		var smoke_r := lerpf(1.0, 0.5, frac)
-		var smoke_g := lerpf(0.5, 0.4, frac)
-		var smoke_b := lerpf(0.15, 0.35, frac)
-		draw_circle(pt, size, Color(smoke_r, smoke_g, smoke_b, alpha))
+		var smoke := flame.lerp(Color(0.5, 0.4, 0.35), frac)
+		draw_circle(pt, size, Color(smoke.r, smoke.g, smoke.b, alpha))
 		# Slight random offset for smokiness using time
 		var jx := sin(t * 8.0 + float(i) * 2.3) * 0.8
 		var jy := cos(t * 7.0 + float(i) * 1.7) * 0.6
-		draw_circle(pt + Vector2(jx, jy), size * 0.6, Color(smoke_r, smoke_g, smoke_b, alpha * 0.5))
+		draw_circle(pt + Vector2(jx, jy), size * 0.6, Color(smoke.r, smoke.g, smoke.b, alpha * 0.5))
 
-	# ── Exhaust flame (animated, behind the body) ──
+	# ── Exhaust flame glow (animated, behind the body) ──
 	var flame_flicker := sin(t * 18.0) * 0.3 + 0.7
-	# Outer flame — orange
-	draw_circle(Vector2(0, 4.5), 2.2 * flame_flicker, Color(1.0, 0.45, 0.05, 0.6))
-	# Inner flame — yellow-white
-	draw_circle(Vector2(0, 3.5), 1.4 * flame_flicker, Color(1.0, 0.9, 0.4, 0.8))
-	# Core — white hot
-	draw_circle(Vector2(0, 3.0), 0.7 * flame_flicker, Color(1.0, 1.0, 0.9, 0.9))
-	# Exhaust particles — small dots that scatter behind
-	for pi in 4:
-		var px := sin(t * 14.0 + float(pi) * 1.57) * 1.8
-		var py := 5.0 + float(pi) * 1.5 + sin(t * 10.0 + float(pi)) * 0.8
-		var pa := 0.5 * (1.0 - float(pi) / 4.0)
-		draw_circle(Vector2(px, py), 0.5, Color(1.0, 0.6, 0.1, pa))
+	DrawKit.glow(self, Vector2(0, 4.0), 3.0 * flame_flicker, Color(flame.r, flame.g, flame.b, 0.65), 4)
+	draw_circle(Vector2(0, 3.5), 1.2 * flame_flicker, Color(1.0, 0.9, 0.85, 0.85))
 
-	# ── Missile body — tapered nose cone ──
-	var body_pts := PackedVector2Array([
-		Vector2(0, -6),      # nose tip
-		Vector2(-1.5, -3),   # shoulder left
-		Vector2(-1.5, 3),    # base left
-		Vector2(1.5, 3),     # base right
-		Vector2(1.5, -3),    # shoulder right
+	# Shock-diamond flicker: 3 small bright rhombi at increasing distance, falling alpha.
+	var diamond_phase := int(t * 8.0) % 3   # 8fps flicker cycle, matches concept cadence
+	var diamond_alphas := [0.8, 0.55, 0.32]
+	for di in 3:
+		var dy := 5.0 + float(di) * 1.6
+		var dsize := 0.9 - float(di) * 0.15 + (0.15 if di == diamond_phase else 0.0)
+		var da: float = diamond_alphas[di]
+		var dpts := PackedVector2Array([
+			Vector2(0, dy - dsize), Vector2(dsize * 0.6, dy),
+			Vector2(0, dy + dsize), Vector2(-dsize * 0.6, dy),
+		])
+		draw_colored_polygon(dpts, Color(flame.r, flame.g, flame.b, da))
+
+	# ── Missile body — tapered nose cone, metal hull ramp ──
+	var body_rect := Rect2(-1.5, -3, 3.0, 6.0)
+	DrawKit.hgrad_rect(self, body_rect, HULL_DARK, HULL_LIGHT, 5)
+	var nose_pts := PackedVector2Array([
+		Vector2(0, -6), Vector2(-1.5, -3), Vector2(1.5, -3),
 	])
-	draw_colored_polygon(body_pts, COLOR_BODY)
+	draw_colored_polygon(nose_pts, HULL_LIGHT.lerp(HULL_DARK, 0.3))
 
 	# Fins
-	draw_line(Vector2(-1.5, 2.0), Vector2(-3.0, 4.0), Color(0.7, 0.7, 0.7), 1.0)
-	draw_line(Vector2(1.5, 2.0), Vector2(3.0, 4.0), Color(0.7, 0.7, 0.7), 1.0)
+	draw_line(Vector2(-1.5, 2.0), Vector2(-3.0, 4.0), HULL_LIGHT.lerp(HULL_DARK, 0.4), 1.0)
+	draw_line(Vector2(1.5, 2.0), Vector2(3.0, 4.0), HULL_LIGHT.lerp(HULL_DARK, 0.4), 1.0)
 
 	# Nose highlight
 	draw_circle(Vector2(0, -5.5), 0.8, Color(1.0, 1.0, 1.0, 0.5))

@@ -13,9 +13,7 @@ const BOLT_DAMAGE     := 10
 const BOLT_SPEED      := 200.0
 const FRONT_SHIELD_REDUCTION := 0.5   # 50% damage from front
 
-# ─── Colors (art bible) ──────────────────────────────────────────────────────
-const COL_HULL   := Color(0.40, 0.00, 0.65)
-const COL_STRIPE := Color(0.70, 0.00, 1.00)
+# ─── Colors (art bible — TURN 4 biomech, see EnemyRenderer for shared ramps) ──
 const COL_ENGINE := Color(0.60, 0.00, 0.90, 0.7)
 const COL_SHIELD_INDICATOR := Color(0.00, 0.80, 1.00, 0.45)
 
@@ -27,6 +25,8 @@ var _burst_queue: int = 0
 var _burst_timer: float = 0.0
 var _sweep_dir: float = 1.0   # +1 = right, -1 = left
 var _wobble: float = 0.0
+var _flecks: Array[Vector3] = []      # seeded chitin flecks (TURN 4)
+var _eye_dots: Array = []             # seeded head eye cluster (dead frequency)
 
 func _ready() -> void:
 	super()
@@ -36,6 +36,12 @@ func _ready() -> void:
 	score_value = 300
 	drop_table = "warrior"
 	_sweep_dir = 1.0 if randf() > 0.5 else -1.0
+	_flecks = EnemyRenderer.seed_flecks(get_instance_id(), 30, Vector2(9, 26))
+	_eye_dots = [
+		Vector3(-5, -13, 1.1), Vector3(5, -13, 1.1), Vector3(-8, -10, 0.8),
+		Vector3(8, -10, 0.8), Vector3(-2.5, -15, 0.85), Vector3(2.5, -15, 0.85),
+		Vector3(0, -11, 1.55),
+	]
 
 func _modify_damage(amount: int, from_pos: Vector2) -> int:
 	# Half damage if attack comes from below (front shield)
@@ -93,83 +99,107 @@ func _update(delta: float) -> void:
 
 func _draw() -> void:
 	var flash := _hit_flash_timer > 0.0
-	var hull  := Color(1, 1, 1) if flash else COL_HULL
-	var dark_hull := Color(hull.r * 0.55, hull.g * 0.4, hull.b * 0.65)
 	var w := _wobble
+	var lit := _lit_factor()
+	var blend := VisualState.blend()
 
-	# Main elongated fin body — wider, armored look
-	draw_colored_polygon(PackedVector2Array([
-		Vector2(-5, -14), Vector2(5, -14),
-		Vector2(7, 4), Vector2(-7, 4)
-	]), hull)
-	# Armor panel lines — horizontal plating
-	for py in [-10, -5, 0]:
-		var pw := 4.0 + (float(py) + 14.0) / 18.0 * 3.0
-		draw_line(Vector2(-pw, py), Vector2(pw, py), dark_hull, 1.0)
-	# Center keel (darker inset panel)
-	draw_colored_polygon(PackedVector2Array([
-		Vector2(-2, -12), Vector2(2, -12),
-		Vector2(2.5, 3), Vector2(-2.5, 3)
-	]), dark_hull)
+	# Under-halo behind the pod
+	EnemyRenderer.under_halo(self, Vector2(0, 10), 22.0)
 
-	# Side fins — angular with armor edge highlight
-	for side in [-1.0, 1.0]:
-		var fin := PackedVector2Array([
-			Vector2(side * 7, -6), Vector2(side * 16, 0),
-			Vector2(side * 13, 7), Vector2(side * 6, 3)
+	# Vertical seed-pod body — 16pt polygon approximating the bezier silhouette
+	var body_pts := _pod_silhouette()
+	var hi := EnemyRenderer.body_stop(0, lit)
+	var mid := EnemyRenderer.body_stop(1, lit)
+	var lo := EnemyRenderer.body_stop(2, lit)
+	if flash:
+		hi = Color(1, 1, 1); mid = Color(1, 1, 1); lo = Color(1, 1, 1)
+	draw_colored_polygon(body_pts, hi)
+	DrawKit.ellipse(self, Vector2(-1, 0), Vector2(6, 20), mid, 16)
+	DrawKit.ellipse(self, Vector2(0, 4), Vector2(4, 15), lo, 14)
+
+	# 5 horizontal plate ridge curves (dark stroke + light echo)
+	for i in range(-2, 3):
+		var yy := i * 13.0
+		var ridge := PackedVector2Array([
+			Vector2(-15, yy), Vector2(0, yy + 6), Vector2(15, yy)
 		])
-		draw_colored_polygon(fin, hull)
-		# Fin edge highlight
-		draw_line(Vector2(side * 7, -6), Vector2(side * 16, 0),
-			Color(1, 1, 1, 0.15), 1.0)
-		# Fin panel line
-		draw_line(Vector2(side * 9, -2), Vector2(side * 12, 4), dark_hull, 1.0)
+		var echo := PackedVector2Array([
+			Vector2(-15, yy - 1.4), Vector2(0, yy + 6 - 1.4), Vector2(15, yy - 1.4)
+		])
+		EnemyRenderer.plate_ridge_line(self, ridge, echo, lit)
+	# Center spine line
+	draw_line(Vector2(0, -44), Vector2(0, 44), Color(0, 0, 0, 0.6), 1.4)
 
-	# Weapon ports — small glowing circles on fin tips
+	# ~30 seeded flecks
+	EnemyRenderer.draw_flecks(self, _flecks, lit)
+
+	# Broad sheen ellipse upper-left
+	var sheen_a := lerpf(0.10, 0.05, blend)
+	DrawKit.ellipse(self, Vector2(-6, -20), Vector2(5, 16), Color(1, 1, 1, sheen_a), 10)
+
+	# 6 short thorn barbs up the spine
+	var barb_col := RIM_LIT_COL if lit > 0.01 else Color(0.04, 0.03, 0.04, 0.9)
+	barb_col = VisualState.col(Color(0.3, 0.24, 0.36, 0.9), Color(0.04, 0.03, 0.04, 0.9)).lerp(barb_col, lit)
+	for i in 6:
+		var yy := -40.0 + i * 7.0
+		draw_line(Vector2(0, yy), Vector2(4, yy - 4), barb_col, 1.3)
+
+	# Warm lit-rim stroke down the left silhouette (beam-lit only)
+	if lit > 0.01:
+		var rim_pts := PackedVector2Array([
+			Vector2(0, 46), Vector2(-16, 22), Vector2(-20, -20), Vector2(0, -46),
+		])
+		EnemyRenderer.lit_rim_stroke(self, rim_pts, lit)
+
+	# Central vein / node dots — magenta in SURVEY, dies to deep-red in DEAD
+	var vein_fade := 1.0 - blend
+	if vein_fade > 0.01:
+		EnemyRenderer.magenta_vein(self, Vector2(0, -16), Vector2(0, 34))
+		var node_col := Color("D46CFF")
+		for yy in [-6.0, 8.0, 22.0]:
+			draw_circle(Vector2(0, yy), 1.5, Color(node_col.r, node_col.g, node_col.b, vein_fade))
+		# Forward eye dots
+		var eye_col := Color("FF3DDC")
+		for ex in [-4.0, 4.0]:
+			DrawKit.glow(self, Vector2(ex, -30), 3.5, Color(eye_col.r, eye_col.g, eye_col.b, 0.3 * vein_fade), 2)
+			draw_circle(Vector2(ex, -30), 1.7, Color(eye_col.r, eye_col.g, eye_col.b, vein_fade))
+			draw_rect(Rect2(ex - 0.45, -30.8, 0.9, 0.9), Color(1, 1, 1, 0.8 * vein_fade))
+	# Deep-red faint vein line + 7-dot red eye cluster (wakes with blend)
+	EnemyRenderer.dead_vein_line(self, Vector2(0, -12), Vector2(0, 30))
+	EnemyRenderer.eye_cluster(self, _eye_dots, lit, [0, 1, 6])
+
+	# Weapon ports on fin tips (kept from original armored silhouette read)
 	for side in [-1.0, 1.0]:
 		var port_pos := Vector2(side * 14, 1)
-		draw_circle(port_pos, 2.0, Color(COL_ENGINE.r, COL_ENGINE.g, COL_ENGINE.b, 0.5))
-		var port_pulse := 0.6 + 0.4 * sin(w * 3.0 + side)
-		draw_circle(port_pos, 1.2, Color(COL_STRIPE.r, COL_STRIPE.g, COL_STRIPE.b, port_pulse))
+		draw_circle(port_pos, 2.0, Color(COL_ENGINE.r, COL_ENGINE.g, COL_ENGINE.b, 0.35 * (1.0 - blend * 0.5)))
 
-	# Energy veins — glowing lines running along body
-	var vein_a := 0.4 + 0.3 * sin(w * 2.5)
-	var vein_col := Color(COL_STRIPE.r, COL_STRIPE.g, COL_STRIPE.b, vein_a)
-	draw_line(Vector2(-4, -12), Vector2(-6, 3), vein_col, 1.0)
-	draw_line(Vector2(4, -12), Vector2(6, 3), vein_col, 1.0)
-
-	# Ventral stripe (glowing, wider pulse)
-	var stripe_a := 0.7 + 0.3 * sin(w)
-	draw_line(Vector2(0, -12), Vector2(0, 3),
-		Color(COL_STRIPE.r, COL_STRIPE.g, COL_STRIPE.b, stripe_a), 2.0)
-	# Stripe glow bloom
-	draw_line(Vector2(0, -12), Vector2(0, 3),
-		Color(COL_STRIPE.r, COL_STRIPE.g, COL_STRIPE.b, stripe_a * 0.3), 4.0)
-
-	# Engine nacelles — dual layered with exhaust flicker
+	# Engine nacelles — dual layered with exhaust flicker (kept, tinted by lo ramp)
 	for side in [-1.0, 1.0]:
-		var eng_pos := Vector2(side * 5.5, 5)
-		# Outer glow
+		var eng_pos := Vector2(side * 5.5, 34)
 		var eng_a := 0.5 + 0.3 * sin(w * 4.0 + side * 2.0)
-		draw_circle(eng_pos, 3.5, Color(COL_ENGINE.r, COL_ENGINE.g, COL_ENGINE.b, eng_a * 0.4))
-		# Core
-		draw_circle(eng_pos, 2.5, Color(COL_ENGINE.r, COL_ENGINE.g, COL_ENGINE.b, 0.8))
-		# Hot center
-		draw_circle(eng_pos, 1.0, Color(1, 0.6, 1, 0.6))
-		# Exhaust trail flicker
+		draw_circle(eng_pos, 3.5, Color(lo.r, lo.g, lo.b, eng_a * 0.4))
+		draw_circle(eng_pos, 2.5, Color(lo.r * 1.4 + 0.1, lo.g * 1.4 + 0.1, lo.b * 1.4 + 0.1, 0.8))
 		var trail_len := 2.0 + 1.5 * sin(w * 6.0 + side)
-		draw_line(eng_pos, eng_pos + Vector2(0, trail_len),
-			Color(COL_ENGINE.r, COL_ENGINE.g, COL_ENGINE.b, 0.5), 1.5)
+		draw_line(eng_pos, eng_pos + Vector2(0, trail_len), Color(lo.r, lo.g, lo.b, 0.5), 1.5)
 
-	# Cockpit viewport (small bright slit near top)
-	draw_line(Vector2(-2, -11), Vector2(2, -11), Color(0.5, 0.8, 1.0, 0.7), 1.5)
-
-	# Front shield indicator (bottom face) — layered arcs
-	draw_arc(Vector2(0, 4), 9.0, 0.0, PI, 16, COL_SHIELD_INDICATOR, 1.0)
+	# Front shield indicator (bottom face) — layered arcs, unchanged (HUD-tint blue)
+	draw_arc(Vector2(0, 40), 9.0, 0.0, PI, 16, COL_SHIELD_INDICATOR, 1.0)
 	var shield_a := 0.35 + 0.15 * sin(w * 2.0)
-	draw_arc(Vector2(0, 4), 11.0, 0.15, PI - 0.15, 16,
+	draw_arc(Vector2(0, 40), 11.0, 0.15, PI - 0.15, 16,
 		Color(COL_SHIELD_INDICATOR.r, COL_SHIELD_INDICATOR.g, COL_SHIELD_INDICATOR.b, shield_a), 1.0)
 
 	# Stun
 	if _stunned:
-		draw_circle(Vector2(0, -16), 2.0, Color(0.0, 1.0, 1.0, 0.8))
+		draw_circle(Vector2(0, -46), 2.0, Color(0.0, 1.0, 1.0, 0.8))
+	_draw_hit_flash()
+
+## 16-point polygon approximating the seed-pod bezier silhouette, nose up.
+func _pod_silhouette() -> PackedVector2Array:
+	return PackedVector2Array([
+		Vector2(0, -46), Vector2(6, -40), Vector2(11, -30), Vector2(14, -18),
+		Vector2(15, -4), Vector2(13, 10), Vector2(9, 24), Vector2(4, 36),
+		Vector2(0, 46), Vector2(-4, 36), Vector2(-9, 24), Vector2(-13, 10),
+		Vector2(-15, -4), Vector2(-14, -18), Vector2(-11, -30), Vector2(-6, -40),
+	])
+
+const RIM_LIT_COL := Color(1.0, 0.878, 0.745, 0.55)

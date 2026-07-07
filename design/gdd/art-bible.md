@@ -1,15 +1,15 @@
 # NOVA SCOUT — Art Bible
 
-**Version:** 2.0 (Dark Directive)
+**Version:** 3.0 (Turn 4 — Punched-Up Realism + The Fade)
 **Art Director:** Star-Finder Studio
-**Supersedes:** v1.0 warm-Technicolor direction
-**Binding creative source:** `design/gdd/dark-directive.md` — implementation record in `production/dark-directive-changelog.md`
+**Supersedes:** v2.0 Dark Directive pixel direction (dread pillars retained; render language replaced)
+**Binding creative source:** `design/gdd/dark-directive.md` (tone) + the Turn 4 graphics-overhaul concept sheets (render language)
 
 ---
 
 ## 1. Overview
 
-NOVA SCOUT's visual language is **retrofuturist pixel art with CRT soul — turned toward the dark**. The v1.0 bible drew from the earnest wonder of 1950s pulp covers; v2.0 keeps the phosphor-and-scanline skeleton (native 320×180, analog instrumentation, monospace readouts) and trades Technicolor wonder for the working-class dread of *Alien* (1979). Space is nearly black. Color is rationed. Red is reserved for threat. Darkness is a mechanic (the visibility veil in sectors 3–5), and the CRT overlay is an actor: analog interference ramps with threat. Combat feedback stays maximal — hitstop, shake, flash, lingering embers — because dread only works against contrast.
+NOVA SCOUT's visual language is **documentary space realism under two lighting states that share one geometry**. v3.0 keeps every dread pillar from the Dark Directive but replaces the pixel/phosphor render language with painterly vector realism drawn procedurally at window resolution: panel-level hull detail on the SP-7 (solar cells with a sweeping sun glint, riveted seams, kapton foil, high-gain dish, shock-diamond plume), photographic starfields with a milky-way dust lane, one hard sun with an anamorphic lens flare — and **THE FADE**: a single 0→1 value (`VisualState.blend`) that crossfades the whole world from **SURVEY** (4A — hard sun, silent black, cyan flight instruments) to **DEAD FREQUENCY** (4B — ember star, scorched hull, engines cold, only the beacon alive, failing red HUD). Aliens stop glowing as the fade rises; they exist as pitch-black shapes with waking red eyes until the player's flood cone crosses them and reveals wet chitin. Sprites share geometry between states — the fade is a parameter, not an asset swap.
 
 ## 2. Player Fantasy
 
@@ -19,27 +19,30 @@ You are a working pilot on old hardware, not a hero in a chrome rocket. The ship
 
 1. **The void is hostile.** Near-black space, sparse dim starfield, desaturated sickly nebulae. Visibility itself is scarce in sectors 3–5.
 2. **Red is rationed.** Blood-red appears only on threat: The Silence's eye, emergency states, sector-4 tint, critical UI. Nothing decorative is red.
-3. **Analog everything, dimmed.** Phosphor-green UI retained but dimmed ~15% from v1.0; amber for warnings. The Nostromo school of instrumentation.
-4. **Interference is fear.** The CRT overlay's static, chroma wobble, and sync-roll are driven by threat level — the screen itself gets scared before the player does.
+3. **Analog everything, thinned.** Cyan flight-instrument FUI (thin vector lines, heading tape, corner brackets) that fails to red as the world fades. The Nostromo school of instrumentation, drawn like a lens recording.
+4. **Interference is fear.** The film pass (grain, vignette, static tears) replaces phosphor scanlines; grain and tearing ramp with threat and the fade — the recording degrades before the player does.
 5. **Juice the kill.** Hitstop, rotation shake, muzzle flash, and embers that cool from orange to deep red. Power in the loud, fear in the quiet.
-6. **Resolution discipline.** Native **320×180** (16:9), integer-scaled. Every sprite must be beautiful at native resolution.
+6. **Resolution discipline, redefined.** The 320×180 coordinate canvas is retained for all gameplay, but every asset is procedurally vector-drawn and rasterizes at window resolution — sub-pixel detail is real and must survive at 1280×720.
+7. **One world, two lights (binding).** Every asset is authored once and lit twice: SURVEY and DEAD FREQUENCY palettes crossfaded by `VisualState.blend` (driven by sector depth, hull, and threat — `assets/data/visuals.json`). No asset may branch on state; colors blend.
 
 ## 3. Detailed Rules
 
 ### 3.1 Color Palette
 
-Anchor values (design reference from `dark-directive.md`; per-entity constants live in the scripts cited below):
+Both master palettes live as constants in `src/core/visual_state.gd` (autoload `VisualState`); every drawn color is `SURVEY.lerp(DEAD, blend)`:
 
-| Name | Hex / value | Use |
+| Role | SURVEY (4A) | DEAD FREQUENCY (4B) |
 |------|-----|-----|
-| Void Black | `#04050A` (project clear color) | Background, space |
-| Star White (dimmed) | `#C8D2E8` range | Sparse starfield — fewer, dimmer stars than v1.0 |
-| Probe Cyan | `#00E5FF` | Player laser, energy, scan beam (unchanged — player light is precious) |
-| Phosphor Green (dim) | `#39FF14` dimmed ~15% in UI constants | Primary UI text, readouts, tracker |
-| Amber Warning | `#FFB000` | Fuel, secondary UI, warning states |
-| Threat Red | `#C41E1E` family | **Reserved:** Silence eye, hull-critical states, sector-4 emergency tint, mines |
-| Alien Blood-Violet | `#4D0080`–`#8C14A6` range | Alien hulls and glows — shifted from v1.0 hot magenta toward blood-violet |
-| Gold Shore | `#FFD700` | Final planet, true-ending reveal — the one unrationed warmth |
+| Background / clear color | `#000004` | `#020101` |
+| Hull light / white | `#F4F7FA` | `#101216` |
+| Hull gray | `#9AA3AE` | `#4E565F` |
+| Gold (kapton / warmth) | `#E3B341` | `#7A0E12` (deep red) |
+| Solar cell / panel | `#1B3B73` | `#101216` |
+| Accent / HUD | `#00D5FF` cyan | `#FF2A1D` failing red |
+| Alien glow | `#B03BFF` magenta biolume | `#FF2A3C` eyes only |
+| Projectiles | beam `#7AE8FF` · core `#F2FCFF` · flame `#FF9A3C` · ring `#9AE8FF` · orb `#FF3DDC` | beam `#FF3B2A` · core `#FFD9D0` · flame `#FF6A3C` · ring `#8C939C` · orb `#FF2A3C` |
+| Beam-lit wet chitin | — | `#8A7458 → #4A3A28 → #140E08` + warm rim `rgba(255,224,190,0.55)` |
+| Gold Shore | `#FFD700` | (final-planet reveal — the one unrationed warmth, exempt from the fade) |
 
 **Nebula tints per sector** (implemented in `src/core/game_world.gd`):
 
@@ -63,19 +66,20 @@ A radial visibility falloff centered on the player (`src/ui/darkness_veil.gd` + 
 - Player and enemy projectiles render **above** the veil — bolts carry their own glow.
 - The Mothership arena is exempt: the boss is the light source.
 - Enemies emerge from murk; first read is silhouette + glow, not full sprite.
+- **Turn 4 flood cone:** once `blend` passes `beam.enable_blend` (0.45), the veil carves a volumetric wedge ahead of the probe (range 130 px, half-angle 17°, `visuals.json → beam`), and creatures inside it draw beam-revealed wet chitin via `VisualState.beam_lit()`. The murk hue itself fades blue-black → red-black.
 
-### 3.3 CRT Overlay — Interference as Fear
+### 3.3 Film Pass — Interference as Fear
 
-Rewritten as a true post-process on the screen texture (`src/ui/crt_overlay.gd`, `assets/shaders/crt_overlay.gdshader`):
+The CRT overlay is re-authored as a film/lens post-process (`src/ui/crt_overlay.gd`, `assets/shaders/crt_overlay.gdshader`); the settings toggle and `pulse_signal_roll()` API are preserved:
 
-- Base treatment: scanlines (`scanline_strength = 0.12`), vignette (`vignette_strength = 0.35`), phosphor green-black shadow tint, bloom on bright objects.
-- **`interference`** uniform (0–1): static specks, horizontal line tearing, chroma wobble, and widened chromatic aberration. Driven by the aggregate threat level — ramps when The Silence is near, on hull-critical, and during scan climaxes.
-- **`signal_roll`** uniform (0–1): a horizontal sync-loss band that rolls down the screen, pulsed on major events (stalker telegraph, sector transitions, boss phase changes).
-- Chromatic aberration on hit retained from v1.0 (single-frame ±2 px channel split), now also widened by interference.
+- Base treatment: film grain (`VisualState.grain_amount()`, 0.035 survey → 0.085 dead), vignette (`VisualState.vignette_amount()`, 0.30 → 0.72 crushing), subtle anamorphic flare keyed to the sun's screen position.
+- **`interference`** (0–1): grain boost + red static tears, driven by aggregate threat — ramps when The Silence is near, on hull-critical, and during scan climaxes.
+- **`signal_roll`** (0–1): sync-loss band retained, pulsed on major events (stalker telegraph, sector transitions, boss phase changes).
+- **HUD failure** (in `src/ui/hud.gd`): text ghosting, seeded glitch bars, and whole-HUD dropouts scale with `blend × (1 − hull%)`; at high blend the sector readout reads `NO CARRIER` and `// SIGNAL LOST //` appears — the horror reads as a gameplay signal.
 
-### 3.4 Sprites
+### 3.4 Drawn Assets
 
-Resolution and style rules carry over from v1.0: clean pixel art, 1 px dark outlines on interactive sprites, no outlines on background elements, 8–12 fps animation choppiness intentional.
+All assets are procedural vector drawing (`_draw()`), no sprite textures. Shared vocabulary lives in `src/core/draw_kit.gd` (glows, gradient rects, seeded rock silhouettes, lit-limb strokes) and per-family renderers (`player_renderer.gd`, `enemy_renderer.gd`, `rock_renderer.gd`, `scene_renderer.gd`, `hud_renderer.gd`). Silhouettes, sizes, and collision footprints are unchanged from v2.0; detail is albedo-level only. Animation choppiness (shock-diamond flicker, glint sweeps) stays in the 3-frame / 8 fps family. Seeded noise is precomputed in `_ready` — never `randf()` inside `_draw()`.
 
 **Player craft — Survey Probe Seven.** 16×22 px, nose-up. Weathered steel hull replaces v1.0's warm silver-white — scuffed panels, faded "SP-7" monospace marking. (The menu tagline "you are the twelfth" counts the eleven silent probes plus you; the craft's registry name stays Probe Seven per `src/gameplay/player/player.gd`.) Red emergency cabin glow below 40% hull; damage sparks below 25%. States: idle, thrust (3-frame loop), left/right bank, hit flash, 8-frame explosion. Laser gains a 2-frame muzzle nose flash.
 
@@ -153,8 +157,13 @@ All in `assets/data/dread.json` or shader uniforms unless noted:
 | `darkness.sector_radius` | {3: 95, 4: 120, 5: 80} px | dread.json |
 | `darkness.edge_softness` | 55 px | dread.json |
 | `darkness.max_alpha` | 0.82 | dread.json |
-| `scanline_strength` | 0.12 | crt_overlay.gdshader |
-| `vignette_strength` | 0.35 | crt_overlay.gdshader |
+| `fade.sector_blend` | {1: 0, 2: 0.1, 3: 0.4, 4: 0.7, 5: 1.0} | visuals.json |
+| `fade.hull_dead_bonus` / `fade.threat_bonus` | 0.18 / 0.08 | visuals.json |
+| `fade.lerp_speed` / `fade.menu_blend` | 0.55 /s / 0.25 | visuals.json |
+| `beam.enable_blend` / `range` / `half_angle_deg` | 0.45 / 130 px / 17° | visuals.json |
+| `film.grain_survey→dead` | 0.035 → 0.085 | visuals.json |
+| `film.vignette_survey→dead` | 0.30 → 0.72 | visuals.json |
+| `sun.survey/dead_screen_pos` | (48,28) / (31,149) | visuals.json |
 | `interference`, `signal_roll` | runtime-driven 0–1 | crt_overlay.gd |
 | `hitstop.kill_ms / elite_kill_ms / player_hit_ms` | 40 / 90 / 55 | dread.json |
 | Wrong-star chance | 0.4 per sector (≥2) | game_world.gd |
@@ -164,13 +173,14 @@ All in `assets/data/dread.json` or shader uniforms unless noted:
 
 ## 8. Acceptance Criteria
 
-1. Project clear color is `#04050A`; no sector background renders brighter than sector-1's cold blue-grey tint.
+1. Clear color is `#000004` at blend 0 and `#020101` at blend 1 (set per-frame by `VisualState`); no sector background renders brighter than sector-1's survey state.
+1b. Driving `GameManager.current_sector` from 1 to 5 visibly crossfades every on-screen asset family (ship, enemies, rocks, projectiles, HUD, background) with no asset swap or pop; enemies inside the flood cone reveal warm chitin.
 2. Blood-red appears on screen only during threat states (Silence eye/telegraph, hull-critical, sector-4 tint, mines, critical UI) — audit via sector fly-through.
 3. Sectors 3–5 render the darkness veil at 95/120/80 px radii; all projectiles remain visible above the veil; Mothership arena is exempt.
 4. CRT interference visibly ramps before 100% of Silence decloaks and while hull < 25%; signal_roll pulses on stalker telegraph and boss phase changes.
 5. Kills produce hitstop (40/90 ms) and ember particles that cool orange→red; player hits produce 55 ms hitstop; all respect `screen_shake = 0` and `dread_intensity`.
 6. Player ship shows red cabin glow below 40% hull and damage sparks below 25%.
 7. Threat tracker renders solid blips for contacts within 100 px lookahead and flickering ghost blips for The Silence.
-8. All sprites read cleanly at native 320×180; enemy silhouettes are distinguishable in murk by glow color alone.
+8. All drawn assets read cleanly at 1280×720; enemy silhouettes are distinguishable in murk by glow/eye color alone in BOTH lighting states (magenta biolume at blend 0, red eyes at blend 1).
 9. The wrong star, when present, drifts against parallax and has no collision or gameplay effect.
 10. Discovery/ending sequences remain visibly warmer than every surrounding scene (the dawn contrast survives the dark pass).

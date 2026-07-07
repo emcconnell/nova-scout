@@ -120,7 +120,16 @@ func _aim_at_player() -> Vector2:
 func _get_player() -> Node2D:
 	return get_tree().get_first_node_in_group("player") as Node2D
 
+## 0..1 flood-beam reveal factor for this enemy, scaled by world blend (TURN 4).
+## Subclasses use this to lerp their body ramp toward the wet-chitin palette.
+func _lit_factor(cap: float = 1.0) -> float:
+	return EnemyRenderer.lit_factor(global_position, cap)
+
 ## Draw flash overlay — call from subclass _draw() after own drawing.
+## Soft radial impact burst (never a hard square — it reads as a lit box
+## when knockback zips the enemy across the screen).
 func _draw_hit_flash() -> void:
 	if _hit_flash_timer > 0.0:
-		draw_rect(Rect2(-16, -16, 32, 32), Color(1, 1, 1, 0.5))
+		var a := clampf(_hit_flash_timer / 0.08, 0.0, 1.0)
+		DrawKit.glow(self, Vector2.ZERO, 13.0, Color(1.0, 1.0, 1.0, 0.5 * a), 6)
+		draw_circle(Vector2.ZERO, 4.0, Color(1.0, 1.0, 1.0, 0.45 * a))

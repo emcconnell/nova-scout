@@ -2,19 +2,16 @@
 ## Sweeps for enemies and mines: on-screen and up to lookahead_px above the
 ## viewport, so threats announce themselves before they arrive.
 ## The Silence appears only as an intermittent ghost blip.
-## GDD Ref: dark-directive.md §4.1 Threat Tracker
+## Retints to VisualState.pal("hud") — thin flight-FUI line weights (Turn 4).
+## GDD Ref: dark-directive.md §4.1 Threat Tracker; art-bible.md Turn 4
 class_name ThreatTracker
 extends Control
 
-const COL_FRAME  := Color(0.10, 0.42, 0.12, 0.85)
-const COL_GRID   := Color(0.08, 0.30, 0.09, 0.45)
-const COL_SWEEP  := Color(0.25, 0.95, 0.25, 0.30)
-const COL_BLIP   := Color(0.45, 1.00, 0.35)
 const COL_GHOST  := Color(0.80, 0.90, 0.80)
-const COL_TEXT   := Color(0.18, 0.62, 0.14, 0.75)
 
-const RADIUS := 17.0
+const RADIUS := 14.5
 const MARGIN := 4.0
+const TRAIL_LEN := 3   # Blip fade-trail frames (Turn 4.1 compact rebuild)
 
 var _sweep_angle: float = 0.0
 var _ping_timer: float = 1.0
@@ -22,6 +19,7 @@ var _blip_count_prev: int = 0
 var _ghost_jitter: float = 0.0
 var _font: Font = null
 var _threat_cache: Array[Dictionary] = []   # Collected once per frame in _process
+var _blip_trail: Array[Array] = []          # Ring buffer of prior frames' blip screen-positions
 
 func _ready() -> void:
 	_font = load("res://assets/fonts/ShareTechMono-Regular.ttf") as Font
@@ -45,6 +43,14 @@ func _process(delta: float) -> void:
 		AudioManager.play_sfx("tracker_ping", 0.75)
 		_ping_timer = minf(_ping_timer, 0.4)
 	_blip_count_prev = threats.size()
+
+	# Push this frame's blip positions onto the trail ring buffer (fade trail).
+	var frame_positions: Array = []
+	for t in threats:
+		frame_positions.append(t["pos"])
+	_blip_trail.push_front(frame_positions)
+	while _blip_trail.size() > TRAIL_LEN:
+		_blip_trail.pop_back()
 
 	# Periodic ping — interval tightens as the nearest threat closes
 	if not threats.is_empty():
@@ -105,50 +111,90 @@ func _collect_threats() -> Array[Dictionary]:
 		})
 	return out
 
+## Compact instrument-style radar: hairline concentric rings inside a thin
+## bracket frame, a rotating sweep whose wake briefly brightens blips, and
+## diamond-shaped contacts with a short fade trail (Turn 4.1 restyle).
 func _draw() -> void:
 	if not _is_active_state():
 		return
 	var vp := get_viewport_rect().size
 	var lookahead: float = float(GameManager.dread_value("tracker", "lookahead_px", 100.0))
-	var center := Vector2(vp.x - RADIUS - MARGIN, vp.y - MARGIN - 6.0)
+	var center := Vector2(vp.x - RADIUS - MARGIN, vp.y - MARGIN - 5.0)
+	var hud_col := VisualState.pal("hud")
+	var frame_col := Color(hud_col.r, hud_col.g, hud_col.b, 0.6)
+	var sweep_col := Color(hud_col.r, hud_col.g, hud_col.b, 0.28)
+	var blip_col := VisualState.pal("accent")
+	var text_col := Color(hud_col.r, hud_col.g, hud_col.b, 0.6)
 
-	# Backing glass
-	draw_circle_arc_poly(center, RADIUS + 2.0, Color(0.0, 0.03, 0.0, 0.75))
-	# Range rings
-	for r in [RADIUS * 0.45, RADIUS * 0.75, RADIUS]:
-		draw_arc(center, r, PI, TAU, 20, COL_GRID, 0.8)
+	# Range rings — 3 hairline rings, alpha falling outward.
+	var ring_fracs := [0.42, 0.7, 1.0]
+	for i in ring_fracs.size():
+		var r: float = RADIUS * float(ring_fracs[i])
+		var a: float = 0.32 - float(i) * 0.09
+		draw_arc(center, r, PI, TAU, 20, Color(hud_col.r, hud_col.g, hud_col.b, a), 0.5)
 	# Bearing lines
 	for i in 3:
 		var a := PI + PI * 0.25 * float(i + 1)
-		draw_line(center, center + Vector2(cos(a), sin(a)) * RADIUS, COL_GRID, 0.6)
-	# Frame
-	draw_arc(center, RADIUS + 1.0, PI, TAU, 24, COL_FRAME, 1.0)
-	draw_line(center + Vector2(-RADIUS - 1, 0), center + Vector2(RADIUS + 1, 0), COL_FRAME, 1.0)
+		draw_line(center, center + Vector2(cos(a), sin(a)) * RADIUS,
+			Color(hud_col.r, hud_col.g, hud_col.b, 0.16), 0.5)
+	# Hairline bracket frame (thin, not a filled ring).
+	draw_arc(center, RADIUS + 1.0, PI, TAU, 24, frame_col, 0.6)
+	draw_line(center + Vector2(-RADIUS - 1, 0), center + Vector2(RADIUS + 1, 0), frame_col, 0.6)
+	draw_line(center + Vector2(-RADIUS - 1, 0), center + Vector2(-RADIUS - 1, -2.5), frame_col, 0.6)
+	draw_line(center + Vector2(RADIUS + 1, 0), center + Vector2(RADIUS + 1, -2.5), frame_col, 0.6)
 
-	# Sweep blade (upper half only)
+	# Sweep blade (upper half only) — slow rotation, thin line.
 	var sweep := PI + fmod(_sweep_angle, PI)
-	draw_line(center, center + Vector2(cos(sweep), sin(sweep)) * RADIUS, COL_SWEEP, 1.2)
+	draw_line(center, center + Vector2(cos(sweep), sin(sweep)) * RADIUS, sweep_col, 0.7)
 
-	# Blips — world y from -lookahead..vp.y maps onto radar radius
+	# Fade trail — older frames first (dimmest), current frame drawn last (brightest).
+	for age in range(_blip_trail.size() - 1, -1, -1):
+		var positions: Array = _blip_trail[age]
+		if age == 0:
+			continue   # current-frame contacts drawn below with full detail
+		var trail_a: float = 1.0 - float(age) / float(TRAIL_LEN)
+		for wpos_v in positions:
+			var wpos: Vector2 = wpos_v
+			var bp := _world_to_scope(wpos, vp, lookahead, center)
+			_draw_diamond(bp, 1.0, Color(blip_col.r, blip_col.g, blip_col.b, 0.25 * trail_a))
+
+	# Current contacts — diamonds, brightened if under the sweep's wake.
 	for t in _threat_cache:
 		var wpos: Vector2 = t["pos"]
-		var nx := clampf(wpos.x / vp.x, 0.0, 1.0) * 2.0 - 1.0            # -1..1
-		var ny := clampf((wpos.y + lookahead) / (vp.y + lookahead), 0.0, 1.0)  # 0 top .. 1 bottom
-		var bp := center + Vector2(nx * RADIUS * 0.85, -RADIUS * 0.92 * (1.0 - ny) - 1.0)
+		var bp := _world_to_scope(wpos, vp, lookahead, center)
+		var under_sweep: bool = _angle_near_sweep(bp, center, sweep)
 		if t["ghost"]:
-			draw_circle(bp, 1.3, Color(COL_GHOST.r, COL_GHOST.g, COL_GHOST.b, randf_range(0.25, 0.7)))
+			draw_circle(bp, 1.1, Color(COL_GHOST.r, COL_GHOST.g, COL_GHOST.b, randf_range(0.25, 0.7)))
 		else:
 			var urgency: float = 1.0 - float(t["norm_dist"])
-			draw_circle(bp, 1.0 + urgency * 0.6, COL_BLIP)
-			draw_circle(bp, 2.2 + urgency, Color(COL_BLIP.r, COL_BLIP.g, COL_BLIP.b, 0.22))
+			var boost: float = 1.35 if under_sweep else 1.0
+			var sz: float = (1.0 + urgency * 0.4) * boost
+			_draw_diamond(bp, sz, Color(blip_col.r, blip_col.g, blip_col.b, minf(1.0, 0.85 * boost)))
 
-	draw_string(_font, center + Vector2(-RADIUS, 6.5), "TRACKER",
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 4, COL_TEXT)
+	draw_string(_font, center + Vector2(-RADIUS, 6.0), "TRACKER",
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 4, text_col)
 
-## Filled semicircle helper (draw_circle can't clip to the upper half).
-func draw_circle_arc_poly(center: Vector2, radius: float, color: Color) -> void:
-	var pts := PackedVector2Array()
-	for i in 13:   # left edge → top arc → right edge; closes flat along the base
-		var a := PI + PI * float(i) / 12.0
-		pts.append(center + Vector2(cos(a), sin(a)) * radius)
-	draw_colored_polygon(pts, color)
+## Map a world position onto the scope's screen-space radius (shared by the
+## live blips and the fade trail so both use identical projection math).
+func _world_to_scope(wpos: Vector2, vp: Vector2, lookahead: float, center: Vector2) -> Vector2:
+	var nx := clampf(wpos.x / vp.x, 0.0, 1.0) * 2.0 - 1.0            # -1..1
+	var ny := clampf((wpos.y + lookahead) / (vp.y + lookahead), 0.0, 1.0)  # 0 top .. 1 bottom
+	return center + Vector2(nx * RADIUS * 0.85, -RADIUS * 0.92 * (1.0 - ny) - 1.0)
+
+## True if a blip screen-position sits within the sweep blade's brightening wake.
+func _angle_near_sweep(bp: Vector2, center: Vector2, sweep: float) -> bool:
+	var rel := bp - center
+	if rel.length() < 0.01:
+		return false
+	var ang := rel.angle()
+	var diff := fmod(absf(ang - sweep), TAU)
+	if diff > PI:
+		diff = TAU - diff
+	return diff < 0.35
+
+## Small 1.5px diamond contact marker.
+func _draw_diamond(pos: Vector2, scale: float, color: Color) -> void:
+	var s := 1.5 * scale
+	draw_colored_polygon(PackedVector2Array([
+		pos + Vector2(0, -s), pos + Vector2(s, 0), pos + Vector2(0, s), pos + Vector2(-s, 0)
+	]), color)

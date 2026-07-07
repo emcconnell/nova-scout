@@ -2,9 +2,9 @@
 class_name EnemyMissile
 extends Area2D
 
-const COLOR_TRAIL := Color(1.0, 0.20, 0.00, 0.6)
-const COLOR_BODY  := Color(0.80, 0.60, 1.00)
-const TURN_SPEED  := 2.5  # rad/sec
+const CHITIN_DARK  := Color(0.086, 0.055, 0.098)
+const CHITIN_LIGHT := Color(0.196, 0.129, 0.216)
+const TURN_SPEED   := 2.5  # rad/sec
 
 var _damage: int = 30
 var _target: Node2D = null
@@ -55,41 +55,36 @@ func _process(delta: float) -> void:
 		queue_free()
 	queue_redraw()
 
+## Dark chitin sliver body + proj "orb"-colored exhaust glow.
 func _draw() -> void:
 	var t := _lifetime
+	var orb := VisualState.proj("orb")
 
-	# ── Smoky fading trail ──
+	# ── Smoky fading trail, tinted toward the orb exhaust color ──
 	for i in _trail.size():
 		var pt := to_local(_trail[i])
 		var frac := float(i) / float(TRAIL_LEN)
 		var alpha := (1.0 - frac) * 0.4
 		var size := 1.8 - frac * 1.0
-		# Reddish smoke fading to dark
-		var smoke_r := lerpf(1.0, 0.4, frac)
-		var smoke_g := lerpf(0.2, 0.25, frac)
-		var smoke_b := lerpf(0.0, 0.3, frac)
-		draw_circle(pt, size, Color(smoke_r, smoke_g, smoke_b, alpha))
+		var smoke := orb.lerp(Color(0.3, 0.2, 0.25), frac)
+		draw_circle(pt, size, Color(smoke.r, smoke.g, smoke.b, alpha))
 		# Smoke jitter
 		var jx := sin(t * 9.0 + float(i) * 2.1) * 0.7
 		var jy := cos(t * 7.5 + float(i) * 1.9) * 0.5
-		draw_circle(pt + Vector2(jx, jy), size * 0.5, Color(smoke_r, smoke_g, smoke_b, alpha * 0.4))
+		draw_circle(pt + Vector2(jx, jy), size * 0.5, Color(smoke.r, smoke.g, smoke.b, alpha * 0.4))
 
-	# ── Exhaust flame ──
+	# ── Exhaust glow ──
 	var flame_flicker := sin(t * 16.0) * 0.3 + 0.7
-	# Outer — red-orange
-	draw_circle(Vector2(0, 4.5), 2.0 * flame_flicker, Color(1.0, 0.25, 0.0, 0.55))
-	# Inner — orange-yellow
-	draw_circle(Vector2(0, 3.5), 1.2 * flame_flicker, Color(1.0, 0.7, 0.2, 0.7))
-	# Core — white
-	draw_circle(Vector2(0, 3.0), 0.6 * flame_flicker, Color(1.0, 0.9, 0.8, 0.85))
+	DrawKit.glow(self, Vector2(0, 4.0), 2.4 * flame_flicker, Color(orb.r, orb.g, orb.b, 0.6), 4)
+	draw_circle(Vector2(0, 3.0), 0.6 * flame_flicker, Color(1.0, 0.9, 0.95, 0.8))
 	# Exhaust particles
 	for pi in 3:
 		var px := sin(t * 12.0 + float(pi) * 2.09) * 1.5
 		var py := 5.0 + float(pi) * 1.3 + sin(t * 9.0 + float(pi)) * 0.6
 		var pa := 0.45 * (1.0 - float(pi) / 3.0)
-		draw_circle(Vector2(px, py), 0.4, Color(1.0, 0.3, 0.05, pa))
+		draw_circle(Vector2(px, py), 0.4, Color(orb.r, orb.g, orb.b, pa))
 
-	# ── Missile body — tapered nose cone ──
+	# ── Missile body — dark chitin sliver, tapered nose ──
 	var body_pts := PackedVector2Array([
 		Vector2(0, -6),      # nose tip
 		Vector2(-1.5, -3),   # shoulder left
@@ -97,14 +92,17 @@ func _draw() -> void:
 		Vector2(1.5, 3),     # base right
 		Vector2(1.5, -3),    # shoulder right
 	])
-	draw_colored_polygon(body_pts, COLOR_BODY)
+	draw_colored_polygon(body_pts, CHITIN_DARK)
+	draw_colored_polygon(PackedVector2Array([
+		Vector2(0, -6), Vector2(-0.6, -3), Vector2(-0.6, 3), Vector2(0, 3),
+	]), CHITIN_LIGHT)
 
 	# Fins
-	draw_line(Vector2(-1.5, 2.0), Vector2(-2.8, 4.0), Color(0.6, 0.4, 0.8), 1.0)
-	draw_line(Vector2(1.5, 2.0), Vector2(2.8, 4.0), Color(0.6, 0.4, 0.8), 1.0)
+	draw_line(Vector2(-1.5, 2.0), Vector2(-2.8, 4.0), CHITIN_LIGHT, 1.0)
+	draw_line(Vector2(1.5, 2.0), Vector2(2.8, 4.0), CHITIN_LIGHT, 1.0)
 
 	# Nose highlight
-	draw_circle(Vector2(0, -5.5), 0.7, Color(1.0, 0.9, 1.0, 0.45))
+	draw_circle(Vector2(0, -5.5), 0.7, Color(orb.r, orb.g, orb.b, 0.45))
 
 func _on_area_entered(area: Area2D) -> void:
 	if area.is_in_group("player"):

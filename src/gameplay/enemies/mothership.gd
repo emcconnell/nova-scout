@@ -15,9 +15,6 @@ const CORE_OPEN   := 4.0
 const CORE_DAMAGE_MULT := 3.0
 
 # ─── Colors ──────────────────────────────────────────────────────────────────
-const COL_HULL   := Color(0.10, 0.00, 0.18)
-const COL_ARMOR  := Color(0.25, 0.00, 0.40)
-const COL_VEIN   := Color(0.90, 0.40, 0.00, 0.6)
 const COL_CORE   := Color(0.00, 0.90, 1.00)
 const COL_CORE_CLOSED := Color(0.20, 0.10, 0.30)
 const COL_ENRAGE := Color(1.00, 0.20, 0.00, 0.5)
@@ -60,6 +57,8 @@ var _safe_gap: float = 0.0   # x-position of safe gap
 
 var _wobble: float = 0.0
 var _enrage_flash: float = 0.0
+var _flecks: Array[Vector3] = []      # seeded chitin flecks (TURN 4)
+var _eye_dots: Array = []             # seeded eye cluster (dead frequency)
 
 func _ready() -> void:
 	super()
@@ -70,6 +69,12 @@ func _ready() -> void:
 	drop_table = "mothership"
 	collision_layer = 2
 	collision_mask = 4   # Only player bullets; player contact handled differently
+	_flecks = EnemyRenderer.seed_flecks(get_instance_id(), 90, Vector2(60, 20))
+	_eye_dots = [
+		Vector3(-30, -16, 2.0), Vector3(30, -16, 2.0), Vector3(-15, -18, 1.4),
+		Vector3(15, -18, 1.4), Vector3(0, -14, 2.6), Vector3(-45, -10, 1.2),
+		Vector3(45, -10, 1.2), Vector3(0, -20, 1.6),
+	]
 
 func _modify_damage(amount: int, _from: Vector2) -> int:
 	# Shield drone blocks all damage while alive
@@ -241,12 +246,17 @@ func _fire_sweep() -> void:
 
 func _draw() -> void:
 	var flash := _hit_flash_timer > 0.0
-	var hull  := Color(1,1,1) if flash else COL_HULL
-	var armor := COL_ARMOR if not flash else Color(1,1,1)
+	var lit := _lit_factor()
+	var blend := VisualState.blend()
+	var hi := EnemyRenderer.body_stop(0, lit)
+	var mid := EnemyRenderer.body_stop(1, lit)
+	var hull  := hi if not flash else Color(1, 1, 1)
+	var armor := mid if not flash else Color(1, 1, 1)
 	var hp_pct: float = float(hp) / float(maxi(max_hp, 1))
 
-	# Enormous hull — multi-segment
-	# Main body
+	EnemyRenderer.under_halo(self, Vector2(0, 4), 90.0)
+
+	# Enormous hull — multi-segment (silhouette unchanged)
 	draw_colored_polygon(PackedVector2Array([
 		Vector2(-50, -18), Vector2(50, -18),
 		Vector2(55, 10), Vector2(-55, 10)
@@ -258,15 +268,38 @@ func _draw() -> void:
 	draw_colored_polygon(PackedVector2Array([
 		Vector2(55, -5), Vector2(80, 5), Vector2(70, 15), Vector2(50, 8)
 	]), armor)
-	# Energy veins
-	var va := 0.5 + 0.3 * sin(_wobble)
-	draw_line(Vector2(-40, -10), Vector2(40, -10), Color(COL_VEIN.r, COL_VEIN.g, COL_VEIN.b, va), 1.5)
-	draw_line(Vector2(-30, 0), Vector2(30, 0), Color(COL_VEIN.r, COL_VEIN.g, COL_VEIN.b, va), 1.5)
+
+	# Plate ridges across the main hull
+	EnemyRenderer.plate_ridge_line(self,
+		PackedVector2Array([Vector2(-48, -6), Vector2(0, -10), Vector2(48, -6)]),
+		PackedVector2Array([Vector2(-48, -7.4), Vector2(0, -11.4), Vector2(48, -7.4)]), lit, 2.0)
+	EnemyRenderer.plate_ridge_line(self,
+		PackedVector2Array([Vector2(-40, 4), Vector2(0, 7), Vector2(40, 4)]),
+		PackedVector2Array([Vector2(-40, 2.6), Vector2(0, 5.6), Vector2(40, 2.6)]), lit, 1.6)
+	EnemyRenderer.draw_flecks(self, _flecks, lit)
+
+	# Energy veins — magenta bioluminescence, dies with blend
+	var va := (0.5 + 0.3 * sin(_wobble)) * (1.0 - blend * 0.5)
+	var vein_col := VisualState.col(MAGENTA_COL, Color("7A0E12"))
+	draw_line(Vector2(-40, -10), Vector2(40, -10), Color(vein_col.r, vein_col.g, vein_col.b, va), 1.5)
+	draw_line(Vector2(-30, 0), Vector2(30, 0), Color(vein_col.r, vein_col.g, vein_col.b, va), 1.5)
+	EnemyRenderer.dead_vein_line(self, Vector2(-45, 8), Vector2(45, 8))
+
 	# Weapon ports
 	for i in 3:
 		var px := -30.0 + i * 30.0
-		draw_circle(Vector2(px, -16), 4.0, Color(0.8, 0.0, 1.0, 0.7))
-	# Reactor core (blast doors)
+		var port_a := 0.7 * (1.0 - blend * 0.4)
+		draw_circle(Vector2(px, -16), 4.0, Color(MAGENTA_COL.r, MAGENTA_COL.g, MAGENTA_COL.b, port_a))
+
+	# Eye cluster — wakes across the hull in dead frequency
+	EnemyRenderer.eye_cluster(self, _eye_dots, lit, [0, 1, 4])
+
+	# Warm lit-rim when the flood beam crosses it
+	if lit > 0.01:
+		var rim_pts := PackedVector2Array([Vector2(-50, -18), Vector2(-55, 10)])
+		EnemyRenderer.lit_rim_stroke(self, rim_pts, lit)
+
+	# Reactor core (blast doors) — kept as the cyan tech-tell weak point
 	var core_col := COL_CORE if _core_open else COL_CORE_CLOSED
 	var core_pulse: float = 0.7 + 0.3 * abs(sin(_wobble * 3.0))
 	draw_circle(Vector2(0, 0), 8.0, Color(core_col.r, core_col.g, core_col.b, core_pulse))
@@ -283,3 +316,6 @@ func _draw() -> void:
 		# Drawn in world space, so local position is (0,0) relative to self
 		draw_line(Vector2(-200, 40), Vector2(200, 40),
 			Color(COL_WARN.r, COL_WARN.g, COL_WARN.b, warn_a), 2.0)
+	_draw_hit_flash()
+
+const MAGENTA_COL := Color("B03BFF")

@@ -2,10 +2,6 @@
 class_name LaserBolt
 extends Area2D
 
-const COLOR_PLAYER := Color(0.0, 0.9, 1.0)
-const COLOR_ENEMY := Color(1.0, 0.27, 0.0)
-const COLOR_WARN := Color(1.0, 0.0, 0.67)
-
 var _damage: int = 8
 var _velocity: Vector2 = Vector2.ZERO
 var _speed: float = 400.0
@@ -47,32 +43,31 @@ func _process(delta: float) -> void:
 		_return_to_pool()
 	queue_redraw()
 
+## Rounded-cap laser core + beam-tone underline + glow; cyan survey -> red dead tracer.
 func _draw() -> void:
-	var col: Color
-	match _owner_type:
-		"player": col = COLOR_PLAYER
-		"enemy_warrior": col = COLOR_WARN
-		_: col = COLOR_ENEMY
+	var beam := VisualState.proj("beam")
+	var core := VisualState.proj("core")
+	if _owner_type == "enemy_warrior":
+		beam = beam.lerp(Color(1.0, 0.0, 0.67), 0.65)
 
 	# Trail — 3 fading copies behind the bolt (in local space, "behind" = +Y)
 	for i in range(1, 4):
 		var trail_y := float(i) * 4.0
 		var trail_a := 0.25 * (1.0 - float(i) / 4.0)
-		var trail_col := Color(col.r, col.g, col.b, trail_a)
-		draw_rect(Rect2(-0.5, -4.0 + trail_y, 1.0, 6.0), trail_col)
+		draw_rect(Rect2(-0.5, -4.0 + trail_y, 1.0, 6.0), Color(beam.r, beam.g, beam.b, trail_a))
 
 	# Outer glow — softer, wider
 	var glow_a := 0.15 + 0.05 * sin(_lifetime * 12.0)
-	draw_rect(Rect2(-2.5, -5.5, 5.0, 11.0), Color(col.r, col.g, col.b, glow_a))
+	draw_rect(Rect2(-2.5, -5.5, 5.0, 11.0), Color(beam.r, beam.g, beam.b, glow_a))
+	DrawKit.glow(self, Vector2(0, -1.0), 4.0, Color(beam.r, beam.g, beam.b, 0.18))
 
-	# Bright core line
-	draw_rect(Rect2(-0.5, -4.5, 1.0, 9.0), col)
-	# White-hot center
-	draw_rect(Rect2(-0.25, -4.0, 0.5, 8.0), Color(1.0, 1.0, 1.0, 0.8))
+	# Beam-color underline (wider, alpha 0.5) + bright core line
+	draw_rect(Rect2(-1.0, -4.5, 2.0, 9.0), Color(beam.r, beam.g, beam.b, 0.5))
+	draw_rect(Rect2(-0.5, -4.5, 1.0, 9.0), core)
 
-	# Tip glow — bright front
-	draw_circle(Vector2(0, -4.5), 2.0, Color(col.r, col.g, col.b, 0.35))
-	draw_circle(Vector2(0, -4.5), 1.0, Color(1.0, 1.0, 1.0, 0.6))
+	# Tip glow — bright front, glowing core
+	DrawKit.glow(self, Vector2(0, -4.5), 2.4, Color(beam.r, beam.g, beam.b, 0.5), 3)
+	draw_circle(Vector2(0, -4.5), 1.0, core)
 
 func _on_area_entered(area: Area2D) -> void:
 	if _owner_type == "player":

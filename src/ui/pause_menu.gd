@@ -1,17 +1,17 @@
 ## PauseMenu — Full-screen ship systems console with space-tech fonts.
+## Menu text and selection retint live to VisualState.pal("hud")/pal("accent")
+## (Turn 4: cyan flight-instrument -> failing red). Amber/red stay fixed —
+## they read as warning/danger, not part of the signal-fade language.
 extends CanvasLayer
 
 const C_BG       := Color(0.015, 0.020, 0.038)
 const C_HULL     := Color(0.050, 0.060, 0.085)
 const C_SEAM     := Color(0.030, 0.035, 0.055)
 const C_RIVET    := Color(0.065, 0.075, 0.100)
-const C_GREEN    := Color(0.25, 1.00, 0.20)
 const C_GREEN_DM := Color(0.10, 0.40, 0.08)
-const C_CYAN     := Color(0.10, 0.85, 1.00)
 const C_AMBER    := Color(1.00, 0.78, 0.15)
 const C_DIM      := Color(0.22, 0.32, 0.45)
 const C_WHITE    := Color(0.85, 0.88, 0.92)
-const C_SEL      := Color(0.10, 0.85, 1.00)
 const C_RED      := Color(0.70, 0.10, 0.08)
 
 var _visible_flag: bool = false
@@ -76,6 +76,8 @@ func _on_draw() -> void:
 	var H  := vp.size.y
 	var cx := W * 0.5
 	var d  := _draw_node
+	var hud_col := VisualState.pal("hud")
+	var accent_col := VisualState.pal("accent")
 
 	# ═══ Fully opaque ═══
 	d.draw_rect(Rect2(Vector2.ZERO, vp.size), C_BG)
@@ -108,24 +110,24 @@ func _on_draw() -> void:
 		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(6), C_GREEN_DM)
 
 	var hull_pct: float = float(GameManager.player_hull) / maxf(float(GameManager.player_max_hull), 1)
-	_draw_stat_bar(d, stat_x, stat_y + 12, "HULL", hull_pct, C_GREEN if hull_pct > 0.25 else C_RED)
+	_draw_stat_bar(d, stat_x, stat_y + 12, "HULL", hull_pct, hud_col if hull_pct > 0.25 else C_RED)
 	var fuel_pct: float = float(GameManager.player_fuel) / maxf(float(GameManager.player_max_fuel), 1)
 	_draw_stat_bar(d, stat_x, stat_y + 24, "FUEL", fuel_pct, C_AMBER if fuel_pct > 0.15 else C_RED)
 
 	d.draw_string(_font_body, Vector2(stat_x, stat_y + 42), "SCORE",
 		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(5), C_GREEN_DM)
 	d.draw_string(_font_body, Vector2(stat_x + 32, stat_y + 42), "%07d" % GameManager.score,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(6), C_CYAN)
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(6), accent_col)
 
 	d.draw_string(_font_body, Vector2(stat_x, stat_y + 54), "SECTOR",
 		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(5), C_GREEN_DM)
 	d.draw_string(_font_body, Vector2(stat_x + 32, stat_y + 54), GameManager.get_sector_name(),
-		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(5), C_CYAN)
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(5), accent_col)
 
 	d.draw_string(_font_body, Vector2(stat_x, stat_y + 66), "BEACONS",
 		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(5), C_GREEN_DM)
 	d.draw_string(_font_body, Vector2(stat_x + 38, stat_y + 66), "%d / 3" % GameManager.survey_beacons,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(6), C_CYAN)
+		HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(6), accent_col)
 
 	# ═══ Divider ═══
 	d.draw_line(Vector2(cx + 4, 42), Vector2(cx + 4, H - 22), C_SEAM, 1.0)
@@ -144,15 +146,15 @@ func _on_draw() -> void:
 		if is_sel:
 			var sel_a := 0.08 + 0.04 * sin(_anim * 4.0)
 			d.draw_rect(Rect2(menu_x - 4, iy - 4, W - menu_x - 16, 24),
-				Color(C_SEL.r, C_SEL.g, C_SEL.b, sel_a))
+				Color(accent_col.r, accent_col.g, accent_col.b, sel_a))
 			d.draw_rect(Rect2(menu_x - 4, iy - 4, W - menu_x - 16, 24),
-				Color(C_SEL.r, C_SEL.g, C_SEL.b, 0.2 + 0.1 * sin(_anim * 4.0)), false, 1.0)
+				Color(accent_col.r, accent_col.g, accent_col.b, 0.2 + 0.1 * sin(_anim * 4.0)), false, 1.0)
 			# Arrow
 			var arrow_a := 0.6 + 0.4 * sin(_anim * 5.0)
 			d.draw_string(_font_body, Vector2(menu_x, iy + 6), ">",
-				HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(8), Color(C_SEL.r, C_SEL.g, C_SEL.b, arrow_a))
+				HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(8), Color(accent_col.r, accent_col.g, accent_col.b, arrow_a))
 
-		var lbl_col := C_WHITE if is_sel else C_GREEN
+		var lbl_col := C_WHITE if is_sel else hud_col
 		var value_text := _setting_value_text(item)
 		d.draw_string(_font_body, Vector2(menu_x + 12, iy + 7), item["label"],
 			HORIZONTAL_ALIGNMENT_LEFT, -1, _fs(7), lbl_col)

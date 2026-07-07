@@ -1,5 +1,6 @@
 ## DeathScreen — Fully opaque blast door + signal lost aesthetic.
-## GDD Ref: gameplay-mechanics.md §10 — Death & Retry
+## Retry/menu prompt tints to VisualState.pal("accent"); title ghosts at high blend.
+## GDD Ref: gameplay-mechanics.md §10 — Death & Retry; art-bible.md Turn 4
 extends Control
 
 const COL_BG      := Color(0.02, 0.01, 0.01)
@@ -8,7 +9,6 @@ const COL_DARK    := Color(0.03, 0.02, 0.02)
 const COL_RED     := Color(0.90, 0.10, 0.10)
 const COL_DIM_RED := Color(0.40, 0.06, 0.06)
 const COL_LABEL   := Color(0.60, 0.60, 0.60)
-const COL_CYAN    := Color(0.00, 0.80, 1.00)
 const COL_RIVET   := Color(0.10, 0.06, 0.06)
 
 var _show_timer: float = 0.0
@@ -125,9 +125,15 @@ func _draw() -> void:
 	draw_line(Vector2(14, 34), Vector2(w - 14, 34),
 		Color(COL_DIM_RED.r, COL_DIM_RED.g, COL_DIM_RED.b, fade_in * 0.5), 1.0)
 
-	# Main message
-	draw_string(_font_title, Vector2(cx - 62, cy - 16), "SIGNAL LOST",
+	# Main message — ghosts at high blend (the fade has already claimed the signal)
+	var title := "SIGNAL LOST"
+	var title_pos := Vector2(cx - 62, cy - 16)
+	draw_string(_font_title, title_pos, title,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(COL_RED.r, COL_RED.g, COL_RED.b, fade_in))
+	var glitch := VisualState.blend()
+	if glitch > 0.5:
+		draw_string(_font_title, title_pos + Vector2(2.5, 1.0), title,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(COL_RED.r, COL_RED.g, COL_RED.b, fade_in * 0.3 * glitch))
 
 	draw_line(Vector2(cx - 60, cy - 6), Vector2(cx + 60, cy - 6),
 		Color(COL_DIM_RED.r, COL_DIM_RED.g, COL_DIM_RED.b, fade_in * 0.5), 1.0)
@@ -166,6 +172,7 @@ func _draw() -> void:
 	# Retry prompt
 	if _ready_to_input:
 		var pa := 0.5 + 0.5 * sin(_blink * 3.0)
+		var accent := VisualState.pal("accent")
 		draw_string(font, Vector2(cx - 60, h - 28),
 			"[SPACE] RETRY     [ESC] MAIN MENU",
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color(COL_CYAN.r, COL_CYAN.g, COL_CYAN.b, pa))
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color(accent.r, accent.g, accent.b, pa))

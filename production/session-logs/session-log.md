@@ -113,3 +113,1154 @@ de11a89 feat: Dark Directive v2.0 — full tonal overhaul (gameplay/story/gfx/au
 ec3f9c7 more
 ---
 
+## Session End: 20260706_222230
+### Commits
+fe85644 Merge pull request #2 from emcconnell/claude/zealous-mccarthy-44639e
+a27b2c4 docs: update art bible and audio design GDDs to Dark Directive v2.0
+ebbe3f2 Merge pull request #1 from emcconnell/claude/sweet-dijkstra-50d351
+a44046b chore: append session log for Dark Directive v2.0 session
+de11a89 feat: Dark Directive v2.0 — full tonal overhaul (gameplay/story/gfx/audio)
+ec3f9c7 more
+### Uncommitted Changes
+assets/shaders/post_darkness_falloff.gdshader
+project.godot
+src/core/game_world.gd
+src/core/main_menu.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/enemy_base.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/player/player.gd
+src/gameplay/projectiles/laser_bolt.gd
+src/gameplay/projectiles/missile.gd
+src/ui/darkness_veil.gd
+src/ui/hud.gd
+---
+
+## Session End: 20260706_222432
+### Commits
+fe85644 Merge pull request #2 from emcconnell/claude/zealous-mccarthy-44639e
+a27b2c4 docs: update art bible and audio design GDDs to Dark Directive v2.0
+ebbe3f2 Merge pull request #1 from emcconnell/claude/sweet-dijkstra-50d351
+a44046b chore: append session log for Dark Directive v2.0 session
+de11a89 feat: Dark Directive v2.0 — full tonal overhaul (gameplay/story/gfx/audio)
+ec3f9c7 more
+### Uncommitted Changes
+assets/shaders/post_darkness_falloff.gdshader
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/main_menu.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/enemy_base.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/player/player.gd
+src/gameplay/projectiles/enemy_bolt.gd
+src/gameplay/projectiles/enemy_missile.gd
+src/gameplay/projectiles/laser_bolt.gd
+src/gameplay/projectiles/missile.gd
+src/gameplay/star_scan/scan_bar.gd
+src/gameplay/star_scan/star_node.gd
+src/ui/darkness_veil.gd
+src/ui/hud.gd
+---
+
+## Session End: 20260706_222534
+### Commits
+fe85644 Merge pull request #2 from emcconnell/claude/zealous-mccarthy-44639e
+a27b2c4 docs: update art bible and audio design GDDs to Dark Directive v2.0
+ebbe3f2 Merge pull request #1 from emcconnell/claude/sweet-dijkstra-50d351
+a44046b chore: append session log for Dark Directive v2.0 session
+de11a89 feat: Dark Directive v2.0 — full tonal overhaul (gameplay/story/gfx/audio)
+ec3f9c7 more
+### Uncommitted Changes
+assets/shaders/post_darkness_falloff.gdshader
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/main_menu.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/enemy_base.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/shield_drone.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/debris_cloud.gd
+src/gameplay/hazards/derelict_ship.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/pickups/pickup_visuals.gd
+src/gameplay/player/player.gd
+src/gameplay/projectiles/enemy_bolt.gd
+src/gameplay/projectiles/enemy_missile.gd
+src/gameplay/projectiles/laser_bolt.gd
+src/gameplay/projectiles/missile.gd
+src/gameplay/star_scan/scan_bar.gd
+src/gameplay/star_scan/star_node.gd
+src/ui/darkness_veil.gd
+src/ui/hud.gd
+---
+
+## Session End: 20260706_222610
+### Commits
+fe85644 Merge pull request #2 from emcconnell/claude/zealous-mccarthy-44639e
+a27b2c4 docs: update art bible and audio design GDDs to Dark Directive v2.0
+ebbe3f2 Merge pull request #1 from emcconnell/claude/sweet-dijkstra-50d351
+a44046b chore: append session log for Dark Directive v2.0 session
+de11a89 feat: Dark Directive v2.0 — full tonal overhaul (gameplay/story/gfx/audio)
+ec3f9c7 more
+### Uncommitted Changes
+assets/shaders/post_darkness_falloff.gdshader
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/main_menu.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/enemy_base.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/shield_drone.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/debris_cloud.gd
+src/gameplay/hazards/derelict_ship.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/pickups/pickup_visuals.gd
+src/gameplay/player/player.gd
+src/gameplay/projectiles/enemy_bolt.gd
+src/gameplay/projectiles/enemy_missile.gd
+src/gameplay/projectiles/laser_bolt.gd
+src/gameplay/projectiles/missile.gd
+src/gameplay/star_scan/scan_bar.gd
+src/gameplay/star_scan/star_node.gd
+src/ui/darkness_veil.gd
+src/ui/hud.gd
+---
+
+## Session End: 20260706_222704
+### Commits
+fe85644 Merge pull request #2 from emcconnell/claude/zealous-mccarthy-44639e
+a27b2c4 docs: update art bible and audio design GDDs to Dark Directive v2.0
+ebbe3f2 Merge pull request #1 from emcconnell/claude/sweet-dijkstra-50d351
+a44046b chore: append session log for Dark Directive v2.0 session
+de11a89 feat: Dark Directive v2.0 — full tonal overhaul (gameplay/story/gfx/audio)
+ec3f9c7 more
+### Uncommitted Changes
+assets/shaders/post_darkness_falloff.gdshader
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/main_menu.gd
+src/gameplay/effects/explosion.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/enemy_base.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/shield_drone.gd
+src/gameplay/enemies/space_leviathan.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/debris_cloud.gd
+src/gameplay/hazards/derelict_ship.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/pickups/pickup_visuals.gd
+src/gameplay/player/player.gd
+src/gameplay/projectiles/enemy_bolt.gd
+src/gameplay/projectiles/enemy_missile.gd
+src/gameplay/projectiles/laser_bolt.gd
+src/gameplay/projectiles/missile.gd
+src/gameplay/star_scan/scan_bar.gd
+src/gameplay/star_scan/star_node.gd
+src/ui/darkness_veil.gd
+src/ui/hud.gd
+---
+
+## Session End: 20260706_222731
+### Commits
+fe85644 Merge pull request #2 from emcconnell/claude/zealous-mccarthy-44639e
+a27b2c4 docs: update art bible and audio design GDDs to Dark Directive v2.0
+ebbe3f2 Merge pull request #1 from emcconnell/claude/sweet-dijkstra-50d351
+a44046b chore: append session log for Dark Directive v2.0 session
+de11a89 feat: Dark Directive v2.0 — full tonal overhaul (gameplay/story/gfx/audio)
+ec3f9c7 more
+### Uncommitted Changes
+assets/shaders/post_darkness_falloff.gdshader
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/main_menu.gd
+src/gameplay/effects/explosion.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/enemy_base.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/shield_drone.gd
+src/gameplay/enemies/space_leviathan.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/debris_cloud.gd
+src/gameplay/hazards/derelict_ship.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/pickups/pickup_visuals.gd
+src/gameplay/player/player.gd
+src/gameplay/projectiles/enemy_bolt.gd
+src/gameplay/projectiles/enemy_missile.gd
+src/gameplay/projectiles/laser_bolt.gd
+src/gameplay/projectiles/missile.gd
+src/gameplay/star_scan/scan_bar.gd
+src/gameplay/star_scan/star_node.gd
+src/ui/darkness_veil.gd
+src/ui/hud.gd
+---
+
+## Session End: 20260706_222857
+### Commits
+fe85644 Merge pull request #2 from emcconnell/claude/zealous-mccarthy-44639e
+a27b2c4 docs: update art bible and audio design GDDs to Dark Directive v2.0
+ebbe3f2 Merge pull request #1 from emcconnell/claude/sweet-dijkstra-50d351
+a44046b chore: append session log for Dark Directive v2.0 session
+de11a89 feat: Dark Directive v2.0 — full tonal overhaul (gameplay/story/gfx/audio)
+ec3f9c7 more
+### Uncommitted Changes
+assets/shaders/post_darkness_falloff.gdshader
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/main_menu.gd
+src/gameplay/effects/explosion.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/enemy_base.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/shield_drone.gd
+src/gameplay/enemies/space_leviathan.gd
+src/gameplay/enemies/the_silence.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/debris_cloud.gd
+src/gameplay/hazards/derelict_ship.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/pickups/pickup_visuals.gd
+src/gameplay/player/player.gd
+src/gameplay/projectiles/enemy_bolt.gd
+src/gameplay/projectiles/enemy_missile.gd
+src/gameplay/projectiles/laser_bolt.gd
+src/gameplay/projectiles/missile.gd
+src/gameplay/star_scan/scan_bar.gd
+src/gameplay/star_scan/star_node.gd
+src/ui/darkness_veil.gd
+src/ui/hud.gd
+---
+
+## Session End: 20260706_222951
+### Commits
+fe85644 Merge pull request #2 from emcconnell/claude/zealous-mccarthy-44639e
+a27b2c4 docs: update art bible and audio design GDDs to Dark Directive v2.0
+ebbe3f2 Merge pull request #1 from emcconnell/claude/sweet-dijkstra-50d351
+a44046b chore: append session log for Dark Directive v2.0 session
+de11a89 feat: Dark Directive v2.0 — full tonal overhaul (gameplay/story/gfx/audio)
+ec3f9c7 more
+### Uncommitted Changes
+assets/shaders/post_darkness_falloff.gdshader
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/main_menu.gd
+src/gameplay/effects/explosion.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/enemy_base.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/shield_drone.gd
+src/gameplay/enemies/space_leviathan.gd
+src/gameplay/enemies/the_silence.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/debris_cloud.gd
+src/gameplay/hazards/derelict_ship.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/pickups/pickup_visuals.gd
+src/gameplay/player/player.gd
+src/gameplay/projectiles/enemy_bolt.gd
+src/gameplay/projectiles/enemy_missile.gd
+src/gameplay/projectiles/laser_bolt.gd
+src/gameplay/projectiles/missile.gd
+src/gameplay/star_scan/scan_bar.gd
+src/gameplay/star_scan/star_node.gd
+src/ui/darkness_veil.gd
+src/ui/hud.gd
+---
+
+## Session End: 20260706_223323
+### Commits
+fe85644 Merge pull request #2 from emcconnell/claude/zealous-mccarthy-44639e
+a27b2c4 docs: update art bible and audio design GDDs to Dark Directive v2.0
+ebbe3f2 Merge pull request #1 from emcconnell/claude/sweet-dijkstra-50d351
+a44046b chore: append session log for Dark Directive v2.0 session
+de11a89 feat: Dark Directive v2.0 — full tonal overhaul (gameplay/story/gfx/audio)
+ec3f9c7 more
+### Uncommitted Changes
+assets/shaders/crt_overlay.gdshader
+assets/shaders/post_darkness_falloff.gdshader
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/main_menu.gd
+src/gameplay/effects/explosion.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/enemy_base.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/shield_drone.gd
+src/gameplay/enemies/space_leviathan.gd
+src/gameplay/enemies/the_silence.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/debris_cloud.gd
+src/gameplay/hazards/derelict_ship.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/pickups/pickup_visuals.gd
+src/gameplay/player/player.gd
+src/gameplay/projectiles/enemy_bolt.gd
+src/gameplay/projectiles/enemy_missile.gd
+src/gameplay/projectiles/laser_bolt.gd
+src/gameplay/projectiles/missile.gd
+src/gameplay/star_scan/scan_bar.gd
+src/gameplay/star_scan/star_node.gd
+src/ui/crt_overlay.gd
+src/ui/darkness_veil.gd
+src/ui/death_screen.gd
+src/ui/enemy_hp_bar.gd
+src/ui/hud.gd
+src/ui/score_popup.gd
+src/ui/sector_transition.gd
+src/ui/threat_tracker.gd
+---
+
+## Session End: 20260706_224802
+### Commits
+fe85644 Merge pull request #2 from emcconnell/claude/zealous-mccarthy-44639e
+a27b2c4 docs: update art bible and audio design GDDs to Dark Directive v2.0
+ebbe3f2 Merge pull request #1 from emcconnell/claude/sweet-dijkstra-50d351
+a44046b chore: append session log for Dark Directive v2.0 session
+de11a89 feat: Dark Directive v2.0 — full tonal overhaul (gameplay/story/gfx/audio)
+ec3f9c7 more
+### Uncommitted Changes
+assets/shaders/crt_overlay.gdshader
+assets/shaders/post_darkness_falloff.gdshader
+design/gdd/art-bible.md
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/main_menu.gd
+src/gameplay/effects/explosion.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/enemy_base.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/shield_drone.gd
+src/gameplay/enemies/space_leviathan.gd
+src/gameplay/enemies/the_silence.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/debris_cloud.gd
+src/gameplay/hazards/derelict_ship.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/pickups/pickup_visuals.gd
+src/gameplay/player/player.gd
+src/gameplay/projectiles/enemy_bolt.gd
+src/gameplay/projectiles/enemy_missile.gd
+src/gameplay/projectiles/laser_bolt.gd
+src/gameplay/projectiles/missile.gd
+src/gameplay/star_scan/scan_bar.gd
+src/gameplay/star_scan/star_node.gd
+src/ui/crt_overlay.gd
+src/ui/darkness_veil.gd
+src/ui/death_screen.gd
+src/ui/enemy_hp_bar.gd
+src/ui/hud.gd
+src/ui/pause_menu.gd
+src/ui/score_popup.gd
+src/ui/sector_transition.gd
+src/ui/threat_tracker.gd
+src/ui/upgrade_screen.gd
+src/ui/win_screen.gd
+---
+
+## Session End: 20260707_081352
+### Uncommitted Changes
+assets/shaders/crt_overlay.gdshader
+assets/shaders/post_darkness_falloff.gdshader
+design/gdd/art-bible.md
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/main_menu.gd
+src/gameplay/effects/explosion.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/enemy_base.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/shield_drone.gd
+src/gameplay/enemies/space_leviathan.gd
+src/gameplay/enemies/the_silence.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/debris_cloud.gd
+src/gameplay/hazards/derelict_ship.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/pickups/pickup_visuals.gd
+src/gameplay/player/player.gd
+src/gameplay/projectiles/enemy_bolt.gd
+src/gameplay/projectiles/enemy_missile.gd
+src/gameplay/projectiles/laser_bolt.gd
+src/gameplay/projectiles/missile.gd
+src/gameplay/star_scan/scan_bar.gd
+src/gameplay/star_scan/star_node.gd
+src/ui/crt_overlay.gd
+src/ui/darkness_veil.gd
+src/ui/death_screen.gd
+src/ui/enemy_hp_bar.gd
+src/ui/hud.gd
+src/ui/pause_menu.gd
+src/ui/score_popup.gd
+src/ui/sector_transition.gd
+src/ui/threat_tracker.gd
+src/ui/upgrade_screen.gd
+src/ui/win_screen.gd
+---
+
+## Session End: 20260707_082727
+### Uncommitted Changes
+assets/shaders/crt_overlay.gdshader
+assets/shaders/post_darkness_falloff.gdshader
+design/gdd/art-bible.md
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/main_menu.gd
+src/gameplay/effects/explosion.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/enemy_base.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/shield_drone.gd
+src/gameplay/enemies/space_leviathan.gd
+src/gameplay/enemies/the_silence.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/debris_cloud.gd
+src/gameplay/hazards/derelict_ship.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/pickups/pickup_visuals.gd
+src/gameplay/player/player.gd
+src/gameplay/projectiles/enemy_bolt.gd
+src/gameplay/projectiles/enemy_missile.gd
+src/gameplay/projectiles/laser_bolt.gd
+src/gameplay/projectiles/missile.gd
+src/gameplay/star_scan/scan_bar.gd
+src/gameplay/star_scan/star_node.gd
+src/ui/crt_overlay.gd
+src/ui/darkness_veil.gd
+src/ui/death_screen.gd
+src/ui/enemy_hp_bar.gd
+src/ui/hud.gd
+src/ui/pause_menu.gd
+src/ui/score_popup.gd
+src/ui/sector_transition.gd
+src/ui/threat_tracker.gd
+src/ui/upgrade_screen.gd
+src/ui/win_screen.gd
+---
+
+## Session End: 20260707_082816
+### Uncommitted Changes
+assets/shaders/crt_overlay.gdshader
+assets/shaders/post_darkness_falloff.gdshader
+design/gdd/art-bible.md
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/main_menu.gd
+src/gameplay/effects/explosion.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/enemy_base.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/shield_drone.gd
+src/gameplay/enemies/space_leviathan.gd
+src/gameplay/enemies/the_silence.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/debris_cloud.gd
+src/gameplay/hazards/derelict_ship.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/pickups/pickup_visuals.gd
+src/gameplay/player/player.gd
+src/gameplay/projectiles/enemy_bolt.gd
+src/gameplay/projectiles/enemy_missile.gd
+src/gameplay/projectiles/laser_bolt.gd
+src/gameplay/projectiles/missile.gd
+src/gameplay/star_scan/scan_bar.gd
+src/gameplay/star_scan/star_node.gd
+src/ui/crt_overlay.gd
+src/ui/darkness_veil.gd
+src/ui/death_screen.gd
+src/ui/enemy_hp_bar.gd
+src/ui/hud.gd
+src/ui/pause_menu.gd
+src/ui/score_popup.gd
+src/ui/sector_transition.gd
+src/ui/threat_tracker.gd
+src/ui/upgrade_screen.gd
+src/ui/win_screen.gd
+---
+
+## Session End: 20260707_084114
+### Uncommitted Changes
+assets/shaders/crt_overlay.gdshader
+assets/shaders/post_darkness_falloff.gdshader
+design/gdd/art-bible.md
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/main_menu.gd
+src/gameplay/effects/explosion.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/enemy_base.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/shield_drone.gd
+src/gameplay/enemies/space_leviathan.gd
+src/gameplay/enemies/the_silence.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/debris_cloud.gd
+src/gameplay/hazards/derelict_ship.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/pickups/pickup_visuals.gd
+src/gameplay/player/player.gd
+src/gameplay/projectiles/enemy_bolt.gd
+src/gameplay/projectiles/enemy_missile.gd
+src/gameplay/projectiles/laser_bolt.gd
+src/gameplay/projectiles/missile.gd
+src/gameplay/star_scan/scan_bar.gd
+src/gameplay/star_scan/star_node.gd
+src/ui/crt_overlay.gd
+src/ui/darkness_veil.gd
+src/ui/death_screen.gd
+src/ui/enemy_hp_bar.gd
+src/ui/hud.gd
+src/ui/pause_menu.gd
+src/ui/score_popup.gd
+src/ui/sector_transition.gd
+src/ui/threat_tracker.gd
+src/ui/upgrade_screen.gd
+src/ui/win_screen.gd
+---
+
+## Session End: 20260707_084632
+### Uncommitted Changes
+assets/shaders/crt_overlay.gdshader
+assets/shaders/post_darkness_falloff.gdshader
+design/gdd/art-bible.md
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/main_menu.gd
+src/gameplay/effects/explosion.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/enemy_base.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/shield_drone.gd
+src/gameplay/enemies/space_leviathan.gd
+src/gameplay/enemies/the_silence.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/debris_cloud.gd
+src/gameplay/hazards/derelict_ship.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/pickups/pickup_visuals.gd
+src/gameplay/player/player.gd
+src/gameplay/projectiles/enemy_bolt.gd
+src/gameplay/projectiles/enemy_missile.gd
+src/gameplay/projectiles/laser_bolt.gd
+src/gameplay/projectiles/missile.gd
+src/gameplay/star_scan/scan_bar.gd
+src/gameplay/star_scan/star_node.gd
+src/ui/crt_overlay.gd
+src/ui/darkness_veil.gd
+src/ui/death_screen.gd
+src/ui/enemy_hp_bar.gd
+src/ui/hud.gd
+src/ui/pause_menu.gd
+src/ui/score_popup.gd
+src/ui/sector_transition.gd
+src/ui/threat_tracker.gd
+src/ui/upgrade_screen.gd
+src/ui/win_screen.gd
+---
+
+## Session End: 20260707_085111
+### Uncommitted Changes
+assets/shaders/crt_overlay.gdshader
+assets/shaders/post_darkness_falloff.gdshader
+design/gdd/art-bible.md
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/main_menu.gd
+src/gameplay/effects/explosion.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/enemy_base.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/shield_drone.gd
+src/gameplay/enemies/space_leviathan.gd
+src/gameplay/enemies/the_silence.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/debris_cloud.gd
+src/gameplay/hazards/derelict_ship.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/pickups/pickup_visuals.gd
+src/gameplay/player/player.gd
+src/gameplay/projectiles/enemy_bolt.gd
+src/gameplay/projectiles/enemy_missile.gd
+src/gameplay/projectiles/laser_bolt.gd
+src/gameplay/projectiles/missile.gd
+src/gameplay/star_scan/scan_bar.gd
+src/gameplay/star_scan/star_node.gd
+src/ui/crt_overlay.gd
+src/ui/darkness_veil.gd
+src/ui/death_screen.gd
+src/ui/enemy_hp_bar.gd
+src/ui/hud.gd
+src/ui/pause_menu.gd
+src/ui/score_popup.gd
+src/ui/sector_transition.gd
+src/ui/threat_tracker.gd
+src/ui/upgrade_screen.gd
+src/ui/win_screen.gd
+---
+
+## Session End: 20260707_090311
+### Uncommitted Changes
+assets/shaders/crt_overlay.gdshader
+assets/shaders/post_darkness_falloff.gdshader
+design/gdd/art-bible.md
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/main_menu.gd
+src/gameplay/effects/explosion.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/enemy_base.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/shield_drone.gd
+src/gameplay/enemies/space_leviathan.gd
+src/gameplay/enemies/the_silence.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/debris_cloud.gd
+src/gameplay/hazards/derelict_ship.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/pickups/pickup_visuals.gd
+src/gameplay/player/player.gd
+src/gameplay/projectiles/enemy_bolt.gd
+src/gameplay/projectiles/enemy_missile.gd
+src/gameplay/projectiles/laser_bolt.gd
+src/gameplay/projectiles/missile.gd
+src/gameplay/star_scan/scan_bar.gd
+src/gameplay/star_scan/star_node.gd
+src/ui/crt_overlay.gd
+src/ui/darkness_veil.gd
+src/ui/death_screen.gd
+src/ui/enemy_hp_bar.gd
+src/ui/hud.gd
+src/ui/mission_prompt.gd
+src/ui/pause_menu.gd
+src/ui/score_popup.gd
+src/ui/sector_transition.gd
+src/ui/threat_tracker.gd
+src/ui/upgrade_screen.gd
+src/ui/win_screen.gd
+---
+
+## Session End: 20260707_090342
+### Uncommitted Changes
+assets/shaders/crt_overlay.gdshader
+assets/shaders/post_darkness_falloff.gdshader
+design/gdd/art-bible.md
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/main_menu.gd
+src/gameplay/effects/explosion.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/enemy_base.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/shield_drone.gd
+src/gameplay/enemies/space_leviathan.gd
+src/gameplay/enemies/the_silence.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/debris_cloud.gd
+src/gameplay/hazards/derelict_ship.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/pickups/pickup_visuals.gd
+src/gameplay/player/player.gd
+src/gameplay/projectiles/enemy_bolt.gd
+src/gameplay/projectiles/enemy_missile.gd
+src/gameplay/projectiles/laser_bolt.gd
+src/gameplay/projectiles/missile.gd
+src/gameplay/star_scan/scan_bar.gd
+src/gameplay/star_scan/star_node.gd
+src/ui/crt_overlay.gd
+src/ui/darkness_veil.gd
+src/ui/death_screen.gd
+src/ui/enemy_hp_bar.gd
+src/ui/hud.gd
+src/ui/mission_prompt.gd
+src/ui/pause_menu.gd
+src/ui/score_popup.gd
+src/ui/sector_transition.gd
+src/ui/threat_tracker.gd
+src/ui/upgrade_screen.gd
+src/ui/win_screen.gd
+---
+
+## Session End: 20260707_090430
+### Uncommitted Changes
+assets/shaders/crt_overlay.gdshader
+assets/shaders/post_darkness_falloff.gdshader
+design/gdd/art-bible.md
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/main_menu.gd
+src/gameplay/effects/explosion.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/enemy_base.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/shield_drone.gd
+src/gameplay/enemies/space_leviathan.gd
+src/gameplay/enemies/the_silence.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/debris_cloud.gd
+src/gameplay/hazards/derelict_ship.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/pickups/pickup_visuals.gd
+src/gameplay/player/player.gd
+src/gameplay/projectiles/enemy_bolt.gd
+src/gameplay/projectiles/enemy_missile.gd
+src/gameplay/projectiles/laser_bolt.gd
+src/gameplay/projectiles/missile.gd
+src/gameplay/star_scan/scan_bar.gd
+src/gameplay/star_scan/star_node.gd
+src/ui/crt_overlay.gd
+src/ui/darkness_veil.gd
+src/ui/death_screen.gd
+src/ui/enemy_hp_bar.gd
+src/ui/hud.gd
+src/ui/mission_prompt.gd
+src/ui/pause_menu.gd
+src/ui/score_popup.gd
+src/ui/sector_transition.gd
+src/ui/threat_tracker.gd
+src/ui/upgrade_screen.gd
+src/ui/win_screen.gd
+---
+
+## Session End: 20260707_090625
+### Uncommitted Changes
+assets/shaders/crt_overlay.gdshader
+assets/shaders/post_darkness_falloff.gdshader
+design/gdd/art-bible.md
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/main_menu.gd
+src/gameplay/effects/explosion.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/enemy_base.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/shield_drone.gd
+src/gameplay/enemies/space_leviathan.gd
+src/gameplay/enemies/the_silence.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/debris_cloud.gd
+src/gameplay/hazards/derelict_ship.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/pickups/pickup_visuals.gd
+src/gameplay/player/player.gd
+src/gameplay/projectiles/enemy_bolt.gd
+src/gameplay/projectiles/enemy_missile.gd
+src/gameplay/projectiles/laser_bolt.gd
+src/gameplay/projectiles/missile.gd
+src/gameplay/star_scan/scan_bar.gd
+src/gameplay/star_scan/star_node.gd
+src/ui/crt_overlay.gd
+src/ui/darkness_veil.gd
+src/ui/death_screen.gd
+src/ui/enemy_hp_bar.gd
+src/ui/hud.gd
+src/ui/mission_prompt.gd
+src/ui/pause_menu.gd
+src/ui/score_popup.gd
+src/ui/sector_transition.gd
+src/ui/threat_tracker.gd
+src/ui/upgrade_screen.gd
+src/ui/win_screen.gd
+---
+
+## Session End: 20260707_091851
+### Uncommitted Changes
+assets/shaders/crt_overlay.gdshader
+assets/shaders/post_darkness_falloff.gdshader
+design/gdd/art-bible.md
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/main_menu.gd
+src/gameplay/effects/explosion.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/enemy_base.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/shield_drone.gd
+src/gameplay/enemies/space_leviathan.gd
+src/gameplay/enemies/the_silence.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/debris_cloud.gd
+src/gameplay/hazards/derelict_ship.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/pickups/pickup_visuals.gd
+src/gameplay/player/player.gd
+src/gameplay/projectiles/enemy_bolt.gd
+src/gameplay/projectiles/enemy_missile.gd
+src/gameplay/projectiles/laser_bolt.gd
+src/gameplay/projectiles/missile.gd
+src/gameplay/star_scan/scan_bar.gd
+src/gameplay/star_scan/star_node.gd
+src/ui/crt_overlay.gd
+src/ui/darkness_veil.gd
+src/ui/death_screen.gd
+src/ui/enemy_hp_bar.gd
+src/ui/hud.gd
+src/ui/mission_prompt.gd
+src/ui/pause_menu.gd
+src/ui/score_popup.gd
+src/ui/sector_transition.gd
+src/ui/threat_tracker.gd
+src/ui/upgrade_screen.gd
+src/ui/win_screen.gd
+---
+
+## Session End: 20260707_092141
+### Uncommitted Changes
+assets/shaders/crt_overlay.gdshader
+assets/shaders/post_darkness_falloff.gdshader
+design/gdd/art-bible.md
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/main_menu.gd
+src/gameplay/effects/explosion.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/enemy_base.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/shield_drone.gd
+src/gameplay/enemies/space_leviathan.gd
+src/gameplay/enemies/the_silence.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/debris_cloud.gd
+src/gameplay/hazards/derelict_ship.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/pickups/pickup_visuals.gd
+src/gameplay/player/player.gd
+src/gameplay/projectiles/enemy_bolt.gd
+src/gameplay/projectiles/enemy_missile.gd
+src/gameplay/projectiles/laser_bolt.gd
+src/gameplay/projectiles/missile.gd
+src/gameplay/star_scan/scan_bar.gd
+src/gameplay/star_scan/star_node.gd
+src/ui/crt_overlay.gd
+src/ui/darkness_veil.gd
+src/ui/death_screen.gd
+src/ui/enemy_hp_bar.gd
+src/ui/hud.gd
+src/ui/mission_prompt.gd
+src/ui/pause_menu.gd
+src/ui/score_popup.gd
+src/ui/sector_transition.gd
+src/ui/threat_tracker.gd
+src/ui/upgrade_screen.gd
+src/ui/win_screen.gd
+---
+
+## Session End: 20260707_092824
+### Uncommitted Changes
+assets/shaders/crt_overlay.gdshader
+assets/shaders/post_darkness_falloff.gdshader
+design/gdd/art-bible.md
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/main_menu.gd
+src/gameplay/effects/explosion.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/enemy_base.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/shield_drone.gd
+src/gameplay/enemies/space_leviathan.gd
+src/gameplay/enemies/the_silence.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/debris_cloud.gd
+src/gameplay/hazards/derelict_ship.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/pickups/pickup_visuals.gd
+src/gameplay/player/player.gd
+src/gameplay/projectiles/enemy_bolt.gd
+src/gameplay/projectiles/enemy_missile.gd
+src/gameplay/projectiles/laser_bolt.gd
+src/gameplay/projectiles/missile.gd
+src/gameplay/star_scan/scan_bar.gd
+src/gameplay/star_scan/star_node.gd
+src/ui/crt_overlay.gd
+src/ui/darkness_veil.gd
+src/ui/death_screen.gd
+src/ui/enemy_hp_bar.gd
+src/ui/hud.gd
+src/ui/mission_prompt.gd
+src/ui/pause_menu.gd
+src/ui/score_popup.gd
+src/ui/sector_transition.gd
+src/ui/threat_tracker.gd
+src/ui/upgrade_screen.gd
+src/ui/win_screen.gd
+---
+
+## Session End: 20260707_163434
+### Uncommitted Changes
+assets/shaders/crt_overlay.gdshader
+assets/shaders/post_darkness_falloff.gdshader
+design/gdd/art-bible.md
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/main_menu.gd
+src/gameplay/effects/explosion.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/enemy_base.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/shield_drone.gd
+src/gameplay/enemies/space_leviathan.gd
+src/gameplay/enemies/the_silence.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/debris_cloud.gd
+src/gameplay/hazards/derelict_ship.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/pickups/pickup_visuals.gd
+src/gameplay/player/player.gd
+src/gameplay/projectiles/enemy_bolt.gd
+src/gameplay/projectiles/enemy_missile.gd
+src/gameplay/projectiles/laser_bolt.gd
+src/gameplay/projectiles/missile.gd
+src/gameplay/star_scan/scan_bar.gd
+src/gameplay/star_scan/star_node.gd
+src/ui/crt_overlay.gd
+src/ui/darkness_veil.gd
+src/ui/death_screen.gd
+src/ui/enemy_hp_bar.gd
+src/ui/hud.gd
+src/ui/mission_prompt.gd
+src/ui/pause_menu.gd
+src/ui/score_popup.gd
+src/ui/sector_transition.gd
+src/ui/threat_tracker.gd
+src/ui/upgrade_screen.gd
+src/ui/win_screen.gd
+---
+
+## Session End: 20260707_165731
+### Uncommitted Changes
+assets/shaders/crt_overlay.gdshader
+assets/shaders/post_darkness_falloff.gdshader
+design/gdd/art-bible.md
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/main_menu.gd
+src/gameplay/effects/explosion.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/enemy_base.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/shield_drone.gd
+src/gameplay/enemies/space_leviathan.gd
+src/gameplay/enemies/the_silence.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/debris_cloud.gd
+src/gameplay/hazards/derelict_ship.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/pickups/pickup_visuals.gd
+src/gameplay/player/player.gd
+src/gameplay/projectiles/enemy_bolt.gd
+src/gameplay/projectiles/enemy_missile.gd
+src/gameplay/projectiles/laser_bolt.gd
+src/gameplay/projectiles/missile.gd
+src/gameplay/star_scan/scan_bar.gd
+src/gameplay/star_scan/star_node.gd
+src/ui/crt_overlay.gd
+src/ui/darkness_veil.gd
+src/ui/death_screen.gd
+src/ui/enemy_hp_bar.gd
+src/ui/hud.gd
+src/ui/mission_prompt.gd
+src/ui/pause_menu.gd
+src/ui/score_popup.gd
+src/ui/sector_transition.gd
+src/ui/threat_tracker.gd
+src/ui/upgrade_screen.gd
+src/ui/win_screen.gd
+---
+
+## Session End: 20260707_170038
+### Uncommitted Changes
+assets/shaders/crt_overlay.gdshader
+assets/shaders/post_darkness_falloff.gdshader
+design/gdd/art-bible.md
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/main_menu.gd
+src/gameplay/effects/explosion.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/enemy_base.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/shield_drone.gd
+src/gameplay/enemies/space_leviathan.gd
+src/gameplay/enemies/the_silence.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/debris_cloud.gd
+src/gameplay/hazards/derelict_ship.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/pickups/pickup_visuals.gd
+src/gameplay/player/player.gd
+src/gameplay/projectiles/enemy_bolt.gd
+src/gameplay/projectiles/enemy_missile.gd
+src/gameplay/projectiles/laser_bolt.gd
+src/gameplay/projectiles/missile.gd
+src/gameplay/star_scan/scan_bar.gd
+src/gameplay/star_scan/star_node.gd
+src/ui/crt_overlay.gd
+src/ui/darkness_veil.gd
+src/ui/death_screen.gd
+src/ui/enemy_hp_bar.gd
+src/ui/hud.gd
+src/ui/mission_prompt.gd
+src/ui/pause_menu.gd
+src/ui/score_popup.gd
+src/ui/sector_transition.gd
+src/ui/threat_tracker.gd
+src/ui/upgrade_screen.gd
+src/ui/win_screen.gd
+---
+

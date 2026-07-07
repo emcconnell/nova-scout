@@ -1,5 +1,7 @@
 ## WinScreen — Victory screen. Fully opaque hangar celebration.
-## GDD Ref: level-design.md — Sector 5 endings
+## Gold/green celebration glow is the win-state signature and stays fixed;
+## the menu prompt retints to VisualState.pal("accent") (Turn 4).
+## GDD Ref: level-design.md — Sector 5 endings; art-bible.md Turn 4
 extends Control
 
 const COL_BG      := Color(0.02, 0.02, 0.04)
@@ -8,7 +10,6 @@ const COL_DARK    := Color(0.03, 0.03, 0.05)
 const COL_GOLD    := Color(1.00, 0.88, 0.20)
 const COL_LABEL   := Color(0.22, 1.00, 0.08)
 const COL_DIM     := Color(0.30, 0.50, 0.30)
-const COL_CYAN    := Color(0.00, 0.80, 1.00)
 const COL_BORDER  := Color(0.12, 0.25, 0.10)
 const COL_RIVET   := Color(0.08, 0.09, 0.12)
 
@@ -120,11 +121,16 @@ func _draw() -> void:
 	# === Content ===
 	var fade := clampf(_show_timer * 1.0, 0.0, 1.0)
 
-	# Title
+	# Title — ghosts at high blend, echoing the signal-degraded HUD even in victory
 	var title := "MISSION COMPLETE" if _is_true_ending else "PROBE SEVEN — RETURNING"
+	var title_pos := Vector2(cx - 56, 32)
 	var title_col := Color(glow_col.r, glow_col.g, glow_col.b, fade)
-	draw_string(_font_title, Vector2(cx - 56, 32), title,
+	draw_string(_font_title, title_pos, title,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 11, title_col)
+	var glitch := VisualState.blend()
+	if glitch > 0.5:
+		draw_string(_font_title, title_pos + Vector2(2.5, 1.0), title,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(glow_col.r, glow_col.g, glow_col.b, fade * 0.3 * glitch))
 
 	draw_line(Vector2(14, 38), Vector2(w - 14, 38),
 		Color(COL_BORDER.r, COL_BORDER.g, COL_BORDER.b, fade), 1.0)
@@ -152,5 +158,6 @@ func _draw() -> void:
 	# Prompt
 	if _show_timer > 5.0:
 		var pa := 0.5 + 0.5 * sin(_anim * 3.0)
+		var accent := VisualState.pal("accent")
 		draw_string(font, Vector2(cx - 32, h - 20), "[SPACE] MAIN MENU",
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color(COL_CYAN.r, COL_CYAN.g, COL_CYAN.b, pa))
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 5, Color(accent.r, accent.g, accent.b, pa))

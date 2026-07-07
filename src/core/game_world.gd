@@ -86,6 +86,9 @@ var _stars: Array[Vector4] = []
 var _vp_size: Vector2 = Vector2.ZERO     # cached viewport size (set in _ready)
 var _wrong_star_idx: int = -1            # The star that moves. It's nothing.
 
+# ─── TURN 4 scene detail (seeded once, never randf() in _draw) ───────────────
+var _scene_detail: Dictionary = {}
+
 # ─── Screen shake ─────────────────────────────────────────────────────────────
 var _shake_amount: float = 0.0
 var _shake_timer: float = 0.0
@@ -198,6 +201,9 @@ func _request_mission_prompt(prompt_id: String) -> void:
 	if _mission_prompt:
 		_mission_prompt.request_prompt(prompt_id)
 
+## Build the parallax starfield and precompute all seeded TURN 4 scene detail
+## (dust lane, ambient glows, derelict hulk, ghost chain) once — never randf()
+## inside _draw().
 func _build_starfield(vp: Rect2) -> void:
 	_stars.clear()
 	for i in 64:   # Sparser field — the void should feel empty
@@ -211,6 +217,7 @@ func _build_starfield(vp: Rect2) -> void:
 	# It's nothing. Probably. (dark-directive.md §4.2)
 	_wrong_star_idx = randi_range(0, _stars.size() - 1) \
 		if GameManager.current_sector >= 2 and randf() < 0.4 else -1
+	_scene_detail = SceneRenderer.precompute(4013 + GameManager.current_sector * 71, vp.size.x, vp.size.y)
 
 # ─── Per-frame ────────────────────────────────────────────────────────────────
 
@@ -294,52 +301,33 @@ func _update_stalker_spawning(delta: float) -> void:
 		var vp := get_viewport_rect()
 		spawn_enemy_at("silence", Vector2(randf_range(40.0, vp.size.x - 40.0), -30.0))
 
+## TURN 4 background — photographic starfield + milky-way dust lane + THE SUN,
+## crossfading via VisualState.blend() toward the dead frequency: collapsed
+## star count, ember star, ambient dark-red glows, derelict hulk silhouette.
+## GDD Ref: art-bible.md (Turn 4) — Scene / starfield recipe (scene4a/scene4c).
 func _draw() -> void:
 	var t := Time.get_ticks_msec() / 1000.0
 	var h := _vp_size.y
 	var w := _vp_size.x
+	var blend := VisualState.blend()
 
-	# ── Nebula glow based on current sector ──
-	# Dread palette: desaturated, sickly, hue-shifted toward cold — the void
-	# gets less romantic the deeper you go (dark-directive.md §4.2)
+	# ── Sector-tinted ambient glow — subtle SURVEY nebula fading to vast DEAD
+	# red glows. Dread palette kept per-sector, alpha capped low (art-bible Turn 4).
 	var sector := clampi(GameManager.current_sector, 1, 5)
 	var nebula_color: Color
 	match sector:
-		1: nebula_color = Color(0.07, 0.10, 0.20, 0.22)   # cold blue-grey — last safe light
-		2: nebula_color = Color(0.11, 0.06, 0.15, 0.20)   # bruise violet
-		3: nebula_color = Color(0.05, 0.13, 0.10, 0.22)   # sickly phosphor murk
-		4: nebula_color = Color(0.13, 0.05, 0.03, 0.20)   # rust / dried blood
-		_: nebula_color = Color(0.08, 0.04, 0.10, 0.18)   # near-black violet
+		1: nebula_color = Color(0.07, 0.10, 0.20, 0.10)   # cold blue-grey — last safe light
+		2: nebula_color = Color(0.11, 0.06, 0.15, 0.09)   # bruise violet
+		3: nebula_color = Color(0.05, 0.13, 0.10, 0.10)   # sickly phosphor murk
+		4: nebula_color = Color(0.13, 0.05, 0.03, 0.09)   # rust / dried blood
+		_: nebula_color = Color(0.08, 0.04, 0.10, 0.08)   # near-black violet
+	SceneRenderer.draw_sector_glows(self, _scene_detail, nebula_color, blend, w, h, t)
 
-	# Two soft nebula blobs — slow drift
-	var neb_x1 := w * 0.3 + sin(t * 0.07) * 30.0
-	var neb_y1 := h * 0.35 + cos(t * 0.05) * 20.0
-	var neb_x2 := w * 0.72 + cos(t * 0.06) * 25.0
-	var neb_y2 := h * 0.6 + sin(t * 0.04) * 18.0
-	for ring in range(5, 0, -1):
-		var r_frac := float(ring) / 5.0
-		var r_size := 50.0 * r_frac
-		var a := nebula_color.a * r_frac * (0.8 + 0.2 * sin(t * 0.3))
-		var nc := Color(nebula_color.r, nebula_color.g, nebula_color.b, a)
-		draw_circle(Vector2(neb_x1, neb_y1), r_size, nc)
-		draw_circle(Vector2(neb_x2, neb_y2), r_size * 0.8, nc)
+	# ── Static seeded milky-way dust lane — behind the parallax stars ──
+	SceneRenderer.draw_dust_lane(self, _scene_detail)
 
-	# ── Distant galaxy smudges (2 static, seeded by sector) ──
-	var gal_seed := sector * 137
-	for gi in 2:
-		var gx := fmod(float(gal_seed + gi * 97) * 1.618, w)
-		var gy := fmod(float(gal_seed + gi * 53) * 2.317, h)
-		var ga := 0.06 + 0.02 * sin(t * 0.15 + float(gi))
-		for gr in range(3, 0, -1):
-			var gs := 3.0 * float(gr)
-			draw_circle(Vector2(gx, gy), gs, Color(0.9, 0.85, 0.7, ga * float(gr) / 3.0))
-		# Tiny bright core
-		draw_circle(Vector2(gx, gy), 0.8, Color(1.0, 0.95, 0.8, ga * 2.5))
-
-	# ── Star colors per layer ──
-	# Layer 0 (far): dim warm yellow / red — distant giants
-	# Layer 1 (mid): white / blue-white mix
-	# Layer 2 (near): bright white / blue, occasional red giant
+	# ── Parallax starfield — photographic restyle, count collapses toward DEAD ──
+	# Layer-agnostic warm/cool split per spec: 28% warm, rest split blue-white/white.
 	for si in _stars.size():
 		var s := _stars[si]
 		var layer   := int(s.z)
@@ -355,50 +343,49 @@ func _draw() -> void:
 		# Twinkle — dimmer overall; the void is not friendly (dark-directive.md)
 		var twinkle := sin(t * (1.8 + s.w * 0.5) + s.w) * 0.5 + 0.5  # 0..1 range
 		var bright  := 0.16 + 0.24 * float(layer) + 0.28 * twinkle
-		var radius  := 0.4 + 0.35 * float(layer)
-
-		# Choose star color based on layer + per-star seed
 		var star_hue := fmod(s.w * 10.0, TAU) / TAU  # 0..1 pseudo-random from offset
-		var col: Color
-		match layer:
-			0:
-				# Far layer: warm yellow, occasional red
-				if star_hue < 0.15:
-					col = Color(bright * 1.0, bright * 0.45, bright * 0.3)  # red giant
-				else:
-					col = Color(bright * 1.0, bright * 0.92, bright * 0.7)  # warm yellow
-			1:
-				# Mid layer: blue-white, white
-				if star_hue < 0.3:
-					col = Color(bright * 0.75, bright * 0.85, bright * 1.1)  # blue-white
-				else:
-					col = Color(bright, bright, bright * 1.05)  # white
-			_:
-				# Near layer: bright white dominant, occasional blue or red
-				if star_hue < 0.1:
-					col = Color(bright * 1.0, bright * 0.4, bright * 0.35)  # rare red giant
-				elif star_hue < 0.3:
-					col = Color(bright * 0.7, bright * 0.85, bright * 1.15)  # blue
-				else:
-					col = Color(bright, bright, bright)  # white
+		var warm := star_hue < 0.28
 
-		# Bloom for brighter stars — extra soft circle
+		# Brightness-weighted size (art-bible: >0.94 -> 1.8px, >0.7 -> 1.2px, else 0.9px).
+		var radius := (1.8 if bright > 0.94 else (1.2 if bright > 0.7 else 0.9)) * 0.5
+
+		var col: Color
+		if warm:
+			col = Color(bright, bright * 0.910, bright * 0.784)   # 255,232,200
+		elif star_hue < 0.64:
+			col = Color(bright * 0.769, bright * 0.839, bright)   # 196,214,255
+		else:
+			col = Color(bright * 0.933, bright * 0.957, bright)  # 238,244,255
+
+		# Star count collapses in DEAD FREQUENCY: cold pinpricks only, warm stars
+		# fade out progressively; overall alpha drops toward 0.3.
+		var alpha := lerpf(1.0, 0.3, blend)
+		if warm:
+			alpha *= (1.0 - blend)
+		if alpha <= 0.01:
+			continue
+		var dc := Color(col.r, col.g, col.b, alpha)
+
 		if bright > 0.7 and layer >= 1:
-			var bloom_a := (bright - 0.7) * 0.4
+			var bloom_a := (bright - 0.7) * 0.4 * alpha
 			draw_circle(Vector2(x_pos, y_off), radius * 2.5, Color(col.r, col.g, col.b, bloom_a))
 
-		draw_circle(Vector2(x_pos, y_off), radius, col)
+		draw_circle(Vector2(x_pos, y_off), radius, dc)
 
-		# Cross-flare on the brightest near stars during peak twinkle
 		if layer == 2 and twinkle > 0.85:
-			var flare_a := (twinkle - 0.85) * 3.0 * 0.3  # 0..0.3
+			var flare_a := (twinkle - 0.85) * 3.0 * 0.3 * alpha
 			var fc := Color(col.r, col.g, col.b, flare_a)
 			draw_line(Vector2(x_pos - 3.0, y_off), Vector2(x_pos + 3.0, y_off), fc, 0.5)
 			draw_line(Vector2(x_pos, y_off - 3.0), Vector2(x_pos, y_off + 3.0), fc, 0.5)
 
-		# Wrap: also draw star one screen-height above
 		if y_off < 6.0:
-			draw_circle(Vector2(x_pos, y_off + h), radius, col)
+			draw_circle(Vector2(x_pos, y_off + h), radius, dc)
+
+	# ── THE SUN / EMBER STAR — one draw pass, position crossfades via VisualState ──
+	SceneRenderer.draw_sun(self, _scene_detail, VisualState.sun_screen_pos(), blend, w, h)
+
+	# ── DERELICT HULK top-right — DEAD FREQUENCY only ──
+	SceneRenderer.draw_derelict_hulk(self, _scene_detail, blend)
 
 # ─── Travel hazard spawning ───────────────────────────────────────────────────
 
@@ -929,10 +916,23 @@ func hitstop(ms: int) -> void:
 		return   # Already stopped at least this long
 	_hitstop_recover_at_msec = end_msec
 	Engine.time_scale = 0.05
+	_schedule_hitstop_recovery(ms)
+
+## Restore time scale once the newest hitstop window has fully elapsed.
+## Re-arms itself for the remainder if a longer stop was queued meanwhile,
+## so recovery is guaranteed — the world can never stay frozen.
+func _schedule_hitstop_recovery(ms: int) -> void:
 	var timer := get_tree().create_timer(float(ms) / 1000.0, true, false, true)
 	timer.timeout.connect(func() -> void:
-		if Time.get_ticks_msec() >= _hitstop_recover_at_msec:
-			Engine.time_scale = 1.0)
+		var remaining := _hitstop_recover_at_msec - Time.get_ticks_msec()
+		if remaining <= 0:
+			Engine.time_scale = 1.0
+		else:
+			_schedule_hitstop_recovery(remaining))
+
+func _exit_tree() -> void:
+	# Scene reloads (sector transition, retry) must never strand a hitstop.
+	Engine.time_scale = 1.0
 
 ## Player took a hull hit — impact feedback (called by Player via group).
 func on_player_hull_hit() -> void:

@@ -12,6 +12,9 @@ var _show_settings: bool = false
 var _settings_selection: int = 0
 var _menu_selection: int = 0
 
+# ─── TURN 4 scene detail (seeded once, never randf() in _draw) ───────────────
+var _scene_detail: Dictionary = {}
+
 # Fonts
 var _font_title: Font = null    # Orbitron — bold techy title
 var _font_body: Font = null     # Share Tech Mono — techy monospace body
@@ -71,6 +74,7 @@ func _ready() -> void:
 			randf_range(0, vp.size.y),
 			randf_range(0.0, TAU),
 			0.25 + float(layer) * 0.25 + randf_range(0.0, 0.15)))
+	_scene_detail = SceneRenderer.precompute(4013, vp.size.x, vp.size.y)
 	_apply_runtime_settings()
 	AudioManager.play_music("mission_log")
 
@@ -145,8 +149,14 @@ func _draw() -> void:
 	var H  := vp.size.y
 	var cx := W * 0.5
 
-	# ═══ Deep space ═══
-	draw_rect(Rect2(Vector2.ZERO, vp.size), C_VOID)
+	# ═══ Deep space — TURN 4 4A beauty treatment (menu blend is 0.25 via visuals.json,
+	# so a hint of unease is always present on the title screen) ═══
+	var blend := VisualState.blend()
+	draw_rect(Rect2(Vector2.ZERO, vp.size), VisualState.pal("bg"))
+
+	SceneRenderer.draw_sector_glows(self, _scene_detail, Color(0.10, 0.10, 0.35, 0.10), blend, W, H, _anim)
+	SceneRenderer.draw_dust_lane(self, _scene_detail)
+
 	for s in _stars:
 		var twinkle := 0.5 + 0.5 * sin(_anim * (0.8 + s.w) + s.z)
 		var bright := s.w * twinkle
@@ -154,6 +164,7 @@ func _draw() -> void:
 		var sc := Color(bright, bright, bright * 1.08)
 		if s.w > 0.6:
 			sc = Color(bright * 0.9, bright * 0.95, bright)
+		sc.a = lerpf(1.0, 0.3, blend)
 		draw_circle(Vector2(s.x, s.y), r, sc)
 	for ss in _shooting_stars:
 		var pct: float = ss["life"] / ss["max_life"]
@@ -168,10 +179,9 @@ func _draw() -> void:
 			Vector2(px - vx / norm * tail, py - vy / norm * tail),
 			Color(0.7, 0.8, 1.0, alpha * 0.4), 1.0)
 		draw_circle(Vector2(px, py), 0.7, Color(1.0, 1.0, 1.0, alpha))
-	# Nebula
-	var neb_a := 0.015 + 0.005 * sin(_anim * 0.3)
-	draw_circle(Vector2(W * 0.3, H * 0.35), 60.0, Color(0.15, 0.10, 0.35, neb_a))
-	draw_circle(Vector2(W * 0.7, H * 0.25), 45.0, Color(0.08, 0.20, 0.35, neb_a))
+
+	SceneRenderer.draw_sun(self, _scene_detail, VisualState.sun_screen_pos(), blend, W, H)
+	SceneRenderer.draw_derelict_hulk(self, _scene_detail, blend)
 
 	if _show_settings:
 		_draw_settings_overlay(vp, cx)
@@ -183,7 +193,8 @@ func _draw() -> void:
 	# ═══ Cockpit frame ═══
 	_draw_cockpit_frame(W, H)
 
-	# ═══ TITLE — properly centered ═══
+	# ═══ TITLE — properly centered, cyan FUI (VisualState.pal("hud")) ═══
+	var hud_col := VisualState.pal("hud")
 	var title_text := "NOVA SCOUT"
 	var title_size := 17
 	var title_w := _font_title.get_string_size(title_text, HORIZONTAL_ALIGNMENT_LEFT, -1, title_size).x
@@ -192,13 +203,13 @@ func _draw() -> void:
 	# Glow rect behind title
 	var tg := 0.06 + 0.03 * sin(_anim * 1.2)
 	draw_rect(Rect2(title_x - 6, title_y - 18, title_w + 12, 22),
-		Color(C_GREEN.r, C_GREEN.g, C_GREEN.b, tg))
+		Color(hud_col.r, hud_col.g, hud_col.b, tg))
 	# Title text (single draw, no doubling)
 	draw_string(_font_title, Vector2(title_x, title_y), title_text,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, title_size, C_GREEN)
+		HORIZONTAL_ALIGNMENT_LEFT, -1, title_size, hud_col)
 	# Divider — matched to title width
 	draw_line(Vector2(title_x - 4, title_y + 5), Vector2(title_x + title_w + 4, title_y + 5),
-		Color(C_GREEN.r, C_GREEN.g, C_GREEN.b, 0.4), 1.0)
+		Color(hud_col.r, hud_col.g, hud_col.b, 0.4), 1.0)
 
 	# Tagline — centered via measurement
 	var tag_text := TAGLINE.substr(0, _typewriter_pos)
@@ -212,7 +223,7 @@ func _draw() -> void:
 		var partial_w := _font_body.get_string_size(tag_text, HORIZONTAL_ALIGNMENT_LEFT, -1, tag_size).x
 		draw_rect(Rect2(tag_x + partial_w + 1, 52, 2, 6), C_AMBER)
 
-	# ═══ LAUNCH BUTTON — centered via measurement ═══
+	# ═══ LAUNCH BUTTON — centered via measurement, cyan FUI ═══
 	var pulse := 0.5 + 0.5 * sin(_blink * 2.8)
 	var launch_text: String = "A / SPACE  " + String(MENU_ITEMS[_menu_selection])
 	var launch_size := 11
@@ -224,17 +235,17 @@ func _draw() -> void:
 	var by := 68.0
 	# Outer glow
 	draw_rect(Rect2(bx - 3, by - 3, bw + 6, bh + 6),
-		Color(C_CYAN.r, C_CYAN.g, C_CYAN.b, 0.04 + 0.04 * pulse))
+		Color(hud_col.r, hud_col.g, hud_col.b, 0.04 + 0.04 * pulse))
 	# Box fill
 	draw_rect(Rect2(bx, by, bw, bh), Color(0.01, 0.04, 0.06, 0.85))
 	# Border
 	draw_rect(Rect2(bx, by, bw, bh),
-		Color(C_CYAN.r, C_CYAN.g, C_CYAN.b, 0.35 + 0.35 * pulse), false, 1.0)
+		Color(hud_col.r, hud_col.g, hud_col.b, 0.35 + 0.35 * pulse), false, 1.0)
 	# Text — centered in box
 	var launch_x := cx - launch_w * 0.5
 	draw_string(_font_title, Vector2(launch_x, by + 14), launch_text,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, launch_size,
-		Color(C_CYAN.r, C_CYAN.g, C_CYAN.b, 0.7 + 0.3 * pulse))
+		Color(hud_col.r, hud_col.g, hud_col.b, 0.7 + 0.3 * pulse))
 
 	# ═══ Controls — two columns ═══
 	var sys_y := 96.0
@@ -269,7 +280,7 @@ func _draw() -> void:
 	var clock := "%02d:%02d" % [secs / 60, secs % 60]
 	var clock_w := _font_body.get_string_size(clock, HORIZONTAL_ALIGNMENT_LEFT, -1, 6).x
 	draw_string(_font_body, Vector2(W - 26 - clock_w, 24), clock,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(C_GREEN.r, C_GREEN.g, C_GREEN.b, 0.6))
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(hud_col.r, hud_col.g, hud_col.b, 0.6))
 
 ## Draw text centered at x position.
 func _draw_centered_text(f: Font, text: String, center_x: float, y: float, sz: int, col: Color) -> void:

@@ -77,3 +77,15 @@ func _process(delta: float) -> void:
 	_mat.set_shader_parameter("light_radius", radius * boost_mult * scan_mult)
 	_mat.set_shader_parameter("edge_softness", float(GameManager.dread_value("darkness", "edge_softness", 55.0)))
 	_mat.set_shader_parameter("max_alpha", _current_alpha)
+
+	# TURN 4 flood cone — the beam is the renderer in the dead frequency.
+	var half_angle: float = deg_to_rad(float(VisualState.value("beam", "half_angle_deg", 17.0)))
+	var soft: float = deg_to_rad(float(VisualState.value("beam", "edge_softness_deg", 8.0)))
+	_mat.set_shader_parameter("beam_dir", Vector2.UP)
+	_mat.set_shader_parameter("beam_range", float(VisualState.value("beam", "range", 130.0)))
+	_mat.set_shader_parameter("beam_cos_half", cos(half_angle))
+	_mat.set_shader_parameter("beam_cos_soft", cos(half_angle + soft))
+	_mat.set_shader_parameter("beam_strength", VisualState.beam_strength())
+	# Murk hue fades blue-black (survey) → red-black (dead frequency).
+	_mat.set_shader_parameter("dark_color",
+		VisualState.col(Color(0.012, 0.014, 0.032), Color(0.03, 0.008, 0.006)))

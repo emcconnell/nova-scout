@@ -83,16 +83,19 @@ func _process(delta: float) -> void:
 		r["life"] += delta
 	queue_redraw()
 
+## White-hot/orange survey bursts blend toward dimmer red dead-frequency bursts.
 func _draw() -> void:
 	var t := _time / _duration   # 0 to 1 normalized
+	var dead := VisualState.blend()
 
-	# Initial flash
+	# Initial flash — white-hot (survey) fades toward a dimmer red flash (dead)
 	if _flash_alpha > 0.0:
 		var fa := _flash_alpha * (1.0 - minf(t * 4.0, 1.0))
 		if fa > 0.01:
 			var flash_r := _get_flash_radius()
-			draw_circle(Vector2.ZERO, flash_r, Color(1.0, 1.0, 1.0, fa))
-			draw_circle(Vector2.ZERO, flash_r * 0.6, Color(1.0, 1.0, 0.9, fa * 0.5))
+			var flash_col := Color(1.0, 1.0, 1.0).lerp(Color(1.0, 0.35, 0.28), dead)
+			draw_circle(Vector2.ZERO, flash_r, Color(flash_col.r, flash_col.g, flash_col.b, fa * lerpf(1.0, 0.6, dead)))
+			draw_circle(Vector2.ZERO, flash_r * 0.6, Color(flash_col.r, flash_col.g, flash_col.b * 0.9, fa * 0.5))
 
 	# Rings
 	for r in _rings:
@@ -100,7 +103,7 @@ func _draw() -> void:
 		if rp >= 1.0:
 			continue
 		var ra: float = (1.0 - rp) * float(r["alpha"])
-		var col: Color = Color(r["color"])
+		var col: Color = _fade_tint(Color(r["color"]), dead)
 		draw_arc(Vector2.ZERO, float(r["radius"]), 0, TAU, 24,
 			Color(col.r, col.g, col.b, ra), float(r["width"]) * (1.0 - rp * 0.5))
 
@@ -110,7 +113,7 @@ func _draw() -> void:
 		if pp >= 1.0:
 			continue
 		var pa: float = (1.0 - pp)
-		var col: Color = Color(p["color"])
+		var col: Color = _fade_tint(Color(p["color"]), dead)
 		# Fade from bright to dim
 		var size: float = float(p["size"]) * (1.0 - pp * 0.6)
 		var pc := Color(col.r, col.g, col.b, pa)
@@ -132,17 +135,26 @@ func _draw() -> void:
 					Color(col.r, col.g, col.b, pa * 0.8), 1.0)
 				draw_circle(Vector2(p["x"], p["y"]), 0.8, Color(1.0, 1.0, 1.0, pa))
 			"ember":
-				# Flickering dying light, cooling toward deep red
+				# Flickering dying light, cooling toward deep red (further toward dead)
 				var flick := 0.55 + 0.45 * sin(_time * 11.0 + float(p["angle"]))
-				var cool := col.lerp(Color(0.55, 0.05, 0.02), pp)
+				var cool := col.lerp(Color(0.45, 0.03, 0.02), pp + dead * 0.3)
 				draw_circle(Vector2(p["x"], p["y"]), size,
 					Color(cool.r, cool.g, cool.b, pa * flick))
 
-	# Smoke (for larger explosions)
+	# Smoke (for larger explosions) — dead frequency: darker, redder haze
 	if _type in [Type.PLAYER, Type.DESTROYER, Type.MOTHERSHIP, Type.MINE]:
-		var smoke_a := 0.15 * (1.0 - t)
+		var smoke_a := 0.15 * (1.0 - t) * lerpf(1.0, 0.7, dead)
 		var smoke_r := _get_flash_radius() * (0.5 + t * 1.5)
-		draw_circle(Vector2.ZERO, smoke_r, Color(0.15, 0.12, 0.10, smoke_a))
+		var smoke_col := Color(0.15, 0.12, 0.10).lerp(Color(0.10, 0.04, 0.04), dead)
+		draw_circle(Vector2.ZERO, smoke_r, Color(smoke_col.r, smoke_col.g, smoke_col.b, smoke_a))
+
+## Blends a bright survey particle color toward the dimmer red dead-frequency family.
+func _fade_tint(col: Color, dead: float) -> Color:
+	if dead <= 0.0:
+		return col
+	var dead_col := Color(0.7, 0.12, 0.08).lerp(col, 0.25)   # keep a hint of the original hue
+	var tinted := col.lerp(dead_col, dead)
+	return tinted.darkened(dead * 0.25)   # dimmer overall in dead frequency, fewer sparks read as bright
 
 func _draw_shard(pos: Vector2, sz: float, angle: float, col: Color) -> void:
 	var pts := PackedVector2Array([

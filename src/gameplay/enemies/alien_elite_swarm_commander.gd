@@ -10,9 +10,7 @@ const MISSILE_INTERVAL := 4.0
 const MISSILE_SPEED    := 180.0
 const MISSILE_DAMAGE   := 40
 
-const COL_HULL  := Color(0.45, 0.00, 0.60)
 const COL_PORT  := Color(0.80, 0.00, 1.00, 0.7)
-const COL_GLOW  := Color(0.55, 0.08, 0.42, 0.5)
 
 var _spawn_timer: float = 5.0
 var _missile_timer: float = 2.0
@@ -20,6 +18,8 @@ var _scouts_spawned: int = 0
 var _wobble: float = 0.0
 var _phase: float = 0.0
 var hp_scale: float = 1.0
+var _flecks: Array[Vector3] = []      # seeded chitin flecks (TURN 4)
+var _eye_dots: Array = []             # seeded eye cluster (dead frequency)
 
 func _ready() -> void:
 	super()
@@ -28,6 +28,11 @@ func _ready() -> void:
 	contact_damage = 25
 	score_value = 1500
 	drop_table = "elite"
+	_flecks = EnemyRenderer.seed_flecks(get_instance_id(), 28, Vector2(13, 8))
+	_eye_dots = [
+		Vector3(-6, -6, 1.2), Vector3(6, -6, 1.2), Vector3(0, -8, 1.5),
+		Vector3(-10, -2, 0.8), Vector3(10, -2, 0.8),
+	]
 
 func _update(delta: float) -> void:
 	if _stunned:
@@ -73,8 +78,15 @@ func _fire_homing_missile() -> void:
 
 func _draw() -> void:
 	var flash := _hit_flash_timer > 0.0
-	var hull  := Color(1,1,1) if flash else COL_HULL
-	# Central command pod
+	var lit := _lit_factor()
+	var blend := VisualState.blend()
+	var hi := EnemyRenderer.body_stop(0, lit)
+	var lo := EnemyRenderer.body_stop(2, lit)
+	var hull := hi if not flash else Color(1, 1, 1)
+
+	EnemyRenderer.under_halo(self, Vector2(0, 2), 22.0)
+
+	# Central command pod (silhouette unchanged)
 	draw_colored_polygon(PackedVector2Array([
 		Vector2(-12, -10), Vector2(12, -10),
 		Vector2(14, 8), Vector2(-14, 8)
@@ -82,11 +94,26 @@ func _draw() -> void:
 	# Spawn bays (two ports)
 	draw_rect(Rect2(-18, 0, 6, 10), hull)
 	draw_rect(Rect2(12, 0, 6, 10), hull)
-	var port_a: float = 0.5 + 0.5 * abs(sin(_wobble * 2.0))
+
+	EnemyRenderer.plate_ridge_line(self,
+		PackedVector2Array([Vector2(-13, -1), Vector2(0, 2), Vector2(13, -1)]),
+		PackedVector2Array([Vector2(-13, -2.4), Vector2(0, 0.6), Vector2(13, -2.4)]), lit)
+	EnemyRenderer.draw_flecks(self, _flecks, lit)
+
+	var port_a: float = (0.5 + 0.5 * abs(sin(_wobble * 2.0))) * (1.0 - blend * 0.5)
 	draw_circle(Vector2(-15, 8), 3.0, Color(COL_PORT.r, COL_PORT.g, COL_PORT.b, port_a))
 	draw_circle(Vector2(15, 8), 3.0, Color(COL_PORT.r, COL_PORT.g, COL_PORT.b, port_a))
-	# Central glow
+
+	# Central glow — magenta dies to embers with blend
 	var ga := 0.4 + 0.4 * sin(_wobble)
-	draw_circle(Vector2(0, 0), 5.0, Color(COL_GLOW.r, COL_GLOW.g, COL_GLOW.b, ga))
+	DrawKit.glow(self, Vector2(0, 0), 5.0, Color(lo.r + 0.3, lo.g + 0.1, lo.b + 0.3, ga * (1.0 - blend * 0.4)), 3)
+
+	EnemyRenderer.eye_cluster(self, _eye_dots, lit, [0, 1])
+	EnemyRenderer.dead_vein_line(self, Vector2(-14, 6), Vector2(14, 6))
+	if lit > 0.01:
+		var rim_pts := PackedVector2Array([Vector2(-12, -10), Vector2(-14, 8)])
+		EnemyRenderer.lit_rim_stroke(self, rim_pts, lit)
+
 	if _stunned:
 		draw_circle(Vector2(0, -12), 2.5, Color(0, 1, 1, 0.9))
+	_draw_hit_flash()

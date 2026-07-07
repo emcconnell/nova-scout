@@ -1264,3 +1264,8 @@ src/ui/upgrade_screen.gd
 src/ui/win_screen.gd
 ---
 
+## Session End: 20260707_180120
+### Commits
+80b07ee feat: Turn 4 graphics overhaul — punched-up realism + the fade
+---
+

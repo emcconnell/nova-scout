@@ -1505,3 +1505,8 @@ b68004d log
   core, ghost chain with aperture hexagons. Ember star (DEAD) untouched.
 - Verified: firing shots sectors 1/5, sun shots sector 1, murk/beam regression
   sector 5; 104/104 tests.
+## Session End: 20260708_074640
+### Commits
+8ac5bb8 fix: restore projectile rendering under the post stack + photographic sun
+---
+

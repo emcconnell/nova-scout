@@ -158,12 +158,18 @@ func _ready() -> void:
 	projectiles_node.z_index = 35
 
 	# v5.0 "Wet Black" — volumetric dust in the beam + the cinematic pass
-	# (bloom / filmic tonemap / fade grade) under the film overlay.
+	# (bloom / filmic tonemap / fade grade). The post pass lives on its own
+	# CanvasLayer (1, under the FilmLayer at 2): a screen-texture read inside
+	# the world canvas gets a stale backbuffer copy in GL Compatibility that
+	# is missing the projectile layer (z 35) — bolts vanished (Turn 6.1).
 	add_child(DustField.new())
-	add_child(PostStack.new())
+	var post_layer := CanvasLayer.new()
+	post_layer.layer = 1
+	add_child(post_layer)
+	post_layer.add_child(PostStack.new())
 
 	# Wire CRT overlay
-	var crt := get_node_or_null("CRTOverlay")
+	var crt := get_node_or_null("FilmLayer/CRTOverlay")
 	if crt and crt.has_method("connect_player"):
 		crt.connect_player(player)
 

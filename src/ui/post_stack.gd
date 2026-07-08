@@ -1,7 +1,9 @@
 ## PostStack — v5.0 "Wet Black" always-on cinematic pass: threshold bloom,
 ## filmic tonemap, and the fade-driven grade (crushed blacks / red lift).
-## Sits at z 45 — above the darkness veil (30) and projectiles (35), below
-## the film/CRT overlay (50) so grain lands on the graded image.
+## MUST live on its own CanvasLayer (1), under the FilmLayer (2) so grain
+## lands on the graded image: a screen-texture read inside the world canvas
+## gets a stale backbuffer copy in GL Compatibility that is missing the
+## projectile layer — bolts vanished (measured, Turn 6.1).
 ## Unlike the CRT overlay this never toggles off: it IS the lens, not a treat.
 ## Tuning: assets/data/visuals.json → "post". GDD Ref: art-bible.md §0 (v5.0)
 class_name PostStack

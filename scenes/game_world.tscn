@@ -79,10 +79,12 @@ mouse_filter = 2
 z_index = 23
 script = ExtResource("8_win")
 
-[node name="CRTOverlay" type="ColorRect" parent="."]
+[node name="FilmLayer" type="CanvasLayer" parent="."]
+layer = 2
+
+[node name="CRTOverlay" type="ColorRect" parent="FilmLayer"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
-z_index = 50
 script = ExtResource("10_crt")

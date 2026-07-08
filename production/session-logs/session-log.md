@@ -1479,3 +1479,29 @@ AAA-realism space-horror light-behavior pass on top of Turn 5's textured bodies:
 - Probe harness: PROBE_SPAWN now accepts rockN:x:y static asteroids.
 Verified: probe screenshots sectors 1/2/3/4/5 incl. beam-reveal composition shots;
 104/104 unit tests (6 new for post-stack data plumbing).
+## Session End: 20260707_232218
+### Commits
+aea89e8 feat: Turn 6 graphics overhaul — Wet Black (art bible v5.0)
+fa931ca Merge pull request #5 from emcconnell/claude/game-graphics-photo-realism-a2bd73
+e758496 log: session log update for Turn 5
+9429b42 feat: Turn 5 graphics overhaul — Textured Light (art bible v4.0)
+74cbf3f Merge pull request #4 from emcconnell/claude/zealous-burnell-e44092
+b68004d log
+28ad4e9 Merge pull request #3 from emcconnell/claude/zealous-burnell-e44092
+80b07ee feat: Turn 4 graphics overhaul — punched-up realism + the fade
+---
+
+
+## Turn 6.1 — laser-fix + photographic sun — 2026-07-08
+- FIX: laser bolts (and all z-35 projectiles) were erased by the Turn 6 PostStack:
+  a fullscreen hint_screen_texture pass inside the world canvas gets a stale
+  backbuffer copy in GL Compatibility regardless of z_index. PostStack now lives
+  on CanvasLayer 1 and the CRT overlay moved to FilmLayer (CanvasLayer 2), so
+  grain still lands on the graded image. Bisected via new probe flags
+  (PROBE_FIRE=1 holds the trigger; bolts confirmed alive-but-unrendered, then
+  visible again after the layer split).
+- Sun rework (photo-realism pass): tight clipped core + feathered halo instead
+  of banded glow discs, 6-blade diffraction spikes, chromatic fringe hugging the
+  core, ghost chain with aperture hexagons. Ember star (DEAD) untouched.
+- Verified: firing shots sectors 1/5, sun shots sector 1, murk/beam regression
+  sector 5; 104/104 tests.

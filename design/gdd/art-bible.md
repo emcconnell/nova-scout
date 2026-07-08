@@ -72,8 +72,10 @@ all data-driven from `assets/data/visuals.json`:
    wall). Creatures do not occlude (their reveal is the shader's job).
    Star layers are light-years away: `light_mask = 0`, nothing lights or
    shadows them.
-3. **The lens is honest.** An always-on `PostStack` ColorRect (z 45, under
-   the film overlay at 50) runs `post_bloom_grade.gdshader`: 13-tap
+3. **The lens is honest.** An always-on `PostStack` ColorRect on its own
+   CanvasLayer (1, under the FilmLayer at 2 — screen reads inside the world
+   canvas get stale copies in GL Compatibility and erased the projectile
+   layer) runs `post_bloom_grade.gdshader`: 13-tap
    threshold bloom at native-canvas radii, ACES filmic tonemap
    (`post.exposure`), and the fade-driven grade — SURVEY gets cold clean
    shadows; DEAD crushes blacks (`grade_strength`), drains every color

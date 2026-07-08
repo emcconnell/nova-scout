@@ -33,7 +33,25 @@ func _ready() -> void:
 			elif world.has_method("spawn_enemy_at"):
 				world.spawn_enemy_at(parts[0], pos)
 
+	# PROBE_FIRE=1 — hold the laser trigger so shots are in flight at capture.
+	if OS.get_environment("PROBE_FIRE") == "1":
+		Input.action_press("fire_laser")
+
+
 	await get_tree().create_timer(wait_s).timeout
+	if OS.get_environment("PROBE_FIRE") == "1":
+		var proj: Node = world.get_node_or_null("Projectiles")
+		if proj:
+			var vis := 0
+			for c in proj.get_children():
+				if c.visible:
+					vis += 1
+					print("  bolt pos=", c.global_position, " z=", c.z_index,
+						" mod=", c.modulate, " lifetime=", c.get("_lifetime"))
+			print("projectiles: children=", proj.get_child_count(), " visible=", vis)
+			var p: Node = world.get_node_or_null("Player")
+			if p and p.get("weapons") != null:
+				print("weapons: energy=", p.weapons.energy, " timer=", p.weapons.get("_laser_timer"))
 	DirAccess.make_dir_recursive_absolute(
 		ProjectSettings.globalize_path("res://.probe_out"))
 	var img := get_viewport().get_texture().get_image()

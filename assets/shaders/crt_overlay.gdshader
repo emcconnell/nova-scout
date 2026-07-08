@@ -54,10 +54,13 @@ void fragment() {
 	float grain_n = hash12(native_px + grain_seed_step) - 0.5;
 	col.rgb += grain_n * (grain_amount + interference * 0.05);
 
-	// Anamorphic flare — faint horizontal streak keyed to the sun/ember screen position
+	// Anamorphic flare — ghost-faint lens echo keyed to the sun/ember screen
+	// position. This is post-process (it sits over moving bodies), so it must
+	// stay at whisper level: the real streak is painted in scene_renderer.gd
+	// and clips correctly behind rocks and ships.
 	float flare_dy = abs(native_px.y - sun_screen_pos.y);
-	float flare = smoothstep(10.0, 0.0, flare_dy) * smoothstep(140.0, 0.0, abs(native_px.x - sun_screen_pos.x));
-	col.rgb += vec3(1.0, 0.96, 0.9) * flare * 0.10;
+	float flare = smoothstep(6.0, 0.0, flare_dy) * smoothstep(120.0, 0.0, abs(native_px.x - sun_screen_pos.x));
+	col.rgb += vec3(1.0, 0.96, 0.9) * flare * 0.025;
 
 	// Red static tears (dead frequency) — 2-3 thin translucent lines, ~2 Hz reposition
 	if (blend_amount > 0.01) {

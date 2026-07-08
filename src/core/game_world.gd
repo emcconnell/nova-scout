@@ -277,9 +277,10 @@ func _update_light_rig() -> void:
 		Color(0.55, 0.22, 0.14), Color(0.34, 0.18, 0.44),
 	][sector - 1]
 	for n in _nebula_sprites:
-		# wisps dim and redden as the frequency dies
+		# wisps dim and redden as the frequency dies; kept glass-thin so
+		# anything moving reads through the gas (they sit at z -8 regardless)
 		n.modulate = wisp_col.lerp(Color(0.35, 0.06, 0.04), blend)
-		n.modulate.a = lerpf(0.30, 0.16, blend)
+		n.modulate.a = lerpf(0.20, 0.11, blend)
 
 ## Build the parallax starfield and precompute all seeded TURN 4 scene detail
 ## (dust lane, ambient glows, derelict hulk, ghost chain) once — never randf()

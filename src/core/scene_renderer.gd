@@ -6,9 +6,9 @@
 class_name SceneRenderer
 extends Object
 
-const DUST_COLOR := Color(0.776, 0.824, 0.933, 0.045)
+const DUST_COLOR := Color(0.776, 0.824, 0.933, 0.028)
 const DUST_BLOB_COLOR := Color(0.012, 0.016, 0.031, 0.6)
-const AMBIENT_RED := Color(0.431, 0.071, 0.047, 0.045)
+const AMBIENT_RED := Color(0.431, 0.071, 0.047, 0.032)
 const EMBER_DISC := Color("170504")
 const EMBER_LIMB := Color(1.0, 0.353, 0.196, 0.85)
 const EMBER_HALO := Color(1.0, 0.275, 0.157, 0.5)
@@ -84,7 +84,8 @@ static func draw_dust_lane(ci: CanvasItem, detail: Dictionary) -> void:
 ## Sector-tinted ambient glow — subtle SURVEY nebula fading to vast DEAD red glows.
 static func draw_sector_glows(ci: CanvasItem, detail: Dictionary, sector_color: Color,
 		blend: float, w: float, h: float, t: float) -> void:
-	var survey_a := sector_color.a * (1.0 - blend)
+	# Fog is atmosphere, not a curtain — thinned so bodies read through it.
+	var survey_a := sector_color.a * (1.0 - blend) * 0.65
 	if survey_a > 0.001:
 		var neb_x1 := w * 0.3 + sin(t * 0.07) * 15.0
 		var neb_y1 := h * 0.35 + cos(t * 0.05) * 10.0
@@ -105,14 +106,21 @@ static func draw_sector_glows(ci: CanvasItem, detail: Dictionary, sector_color: 
 static func draw_sun(ci: CanvasItem, detail: Dictionary, sun_pos: Vector2, blend: float, w: float, h: float) -> void:
 	var survey_a := 1.0 - blend
 	if survey_a > 0.01:
-		# 5 nested glows step white-hot core -> pale warm -> cool blue wide halo;
-		# DrawKit.glow auto-scales ring density with radius, so each step reads
-		# as a smooth gradient instead of a banded ring stack.
-		DrawKit.glow(ci, sun_pos, 4.0, Color(1.0, 1.0, 1.0, 1.0 * survey_a))
-		DrawKit.glow(ci, sun_pos, 11.0, Color(1.0, 0.98, 0.92, 0.55 * survey_a))
-		DrawKit.glow(ci, sun_pos, 23.0, Color(1.0, 0.90, 0.74, 0.28 * survey_a))
-		DrawKit.glow(ci, sun_pos, 50.0, Color(0.90, 0.92, 1.0, 0.16 * survey_a))
-		DrawKit.glow(ci, sun_pos, 85.0, Color(0.78, 0.86, 1.0, 0.09 * survey_a))
+		# v5.0 photographic star: a tight white-hot point — the post-stack
+		# bloom paints the wide bleed. No huge painted glow discs (they band
+		# into rings); the compact halo below is all the paint we allow.
+		# Transparency discipline: the core stays hot (it is a star) but every
+		# glow around it is glass-thin — moving bodies must read through it.
+		DrawKit.glow(ci, sun_pos, 3.0, Color(1.0, 1.0, 1.0, 0.9 * survey_a))
+		DrawKit.glow(ci, sun_pos, 8.0, Color(1.0, 0.97, 0.90, 0.32 * survey_a))
+		# Halo feather: overlapping low-alpha steps so no disc edge survives.
+		DrawKit.glow(ci, sun_pos, 15.0, Color(0.97, 0.94, 0.88, 0.06 * survey_a))
+		DrawKit.glow(ci, sun_pos, 24.0, Color(0.92, 0.91, 0.90, 0.034 * survey_a))
+		DrawKit.glow(ci, sun_pos, 36.0, Color(0.84, 0.88, 1.0, 0.022 * survey_a))
+		DrawKit.glow(ci, sun_pos, 52.0, Color(0.80, 0.86, 1.0, 0.014 * survey_a))
+		# Chromatic fringe — blue edge hugging the clipped core, as in a photo.
+		ci.draw_arc(sun_pos, 6.5, 0.0, TAU, 40,
+			Color(0.55, 0.70, 1.0, 0.06 * survey_a), 1.2)
 
 		# Anamorphic streak — hairline core over a thin soft under-glow, with
 		# alpha falling off along the length so the tips vanish (no bar ends).
@@ -124,19 +132,45 @@ static func draw_sun(ci: CanvasItem, detail: Dictionary, sun_pos: Vector2, blend
 				var fade := pow(1.0 - t0, 1.8)
 				var p0 := sun_pos + Vector2(side * 100.0 * t0, 0.0)
 				var p1 := sun_pos + Vector2(side * 100.0 * t1, 0.0)
-				ci.draw_line(p0, p1, Color(0.72, 0.85, 1.0, 0.09 * fade * survey_a), 2.0)
-				ci.draw_line(p0, p1, Color(0.95, 0.98, 1.0, 0.45 * fade * survey_a), 0.7)
+				ci.draw_line(p0, p1, Color(0.72, 0.85, 1.0, 0.055 * fade * survey_a), 2.0)
+				ci.draw_line(p0, p1, Color(0.95, 0.98, 1.0, 0.26 * fade * survey_a), 0.7)
 
-		# Lens ghost chain — sun through screen center, subtler per feedback (x0.7).
+		# 6-blade aperture diffraction spikes — the horizontal pair is the
+		# anamorphic streak above; four diagonals complete the star, shorter
+		# and fainter, segment-faded like the streak.
+		for spike_deg in [60.0, 120.0, 240.0, 300.0]:
+			var dir := Vector2.from_angle(deg_to_rad(spike_deg))
+			for i in 5:
+				var t0 := float(i) / 5.0
+				var t1 := float(i + 1) / 5.0
+				var fade := pow(1.0 - t0, 1.9)
+				ci.draw_line(sun_pos + dir * 34.0 * t0, sun_pos + dir * 34.0 * t1,
+					Color(0.95, 0.97, 1.0, 0.13 * fade * survey_a), 0.6)
+
+		# Lens ghost chain — sun through screen center: alternating soft discs,
+		# thin rings, and two aperture hexagons (real internal reflections).
 		var center := Vector2(w * 0.5, h * 0.5)
 		var to_center := center - sun_pos
+		var stop_i := 0
 		for stop in (detail.get("ghost_chain", []) as Array):
 			var d: Dictionary = stop
 			var gp := sun_pos + to_center * float(d["t"]) * 1.5
 			var col: Color = d["col"]
-			var a := float(d["a"]) * survey_a * 0.7
-			ci.draw_circle(gp, float(d["r"]), Color(col.r, col.g, col.b, a))
-			ci.draw_arc(gp, float(d["r"]) + 1.25, 0.0, TAU, 16, Color(col.r, col.g, col.b, a * 1.1), 0.5)
+			var a := float(d["a"]) * survey_a * 0.35
+			if stop_i % 2 == 1:
+				# Aperture ghost: faint 6-sided polygon outline + fill.
+				var hex := PackedVector2Array()
+				var hr := float(d["r"]) * 2.6
+				for k in 6:
+					hex.append(gp + Vector2.from_angle(TAU * float(k) / 6.0 + 0.26) * hr)
+				ci.draw_colored_polygon(hex, Color(col.r, col.g, col.b, a * 0.55))
+				ci.draw_polyline(hex + PackedVector2Array([hex[0]]),
+					Color(col.r, col.g, col.b, a * 1.1), 0.5)
+			else:
+				ci.draw_circle(gp, float(d["r"]), Color(col.r, col.g, col.b, a))
+				ci.draw_arc(gp, float(d["r"]) + 1.25, 0.0, TAU, 24,
+					Color(col.r, col.g, col.b, a * 1.1), 0.5)
+			stop_i += 1
 
 	if blend > 0.01:
 		# Ember star: smoothed nested halos (verified against the radius-scaled

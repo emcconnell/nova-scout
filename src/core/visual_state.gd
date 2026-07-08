@@ -174,6 +174,25 @@ func vignette_amount() -> float:
 	return lerpf(float(value("film", "vignette_survey", 0.30)),
 		float(value("film", "vignette_dead", 0.72)), _blend)
 
+# ─── v5.0 "Wet Black" post stack hooks (bloom / tonemap / grade) ─────────────
+
+## Scene exposure fed to the filmic curve (post_bloom_grade.gdshader).
+func post_exposure() -> float:
+	return float(value("post", "exposure", 1.0))
+
+## Bloom gain — highlights bleed harder as the frequency dies.
+func bloom_strength() -> float:
+	return lerpf(float(value("post", "bloom_survey", 0.45)),
+		float(value("post", "bloom_dead", 0.75)), _blend)
+
+## Luminance knee above which pixels bloom.
+func bloom_threshold() -> float:
+	return float(value("post", "bloom_threshold", 0.62))
+
+## 0..1 DEAD grade amount (crush + red lift + desat), scaled from the fade.
+func grade_amount() -> float:
+	return _blend * float(value("post", "grade_strength", 0.85))
+
 ## Sun screen position drifts from hard key light (4A) to ember star (4B).
 func sun_screen_pos() -> Vector2:
 	var s: Variant = value("sun", "survey_screen_pos", [48.0, 28.0])

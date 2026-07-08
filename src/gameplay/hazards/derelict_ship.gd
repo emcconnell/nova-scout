@@ -37,6 +37,9 @@ func _ready() -> void:
 	# Baked hull slab + plating + breach hole + wing stub. Windows, salvage
 	# glints, and the antenna/rim light stay procedural on top.
 	_body = TextureKit.fade_body(self, "hazards", "derelict")
+	# v5.0: the wreck is the biggest light-blocker in the field — the flood
+	# cone dies against it and the murk behind it stays black.
+	TextureKit.occluder(self, 16.0)
 
 func _process(delta: float) -> void:
 	if _dead:

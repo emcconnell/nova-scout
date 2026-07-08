@@ -157,8 +157,19 @@ func _ready() -> void:
 	enemy_projectiles_node.z_index = 35
 	projectiles_node.z_index = 35
 
+	# v5.0 "Wet Black" — volumetric dust in the beam + the cinematic pass
+	# (bloom / filmic tonemap / fade grade). The post pass lives on its own
+	# CanvasLayer (1, under the FilmLayer at 2): a screen-texture read inside
+	# the world canvas gets a stale backbuffer copy in GL Compatibility that
+	# is missing the projectile layer (z 35) — bolts vanished (Turn 6.1).
+	add_child(DustField.new())
+	var post_layer := CanvasLayer.new()
+	post_layer.layer = 1
+	add_child(post_layer)
+	post_layer.add_child(PostStack.new())
+
 	# Wire CRT overlay
-	var crt := get_node_or_null("CRTOverlay")
+	var crt := get_node_or_null("FilmLayer/CRTOverlay")
 	if crt and crt.has_method("connect_player"):
 		crt.connect_player(player)
 
@@ -224,6 +235,9 @@ func _build_bg_layers() -> void:
 		s.region_enabled = true
 		s.region_rect = Rect2(0, 0, 640, 360)
 		s.scale = Vector2(0.5, 0.5)
+		# v5.0: stars are light-years away — no in-scene light may brighten
+		# them, and no occluder may shadow them.
+		s.light_mask = 0
 		add_child(s)
 		_bg_tiles.append(s)
 	var wisp_rng := DrawKit.rng(917 + GameManager.current_sector)
@@ -263,9 +277,10 @@ func _update_light_rig() -> void:
 		Color(0.55, 0.22, 0.14), Color(0.34, 0.18, 0.44),
 	][sector - 1]
 	for n in _nebula_sprites:
-		# wisps dim and redden as the frequency dies
+		# wisps dim and redden as the frequency dies; kept glass-thin so
+		# anything moving reads through the gas (they sit at z -8 regardless)
 		n.modulate = wisp_col.lerp(Color(0.35, 0.06, 0.04), blend)
-		n.modulate.a = lerpf(0.30, 0.16, blend)
+		n.modulate.a = lerpf(0.20, 0.11, blend)
 
 ## Build the parallax starfield and precompute all seeded TURN 4 scene detail
 ## (dust lane, ambient glows, derelict hulk, ghost chain) once — never randf()

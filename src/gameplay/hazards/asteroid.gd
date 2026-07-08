@@ -17,6 +17,7 @@ var _hp: int = 3
 var _dead: bool = false
 var _velocity: Vector2 = Vector2.ZERO
 var _body: Sprite2D = null
+var _occluder: LightOccluder2D = null
 var _instance_seed: int = 0
 
 # ─── Lifecycle ────────────────────────────────────────────────────────────────
@@ -45,6 +46,10 @@ func setup(tier: int, vel: Vector2) -> void:
 	# baked at r=12 units, 12 px/unit; scale to this tier's radius. No mirror
 	# flips — they would invert the normal map's X and break sun shading.
 	_body.scale = Vector2.ONE * (RADII[size_tier] / 12.0 / 12.0)
+	# v5.0: rock blocks the flood cone and blast light (shadow behind, rim lit).
+	if _occluder:
+		_occluder.queue_free()
+	_occluder = TextureKit.occluder(self, RADII[size_tier] * 0.7)
 	_resize_collision()
 
 func _resize_collision() -> void:

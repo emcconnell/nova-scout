@@ -75,6 +75,12 @@ func _ready() -> void:
 			randf_range(0.0, TAU),
 			0.25 + float(layer) * 0.25 + randf_range(0.0, 0.15)))
 	_scene_detail = SceneRenderer.precompute(4013, vp.size.x, vp.size.y)
+	# v5.0: the title screen goes through the same lens as the flight scene.
+	# Own CanvasLayer — in-canvas screen reads get stale copies (see PostStack).
+	var post_layer := CanvasLayer.new()
+	post_layer.layer = 1
+	add_child(post_layer)
+	post_layer.add_child(PostStack.new())
 	_apply_runtime_settings()
 	AudioManager.play_music("mission_log")
 

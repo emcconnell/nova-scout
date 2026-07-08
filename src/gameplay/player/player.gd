@@ -42,6 +42,7 @@ var _body: Sprite2D = null
 var _engine_light: PointLight2D = null
 var _muzzle_light: PointLight2D = null
 var _beam_light: PointLight2D = null
+var _plume_haze: Sprite2D = null
 
 # ─── Lifecycle ───────────────────────────────────────────────────────────────
 func _ready() -> void:
@@ -64,6 +65,13 @@ func _ready() -> void:
 	_beam_light.position = Vector2(0, PlayerRenderer.HULL_TOP_Y)
 	_beam_light.color = Color(1.0, 0.93, 0.82)
 	_beam_light.energy = 0.0
+	# v5.0 "Wet Black": solid bodies occlude the light rig — rocks carve real
+	# shadow wedges out of the beam; the muzzle snap throws them too.
+	TextureKit.enable_shadows(_beam_light)
+	TextureKit.enable_shadows(_muzzle_light)
+	# Engine plume heat haze — space wobbles over the exhaust while thrusting.
+	_plume_haze = TextureKit.refraction_patch(self, 9.0, 0.004)
+	_plume_haze.position = Vector2(0, 13)
 
 ## Precomputes seeded jitter used by the DEAD-state scorch-streak overlay.
 func _build_noise_cache() -> void:
@@ -115,6 +123,10 @@ func _update_body_and_lights() -> void:
 	if _beam_light:
 		# The beam is the renderer — it must visibly carve the murk.
 		_beam_light.energy = VisualState.beam_strength() * 2.4
+	if _plume_haze:
+		# Haze tracks the plume: flares on boost, dies to nothing with the fade.
+		var haze := lerpf(1.0, 0.25, blend) * (1.5 if _is_boosting else 1.0)
+		_plume_haze.modulate.a = clampf(0.85 * haze, 0.0, 1.0)
 
 func _physics_process(delta: float) -> void:
 	if _dead:

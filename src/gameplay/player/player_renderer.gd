@@ -26,6 +26,7 @@ class DrawState:
 ## Draws the SP-7 FX layers at local origin, crossfaded by VisualState.blend().
 static func draw(ci: CanvasItem, ds: DrawState) -> void:
 	var blend := VisualState.blend()
+	_draw_beam_shaft(ci)
 	_draw_engine_plume(ci, ds, blend)
 	_draw_wing_shadow(ci, ds)
 	_draw_damage_overlay(ci, ds, blend)
@@ -34,6 +35,35 @@ static func draw(ci: CanvasItem, ds: DrawState) -> void:
 	_draw_muzzle_flash(ci, ds)
 	_draw_graze_ring(ci, ds)
 	_draw_shield(ci, ds)
+
+## v5.0 "Wet Black" — the flood cone as a visible volume: a faint warm shaft
+## from the nose, nested wedges fading with reach so the beam reads over the
+## black void even when nothing is inside it (the dust motes swim in it).
+static func _draw_beam_shaft(ci: CanvasItem) -> void:
+	var strength := VisualState.beam_strength()
+	if strength <= 0.01:
+		return
+	var beam_range := float(VisualState.value("beam", "range", 130.0))
+	var half := deg_to_rad(float(VisualState.value("beam", "half_angle_deg", 17.0)))
+	var apex := Vector2(0, HULL_TOP_Y)
+	var warm := Color(1.0, 0.93, 0.82)
+	# Nested wedges with per-vertex alpha: bright at the apex, zero at the far
+	# edge — the shaft dissolves into the murk instead of ending on a line.
+	for w in [Vector2(0.38, 0.10), Vector2(0.72, 0.055), Vector2(1.0, 0.032)]:
+		var spread: float = tan(half) * beam_range * w.x
+		var reach: float = beam_range * (0.6 + 0.52 * w.x)
+		var a: float = w.y * strength
+		ci.draw_polygon(PackedVector2Array([
+			apex + Vector2(-spread * 0.12, 0.0),
+			apex + Vector2(spread * 0.12, 0.0),
+			apex + Vector2(spread, -reach),
+			apex + Vector2(-spread, -reach),
+		]), PackedColorArray([
+			Color(warm.r, warm.g, warm.b, a),
+			Color(warm.r, warm.g, warm.b, a),
+			Color(warm.r, warm.g, warm.b, 0.0),
+			Color(warm.r, warm.g, warm.b, 0.0),
+		]))
 
 ## Engine exhaust plume — shock diamonds (SURVEY) crossfading to a cold pilot glow (DEAD).
 static func _draw_engine_plume(ci: CanvasItem, ds: DrawState, blend: float) -> void:

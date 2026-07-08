@@ -1437,3 +1437,139 @@ b68004d log
 production/session-logs/session-log.md
 ---
 
+## Session End: 20260707_213318
+### Commits
+fa931ca Merge pull request #5 from emcconnell/claude/game-graphics-photo-realism-a2bd73
+e758496 log: session log update for Turn 5
+9429b42 feat: Turn 5 graphics overhaul — Textured Light (art bible v4.0)
+74cbf3f Merge pull request #4 from emcconnell/claude/zealous-burnell-e44092
+b68004d log
+28ad4e9 Merge pull request #3 from emcconnell/claude/zealous-burnell-e44092
+80b07ee feat: Turn 4 graphics overhaul — punched-up realism + the fade
+---
+
+## Session End: 20260707_213359
+### Commits
+fa931ca Merge pull request #5 from emcconnell/claude/game-graphics-photo-realism-a2bd73
+e758496 log: session log update for Turn 5
+9429b42 feat: Turn 5 graphics overhaul — Textured Light (art bible v4.0)
+74cbf3f Merge pull request #4 from emcconnell/claude/zealous-burnell-e44092
+b68004d log
+28ad4e9 Merge pull request #3 from emcconnell/claude/zealous-burnell-e44092
+80b07ee feat: Turn 4 graphics overhaul — punched-up realism + the fade
+### Uncommitted Changes
+production/session-logs/session-log.md
+---
+
+
+## Turn 6 — "Wet Black" graphics overhaul (art bible v5.0) — 2026-07-07
+AAA-realism space-horror light-behavior pass on top of Turn 5's textured bodies:
+- Specular: baked _spec gloss masks now drive Blinn-Phong in custom light() passes
+  (fade_sprite / creature_sprite); wet chitin turns high-gloss inside the flood cone.
+  (SPECULAR_SHININESS is read-only in 4.6 fragment shaders — custom light() required.)
+- Shadows: circular occluders on rocks/mines/derelict (back-face cull keeps rims lit);
+  flood cone, muzzle and explosion lights cast soft PCF13 shadows (visuals.json → shadows).
+- Cinematic pass: always-on PostStack (z 45) — 13-tap threshold bloom, ACES tonemap,
+  fade-driven grade (survey cool shadows → dead crushed blacks + red isolation).
+- Refraction: engine plume heat haze, explosion shockwave rings, and The Silence's
+  cloak now bends starlight (canvas_fx_refraction.gdshader).
+- Beam as volume: gradient shaft polygon + DustField motes igniting via beam_lit();
+  flood lamp restores TRUE albedo per pixel on rocks/wrecks (they were unliftable by
+  2D lights — light multiplies albedo, DEAD albedo is near-black).
+- Probe harness: PROBE_SPAWN now accepts rockN:x:y static asteroids.
+Verified: probe screenshots sectors 1/2/3/4/5 incl. beam-reveal composition shots;
+104/104 unit tests (6 new for post-stack data plumbing).
+## Session End: 20260707_232218
+### Commits
+aea89e8 feat: Turn 6 graphics overhaul — Wet Black (art bible v5.0)
+fa931ca Merge pull request #5 from emcconnell/claude/game-graphics-photo-realism-a2bd73
+e758496 log: session log update for Turn 5
+9429b42 feat: Turn 5 graphics overhaul — Textured Light (art bible v4.0)
+74cbf3f Merge pull request #4 from emcconnell/claude/zealous-burnell-e44092
+b68004d log
+28ad4e9 Merge pull request #3 from emcconnell/claude/zealous-burnell-e44092
+80b07ee feat: Turn 4 graphics overhaul — punched-up realism + the fade
+---
+
+
+## Turn 6.1 — laser-fix + photographic sun — 2026-07-08
+- FIX: laser bolts (and all z-35 projectiles) were erased by the Turn 6 PostStack:
+  a fullscreen hint_screen_texture pass inside the world canvas gets a stale
+  backbuffer copy in GL Compatibility regardless of z_index. PostStack now lives
+  on CanvasLayer 1 and the CRT overlay moved to FilmLayer (CanvasLayer 2), so
+  grain still lands on the graded image. Bisected via new probe flags
+  (PROBE_FIRE=1 holds the trigger; bolts confirmed alive-but-unrendered, then
+  visible again after the layer split).
+- Sun rework (photo-realism pass): tight clipped core + feathered halo instead
+  of banded glow discs, 6-blade diffraction spikes, chromatic fringe hugging the
+  core, ghost chain with aperture hexagons. Ember star (DEAD) untouched.
+- Verified: firing shots sectors 1/5, sun shots sector 1, murk/beam regression
+  sector 5; 104/104 tests.
+## Session End: 20260708_074640
+### Commits
+8ac5bb8 fix: restore projectile rendering under the post stack + photographic sun
+---
+
+## Session End: 20260708_081935
+### Commits
+b9c2619 log: session log update for Turn 6
+8ac5bb8 fix: restore projectile rendering under the post stack + photographic sun
+---
+
+## Session End: 20260708_082149
+### Commits
+84f2b97 log: session log update for PR #6
+b9c2619 log: session log update for Turn 6
+8ac5bb8 fix: restore projectile rendering under the post stack + photographic sun
+---
+
+## Session End: 20260708_123437
+### Commits
+a8577cc tune: glass-thin lens flare and nebula fog, always behind moving bodies
+84f2b97 log: session log update for PR #6
+b9c2619 log: session log update for Turn 6
+8ac5bb8 fix: restore projectile rendering under the post stack + photographic sun
+---
+
+## Session End: 20260708_123830
+### Commits
+5f4c7e2 log: session log update for flare/fog tuning
+a8577cc tune: glass-thin lens flare and nebula fog, always behind moving bodies
+84f2b97 log: session log update for PR #6
+b9c2619 log: session log update for Turn 6
+8ac5bb8 fix: restore projectile rendering under the post stack + photographic sun
+---
+
+## Session End: 20260708_123915
+### Commits
+84ab488 log: session log update
+5f4c7e2 log: session log update for flare/fog tuning
+a8577cc tune: glass-thin lens flare and nebula fog, always behind moving bodies
+84f2b97 log: session log update for PR #6
+b9c2619 log: session log update for Turn 6
+8ac5bb8 fix: restore projectile rendering under the post stack + photographic sun
+---
+
+## Session End: 20260708_141648
+### Commits
+e72eafa log: session log update
+84ab488 log: session log update
+5f4c7e2 log: session log update for flare/fog tuning
+a8577cc tune: glass-thin lens flare and nebula fog, always behind moving bodies
+84f2b97 log: session log update for PR #6
+b9c2619 log: session log update for Turn 6
+8ac5bb8 fix: restore projectile rendering under the post stack + photographic sun
+---
+
+## Session End: 20260708_142134
+### Commits
+e2dc093 log: session log update
+e72eafa log: session log update
+84ab488 log: session log update
+5f4c7e2 log: session log update for flare/fog tuning
+a8577cc tune: glass-thin lens flare and nebula fog, always behind moving bodies
+84f2b97 log: session log update for PR #6
+b9c2619 log: session log update for Turn 6
+8ac5bb8 fix: restore projectile rendering under the post stack + photographic sun
+---
+

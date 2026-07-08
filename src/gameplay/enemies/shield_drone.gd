@@ -11,6 +11,7 @@ var _parent: Node2D = null
 var _angle: float = 0.0
 var _wobble: float = 0.0
 var _eye_dots: Array = []   # seeded eye cluster (dead frequency)
+var _body: Sprite2D = null  # textured hull (art bible v4.0)
 
 func _ready() -> void:
 	super()
@@ -22,12 +23,14 @@ func _ready() -> void:
 	collision_layer = 2
 	collision_mask = 4   # only player bullets
 	_eye_dots = [Vector3(0, -1, 1.4)]
+	_body = TextureKit.creature_body(self, "enemies", "drone")
 
 func attach_to(parent: Node2D) -> void:
 	_parent = parent
 	_angle = randf_range(0, TAU)
 
 func _update(delta: float) -> void:
+	TextureKit.set_flash(_body, 1.0 if _hit_flash_timer > 0.0 else 0.0)
 	_wobble += delta * 6.0
 	if is_instance_valid(_parent):
 		_angle += ORBIT_SPEED * delta
@@ -37,12 +40,7 @@ func _update(delta: float) -> void:
 		queue_free()
 
 func _draw() -> void:
-	var flash := _hit_flash_timer > 0.0
 	var lit := _lit_factor()
-	var hull := EnemyRenderer.body_stop(0, lit)
-	if flash:
-		hull = Color(1, 1, 1)
-	draw_circle(Vector2.ZERO, 6.0, hull)
 	# Shield-tech glow ring — a Mothership system, kept blue (not biomech)
 	var ga := 0.4 + 0.4 * sin(_wobble)
 	draw_circle(Vector2.ZERO, 9.0, Color(COL_SHIELD_GLOW.r, COL_SHIELD_GLOW.g, COL_SHIELD_GLOW.b, ga))

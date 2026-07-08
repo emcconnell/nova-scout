@@ -57,8 +57,11 @@ var _safe_gap: float = 0.0   # x-position of safe gap
 
 var _wobble: float = 0.0
 var _enrage_flash: float = 0.0
-var _flecks: Array[Vector3] = []      # seeded chitin flecks (TURN 4)
 var _eye_dots: Array = []             # seeded eye cluster (dead frequency)
+
+# ─── Textured body + lights (art bible v4.0 "Textured Light") ────────────────
+var _body: Sprite2D = null
+var _reactor_light: PointLight2D = null
 
 func _ready() -> void:
 	super()
@@ -69,12 +72,15 @@ func _ready() -> void:
 	drop_table = "mothership"
 	collision_layer = 2
 	collision_mask = 4   # Only player bullets; player contact handled differently
-	_flecks = EnemyRenderer.seed_flecks(get_instance_id(), 90, Vector2(60, 20))
 	_eye_dots = [
 		Vector3(-30, -16, 2.0), Vector3(30, -16, 2.0), Vector3(-15, -18, 1.4),
 		Vector3(15, -18, 1.4), Vector3(0, -14, 2.6), Vector3(-45, -10, 1.2),
 		Vector3(45, -10, 1.2), Vector3(0, -20, 1.6),
 	]
+	# Textured, normal-mapped hull; baked at 6 px/unit (this hull is huge).
+	_body = TextureKit.creature_body(self, "enemies", "mothership", 6.0)
+	# Reactor light — the boss lights its own arena with an ember glow.
+	_reactor_light = TextureKit.point_light(self, 90.0, Color(1.0, 0.42, 0.2), 0.9)
 
 func _modify_damage(amount: int, _from: Vector2) -> int:
 	# Shield drone blocks all damage while alive
@@ -88,6 +94,9 @@ func _update(delta: float) -> void:
 	if _stunned:
 		return
 	_wobble += delta * 2.0
+	TextureKit.set_flash(_body, 1.0 if _hit_flash_timer > 0.0 else 0.0)
+	if _reactor_light:
+		_reactor_light.energy = 0.9 + 0.15 * sin(_wobble * 1.2)
 	var vp := get_viewport_rect()
 	var hp_pct := float(hp) / float(max_hp)
 
@@ -245,38 +254,11 @@ func _fire_sweep() -> void:
 		x += 12.0
 
 func _draw() -> void:
-	var flash := _hit_flash_timer > 0.0
 	var lit := _lit_factor()
 	var blend := VisualState.blend()
-	var hi := EnemyRenderer.body_stop(0, lit)
-	var mid := EnemyRenderer.body_stop(1, lit)
-	var hull  := hi if not flash else Color(1, 1, 1)
-	var armor := mid if not flash else Color(1, 1, 1)
 	var hp_pct: float = float(hp) / float(maxi(max_hp, 1))
 
 	EnemyRenderer.under_halo(self, Vector2(0, 4), 90.0)
-
-	# Enormous hull — multi-segment (silhouette unchanged)
-	draw_colored_polygon(PackedVector2Array([
-		Vector2(-50, -18), Vector2(50, -18),
-		Vector2(55, 10), Vector2(-55, 10)
-	]), hull)
-	# Wings
-	draw_colored_polygon(PackedVector2Array([
-		Vector2(-55, -5), Vector2(-80, 5), Vector2(-70, 15), Vector2(-50, 8)
-	]), armor)
-	draw_colored_polygon(PackedVector2Array([
-		Vector2(55, -5), Vector2(80, 5), Vector2(70, 15), Vector2(50, 8)
-	]), armor)
-
-	# Plate ridges across the main hull
-	EnemyRenderer.plate_ridge_line(self,
-		PackedVector2Array([Vector2(-48, -6), Vector2(0, -10), Vector2(48, -6)]),
-		PackedVector2Array([Vector2(-48, -7.4), Vector2(0, -11.4), Vector2(48, -7.4)]), lit, 2.0)
-	EnemyRenderer.plate_ridge_line(self,
-		PackedVector2Array([Vector2(-40, 4), Vector2(0, 7), Vector2(40, 4)]),
-		PackedVector2Array([Vector2(-40, 2.6), Vector2(0, 5.6), Vector2(40, 2.6)]), lit, 1.6)
-	EnemyRenderer.draw_flecks(self, _flecks, lit)
 
 	# Energy veins — magenta bioluminescence, dies with blend
 	var va := (0.5 + 0.3 * sin(_wobble)) * (1.0 - blend * 0.5)

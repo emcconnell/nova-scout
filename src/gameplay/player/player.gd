@@ -12,9 +12,7 @@ const BOOST_SPEED := 320.0
 const FUEL_DRAIN_BOOST := 8.0   # per second while boosting
 const FUEL_DRAIN_IDLE := 0.5    # per second always
 
-const CELL_SEED := 7          # solar cell hi/lo pattern (probe4 recipe)
-const KAPTON_SEED := 41       # kapton wrinkle strokes
-const CANOPY_SEED := 31       # canopy star-reflection specks
+const KAPTON_SEED := 41       # seeded jitter for DEAD-state scorch streaks
 
 # ─── Sub-components ──────────────────────────────────────────────────────────
 @onready var health: PlayerHealth = $PlayerHealth
@@ -37,9 +35,13 @@ var _invincible_timer: float = 0.0
 var _boost_toggled: bool = false
 
 # ─── Draw pass state (precomputed noise — never randf() inside _draw) ───────
-var _cell_pattern: Array[bool] = []
 var _kapton_wrinkles: Array[Vector4] = []
-var _canopy_specks: Array[Vector2] = []
+
+# ─── Textured body + lights (art bible v4.0 "Textured Light") ────────────────
+var _body: Sprite2D = null
+var _engine_light: PointLight2D = null
+var _muzzle_light: PointLight2D = null
+var _beam_light: PointLight2D = null
 
 # ─── Lifecycle ───────────────────────────────────────────────────────────────
 func _ready() -> void:
@@ -48,14 +50,23 @@ func _ready() -> void:
 	health.hull_changed.connect(_on_hull_changed)
 	z_index = 10
 	_build_noise_cache()
+	# Textured, normal-mapped hull; FX layers draw above it in _draw().
+	_body = TextureKit.fade_body(self, "player", "sp7")
+	# Engine glow — the probe's own warmth in the dark; dies with the fade.
+	_engine_light = TextureKit.point_light(self, 30.0, Color(1.0, 0.72, 0.42), 0.55)
+	_engine_light.position = Vector2(0, 11)
+	# Muzzle flash light — snaps on for 2 frames per laser shot.
+	_muzzle_light = TextureKit.point_light(self, 26.0, Color(0.75, 0.93, 1.0), 0.0)
+	_muzzle_light.position = Vector2(0, PlayerRenderer.HULL_TOP_Y - 1.5)
+	# Flood cone — "the beam is the renderer" once the fade passes threshold.
+	_beam_light = TextureKit.cone_light(self,
+		float(VisualState.value("beam", "range", 130.0)))
+	_beam_light.position = Vector2(0, PlayerRenderer.HULL_TOP_Y)
+	_beam_light.color = Color(1.0, 0.93, 0.82)
+	_beam_light.energy = 0.0
 
-## Precomputes seeded solar-cell, kapton-wrinkle, and canopy-speck noise for PlayerRenderer.
+## Precomputes seeded jitter used by the DEAD-state scorch-streak overlay.
 func _build_noise_cache() -> void:
-	var cell_rng := DrawKit.rng(CELL_SEED)
-	_cell_pattern = []
-	for i in (PlayerRenderer.CELL_COLS * PlayerRenderer.CELL_ROWS * 2):
-		_cell_pattern.append(cell_rng.randf() > 0.5)
-
 	var kapton_rng := DrawKit.rng(KAPTON_SEED)
 	_kapton_wrinkles = []
 	for i in 10:
@@ -64,11 +75,6 @@ func _build_noise_cache() -> void:
 		var sign_z := (1.0 if kapton_rng.randf() > 0.5 else -1.0)
 		var y1 := (kapton_rng.randf() - 0.5) * 3.0
 		_kapton_wrinkles.append(Vector4(x0, y0, sign_z, y1))
-
-	var canopy_rng := DrawKit.rng(CANOPY_SEED)
-	_canopy_specks = []
-	for i in 5:
-		_canopy_specks.append(Vector2(canopy_rng.randf() * 1.6 - 0.8, canopy_rng.randf() * 1.2 - 0.6))
 
 func _process(delta: float) -> void:
 	if _dead:
@@ -86,7 +92,29 @@ func _process(delta: float) -> void:
 		if _invincible_timer <= 0.0:
 			_invincible = false
 
+	_update_body_and_lights()
 	queue_redraw()
+
+## Banking squash, hit flash, and the light rig — all fade-aware.
+func _update_body_and_lights() -> void:
+	var blend := VisualState.blend()
+	if _body:
+		# Banking reads as a roll: slight horizontal squash + lean.
+		_body.scale.x = (1.0 / 12.0) * (1.0 - absf(_bank_dir) * 0.10)
+		_body.rotation = _bank_dir * 0.05
+		TextureKit.set_flash(_body, 1.0 if _hit_flash_timer > 0.0 else 0.0)
+	if _engine_light:
+		# SURVEY: hot plume flicker (boost flares it). DEAD: faint pilot glow.
+		var boost_mult := 1.6 if _is_boosting else 1.0
+		var flicker := 0.9 + 0.1 * sin(_engine_anim * 3.1)
+		_engine_light.energy = lerpf(0.55 * boost_mult * flicker, 0.12, blend)
+		_engine_light.color = Color(1.0, 0.72, 0.42).lerp(Color(1.0, 0.45, 0.25), blend)
+	if _muzzle_light:
+		_muzzle_light.energy = (_muzzle_flash_timer / 0.05) * 1.1 \
+			if _muzzle_flash_timer > 0.0 else 0.0
+	if _beam_light:
+		# The beam is the renderer — it must visibly carve the murk.
+		_beam_light.energy = VisualState.beam_strength() * 2.4
 
 func _physics_process(delta: float) -> void:
 	if _dead:
@@ -144,9 +172,7 @@ func _draw() -> void:
 	ds.shield = health.shield
 	ds.muzzle_flash_timer = _muzzle_flash_timer
 	ds.graze_flash_timer = _graze_flash_timer
-	ds.cell_pattern = _cell_pattern
 	ds.kapton_wrinkles = _kapton_wrinkles
-	ds.canopy_specks = _canopy_specks
 
 	PlayerRenderer.draw(self, ds)
 

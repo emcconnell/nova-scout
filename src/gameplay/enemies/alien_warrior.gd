@@ -25,8 +25,10 @@ var _burst_queue: int = 0
 var _burst_timer: float = 0.0
 var _sweep_dir: float = 1.0   # +1 = right, -1 = left
 var _wobble: float = 0.0
-var _flecks: Array[Vector3] = []      # seeded chitin flecks (TURN 4)
 var _eye_dots: Array = []             # seeded head eye cluster (dead frequency)
+
+# ─── Textured body (art bible v4.0 "Textured Light") ────────────────────────
+var _body: Sprite2D = null
 
 func _ready() -> void:
 	super()
@@ -36,7 +38,7 @@ func _ready() -> void:
 	score_value = 300
 	drop_table = "warrior"
 	_sweep_dir = 1.0 if randf() > 0.5 else -1.0
-	_flecks = EnemyRenderer.seed_flecks(get_instance_id(), 30, Vector2(9, 26))
+	_body = TextureKit.creature_body(self, "enemies", "warrior")
 	_eye_dots = [
 		Vector3(-5, -13, 1.1), Vector3(5, -13, 1.1), Vector3(-8, -10, 0.8),
 		Vector3(8, -10, 0.8), Vector3(-2.5, -15, 0.85), Vector3(2.5, -15, 0.85),
@@ -102,47 +104,15 @@ func _draw() -> void:
 	var w := _wobble
 	var lit := _lit_factor()
 	var blend := VisualState.blend()
+	TextureKit.set_flash(_body, 1.0 if flash else 0.0)
 
 	# Under-halo behind the pod
 	EnemyRenderer.under_halo(self, Vector2(0, 10), 22.0)
 
-	# Vertical seed-pod body — 16pt polygon approximating the bezier silhouette
-	var body_pts := _pod_silhouette()
-	var hi := EnemyRenderer.body_stop(0, lit)
-	var mid := EnemyRenderer.body_stop(1, lit)
+	# Hull ramp low-stop — feeds the engine nacelle glow tint below
 	var lo := EnemyRenderer.body_stop(2, lit)
 	if flash:
-		hi = Color(1, 1, 1); mid = Color(1, 1, 1); lo = Color(1, 1, 1)
-	draw_colored_polygon(body_pts, hi)
-	DrawKit.ellipse(self, Vector2(-1, 0), Vector2(6, 20), mid, 16)
-	DrawKit.ellipse(self, Vector2(0, 4), Vector2(4, 15), lo, 14)
-
-	# 5 horizontal plate ridge curves (dark stroke + light echo)
-	for i in range(-2, 3):
-		var yy := i * 13.0
-		var ridge := PackedVector2Array([
-			Vector2(-15, yy), Vector2(0, yy + 6), Vector2(15, yy)
-		])
-		var echo := PackedVector2Array([
-			Vector2(-15, yy - 1.4), Vector2(0, yy + 6 - 1.4), Vector2(15, yy - 1.4)
-		])
-		EnemyRenderer.plate_ridge_line(self, ridge, echo, lit)
-	# Center spine line
-	draw_line(Vector2(0, -44), Vector2(0, 44), Color(0, 0, 0, 0.6), 1.4)
-
-	# ~30 seeded flecks
-	EnemyRenderer.draw_flecks(self, _flecks, lit)
-
-	# Broad sheen ellipse upper-left
-	var sheen_a := lerpf(0.10, 0.05, blend)
-	DrawKit.ellipse(self, Vector2(-6, -20), Vector2(5, 16), Color(1, 1, 1, sheen_a), 10)
-
-	# 6 short thorn barbs up the spine
-	var barb_col := RIM_LIT_COL if lit > 0.01 else Color(0.04, 0.03, 0.04, 0.9)
-	barb_col = VisualState.col(Color(0.3, 0.24, 0.36, 0.9), Color(0.04, 0.03, 0.04, 0.9)).lerp(barb_col, lit)
-	for i in 6:
-		var yy := -40.0 + i * 7.0
-		draw_line(Vector2(0, yy), Vector2(4, yy - 4), barb_col, 1.3)
+		lo = Color(1, 1, 1)
 
 	# Warm lit-rim stroke down the left silhouette (beam-lit only)
 	if lit > 0.01:
@@ -192,14 +162,3 @@ func _draw() -> void:
 	if _stunned:
 		draw_circle(Vector2(0, -46), 2.0, Color(0.0, 1.0, 1.0, 0.8))
 	_draw_hit_flash()
-
-## 16-point polygon approximating the seed-pod bezier silhouette, nose up.
-func _pod_silhouette() -> PackedVector2Array:
-	return PackedVector2Array([
-		Vector2(0, -46), Vector2(6, -40), Vector2(11, -30), Vector2(14, -18),
-		Vector2(15, -4), Vector2(13, 10), Vector2(9, 24), Vector2(4, 36),
-		Vector2(0, 46), Vector2(-4, 36), Vector2(-9, 24), Vector2(-13, 10),
-		Vector2(-15, -4), Vector2(-14, -18), Vector2(-11, -30), Vector2(-6, -40),
-	])
-
-const RIM_LIT_COL := Color(1.0, 0.878, 0.745, 0.55)

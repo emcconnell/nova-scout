@@ -45,6 +45,21 @@ window/stretch/mode="canvas_items"
 
 textures/vram_compression/import_etc2_astc=true
 
+[shader_globals]
+
+ns_blend={
+"type": "float",
+"value": 0.0
+}
+ns_player_pos={
+"type": "vec2",
+"value": Vector2(160, 150)
+}
+ns_beam={
+"type": "vec4",
+"value": Quaternion(130.0, 0.956, 0.906, 0.0)
+}
+
 [input]
 
 ui_accept={

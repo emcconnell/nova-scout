@@ -39,8 +39,10 @@ const NUM_TENTACLES := 6
 
 # Blood splatter particles
 var _blood_particles: Array[Dictionary] = []
-var _flecks: Array[Vector3] = []      # seeded chitin flecks (TURN 4)
 var _eye_dots: Array = []             # seeded eye cluster (dead frequency)
+
+# ─── Textured body (art bible v4.0 "Textured Light") ─────────────────────────
+var _body: Sprite2D = null
 
 func _ready() -> void:
 	super()
@@ -51,8 +53,9 @@ func _ready() -> void:
 	drop_table = "leviathan"
 	collision_layer = 2
 	collision_mask = 5
-	_flecks = EnemyRenderer.seed_flecks(get_instance_id(), 30, Vector2(9, 6))
 	_eye_dots = [Vector3(0, 0, 2.2)]
+	# Textured, normal-mapped hide; the old vertex wobble becomes a scale pulse.
+	_body = TextureKit.creature_body(self, "enemies", "leviathan")
 
 	# Initialize tentacles
 	for i in NUM_TENTACLES:
@@ -89,6 +92,11 @@ func _update(delta: float) -> void:
 		return
 	_wobble += delta * 3.0
 	_phase += delta
+
+	if _body:
+		# The old body wobbled its polygon verts — pulse the sprite instead.
+		_body.scale = Vector2.ONE / 12.0 * (1.0 + 0.06 * sin(_wobble))
+		TextureKit.set_flash(_body, 1.0 if _hit_flash_timer > 0.0 else 0.0)
 
 	var vp := get_viewport_rect()
 	var player := _get_player()
@@ -281,30 +289,12 @@ func _draw() -> void:
 			var ga := 0.3 + 0.3 * sin(_wobble * 5.0)
 			draw_circle(seg3_end, 3.0, Color(eye_col.r, eye_col.g, eye_col.b, ga))
 
-	# ─── Main body — organic blob, retextured to the shared chitin ramp ──
-	var hi := EnemyRenderer.body_stop(0, lit)
-	var mid := EnemyRenderer.body_stop(1, lit)
-	var body_col := Color(1, 1, 1) if flash else hi
-	var lit_col := Color(1, 1, 1) if flash else mid
-
-	# Body: organic irregular shape
+	# ─── Body silhouette — baked to the texture; kept only for the rim path ──
 	var body_pts := PackedVector2Array()
 	for bi in 12:
 		var a := TAU / 12.0 * bi
 		var r := 10.0 + 2.0 * sin(_wobble + bi * 1.3)
 		body_pts.append(Vector2(cos(a) * r, sin(a) * r * 0.7))
-	draw_colored_polygon(body_pts, body_col)
-
-	# Inner membrane
-	var inner_pts := PackedVector2Array()
-	for bi in 12:
-		var a := TAU / 12.0 * bi
-		var r := 6.0 + 1.5 * sin(_wobble * 1.5 + bi * 1.1)
-		inner_pts.append(Vector2(cos(a) * r, sin(a) * r * 0.65))
-	draw_colored_polygon(inner_pts, lit_col)
-
-	# Seeded chitin flecks over the hide
-	EnemyRenderer.draw_flecks(self, _flecks, lit)
 
 	# Pulsing veins — magenta bioluminescence, dies with blend
 	var vein_a := (0.3 + 0.2 * sin(_wobble * 2.0)) * (1.0 - VisualState.blend() * 0.5)

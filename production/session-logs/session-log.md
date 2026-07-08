@@ -1269,3 +1269,171 @@ src/ui/win_screen.gd
 80b07ee feat: Turn 4 graphics overhaul — punched-up realism + the fade
 ---
 
+## Session End: 20260707_181111
+### Commits
+74cbf3f Merge pull request #4 from emcconnell/claude/zealous-burnell-e44092
+b68004d log
+28ad4e9 Merge pull request #3 from emcconnell/claude/zealous-burnell-e44092
+80b07ee feat: Turn 4 graphics overhaul — punched-up realism + the fade
+---
+
+## Session End: 20260707_195617
+### Commits
+74cbf3f Merge pull request #4 from emcconnell/claude/zealous-burnell-e44092
+b68004d log
+28ad4e9 Merge pull request #3 from emcconnell/claude/zealous-burnell-e44092
+80b07ee feat: Turn 4 graphics overhaul — punched-up realism + the fade
+### Uncommitted Changes
+design/gdd/art-bible.md
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/visual_state.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/space_leviathan.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/rock_renderer.gd
+src/gameplay/player/player.gd
+src/gameplay/player/player_renderer.gd
+src/ui/win_screen.gd
+---
+
+## Session End: 20260707_195647
+### Commits
+74cbf3f Merge pull request #4 from emcconnell/claude/zealous-burnell-e44092
+b68004d log
+28ad4e9 Merge pull request #3 from emcconnell/claude/zealous-burnell-e44092
+80b07ee feat: Turn 4 graphics overhaul — punched-up realism + the fade
+### Uncommitted Changes
+design/gdd/art-bible.md
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/visual_state.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/shield_drone.gd
+src/gameplay/enemies/space_leviathan.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/rock_renderer.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/player/player.gd
+src/gameplay/player/player_renderer.gd
+src/ui/win_screen.gd
+---
+
+## Session End: 20260707_195706
+### Commits
+74cbf3f Merge pull request #4 from emcconnell/claude/zealous-burnell-e44092
+b68004d log
+28ad4e9 Merge pull request #3 from emcconnell/claude/zealous-burnell-e44092
+80b07ee feat: Turn 4 graphics overhaul — punched-up realism + the fade
+### Uncommitted Changes
+design/gdd/art-bible.md
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/visual_state.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/shield_drone.gd
+src/gameplay/enemies/space_leviathan.gd
+src/gameplay/enemies/the_silence.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/rock_renderer.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/player/player.gd
+src/gameplay/player/player_renderer.gd
+src/ui/win_screen.gd
+---
+
+## Session End: 20260707_195751
+### Commits
+74cbf3f Merge pull request #4 from emcconnell/claude/zealous-burnell-e44092
+b68004d log
+28ad4e9 Merge pull request #3 from emcconnell/claude/zealous-burnell-e44092
+80b07ee feat: Turn 4 graphics overhaul — punched-up realism + the fade
+### Uncommitted Changes
+design/gdd/art-bible.md
+production/session-logs/session-log.md
+project.godot
+src/core/game_world.gd
+src/core/visual_state.gd
+src/gameplay/enemies/alien_destroyer.gd
+src/gameplay/enemies/alien_elite_artillery.gd
+src/gameplay/enemies/alien_elite_interceptor.gd
+src/gameplay/enemies/alien_elite_swarm_commander.gd
+src/gameplay/enemies/alien_scout.gd
+src/gameplay/enemies/alien_warrior.gd
+src/gameplay/enemies/mothership.gd
+src/gameplay/enemies/shield_drone.gd
+src/gameplay/enemies/space_leviathan.gd
+src/gameplay/enemies/the_silence.gd
+src/gameplay/hazards/asteroid.gd
+src/gameplay/hazards/derelict_ship.gd
+src/gameplay/hazards/rock_renderer.gd
+src/gameplay/hazards/space_mine.gd
+src/gameplay/hazards/space_mine_renderer.gd
+src/gameplay/player/player.gd
+src/gameplay/player/player_renderer.gd
+src/ui/win_screen.gd
+---
+
+
+## Turn 5 — Textured Light (art bible v4.0)
+Route 2 graphics overhaul: every solid body (SP-7, 10 alien types, rocks,
+mine, derelict, planets) replaced with baked albedo+normal textures
+(tools/texture_gen/, numpy/PIL height-field synthesis) lit by real-time 2D
+lights — DirectionalLight2D sun driven by the fade, player engine/muzzle/
+flood-cone lights, explosion + missile + mothership reactor lights. The fade
+is now a per-pixel shader crossfade (global uniform ns_blend); the flood
+cone reveals wet chitin per pixel in world space. Emissive FX, HUD,
+projectiles, pickups stay procedural by design. Fixed a latent bug: the
+DarknessVeil ColorRect had 0x0 size since birth (anchors under Node2D) —
+sectors 3–5 murk now actually renders. 98/98 unit tests pass.
+## Session End: 20260707_201303
+### Commits
+9429b42 feat: Turn 5 graphics overhaul — Textured Light (art bible v4.0)
+74cbf3f Merge pull request #4 from emcconnell/claude/zealous-burnell-e44092
+b68004d log
+28ad4e9 Merge pull request #3 from emcconnell/claude/zealous-burnell-e44092
+80b07ee feat: Turn 4 graphics overhaul — punched-up realism + the fade
+---
+
+## Session End: 20260707_201657
+### Commits
+9429b42 feat: Turn 5 graphics overhaul — Textured Light (art bible v4.0)
+74cbf3f Merge pull request #4 from emcconnell/claude/zealous-burnell-e44092
+b68004d log
+28ad4e9 Merge pull request #3 from emcconnell/claude/zealous-burnell-e44092
+80b07ee feat: Turn 4 graphics overhaul — punched-up realism + the fade
+### Uncommitted Changes
+production/session-logs/session-log.md
+---
+
+## Session End: 20260707_202332
+### Commits
+9429b42 feat: Turn 5 graphics overhaul — Textured Light (art bible v4.0)
+74cbf3f Merge pull request #4 from emcconnell/claude/zealous-burnell-e44092
+b68004d log
+28ad4e9 Merge pull request #3 from emcconnell/claude/zealous-burnell-e44092
+80b07ee feat: Turn 4 graphics overhaul — punched-up realism + the fade
+### Uncommitted Changes
+production/session-logs/session-log.md
+---
+

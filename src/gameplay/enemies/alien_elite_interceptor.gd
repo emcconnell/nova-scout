@@ -21,8 +21,8 @@ var _wobble: float = 0.0
 var _target_pos: Vector2 = Vector2.ZERO
 var _moving: bool = true
 var hp_scale: float = 1.0  # For scaled encounters
-var _flecks: Array[Vector3] = []      # seeded chitin flecks (TURN 4)
 var _eye_dots: Array = []             # seeded eye cluster (dead frequency)
+var _body: Sprite2D = null            # textured hull (art bible v4.0)
 
 func _ready() -> void:
 	super()
@@ -31,13 +31,14 @@ func _ready() -> void:
 	contact_damage = 25
 	score_value = 1500
 	drop_table = "elite"
-	_flecks = EnemyRenderer.seed_flecks(get_instance_id(), 24, Vector2(12, 9))
+	_body = TextureKit.creature_body(self, "enemies", "elite_interceptor")
 	_eye_dots = [
 		Vector3(-4, -4, 1.2), Vector3(4, -4, 1.2), Vector3(0, -8, 1.5),
 		Vector3(-8, 2, 0.8), Vector3(8, 2, 0.8),
 	]
 
 func _update(delta: float) -> void:
+	TextureKit.set_flash(_body, 1.0 if _hit_flash_timer > 0.0 else 0.0)
 	if _stunned:
 		return
 	_wobble += delta * 6.0
@@ -85,36 +86,10 @@ func _update(delta: float) -> void:
 		AudioManager.play_sfx("enemy_laser")
 
 func _draw() -> void:
-	var flash := _hit_flash_timer > 0.0 or _blink_flash > 0.0
 	var lit := _lit_factor()
 	var blend := VisualState.blend()
-	var hi := EnemyRenderer.body_stop(0, lit)
-	var mid := EnemyRenderer.body_stop(1, lit)
-	var hull := hi
-	if flash:
-		hull = Color(1, 1, 1)
 
 	EnemyRenderer.under_halo(self, Vector2(0, 4), 20.0)
-
-	# Arrowhead body (silhouette unchanged)
-	draw_colored_polygon(PackedVector2Array([
-		Vector2(0, -14), Vector2(10, 6), Vector2(0, 2), Vector2(-10, 6)
-	]), hull)
-	# Wing tips
-	var wing_col := mid if not flash else Color(1, 1, 1)
-	draw_colored_polygon(PackedVector2Array([
-		Vector2(-10, 6), Vector2(-18, 10), Vector2(-12, 12), Vector2(-8, 8)
-	]), wing_col)
-	draw_colored_polygon(PackedVector2Array([
-		Vector2(10, 6), Vector2(18, 10), Vector2(12, 12), Vector2(8, 8)
-	]), wing_col)
-
-	# Plate ridge across the nose
-	EnemyRenderer.plate_ridge_line(self,
-		PackedVector2Array([Vector2(-8, 2), Vector2(0, -4), Vector2(8, 2)]),
-		PackedVector2Array([Vector2(-8, 0.6), Vector2(0, -5.4), Vector2(8, 0.6)]), lit)
-
-	EnemyRenderer.draw_flecks(self, _flecks, lit)
 
 	# Glow core — magenta in SURVEY, dies with blend
 	var pulse: float = 0.5 + 0.5 * abs(sin(_wobble))

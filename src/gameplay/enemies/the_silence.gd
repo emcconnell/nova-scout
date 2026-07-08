@@ -22,6 +22,7 @@ var _drift_target_x: float = 0.0
 var _attack_dir: Vector2 = Vector2.DOWN
 var _fired_shots: int = 0
 var _shimmer: float = 0.0
+var _body: Sprite2D = null       # textured hull; alpha follows the cloak shimmer
 
 func _ready() -> void:
 	super()
@@ -34,6 +35,7 @@ func _ready() -> void:
 	_attacks_left = int(GameManager.dread_value("stalker", "attack_cycles", 2))
 	_phase_timer = _roll_attack_interval()
 	_drift_target_x = randf_range(40.0, GameManager.VIEWPORT_W - 40.0)
+	_body = TextureKit.creature_body(self, "enemies", "silence")
 	AudioManager.play_sfx("stalker_drone", 0.55)
 
 func _exit_tree() -> void:
@@ -45,6 +47,7 @@ func _roll_attack_interval() -> float:
 		float(GameManager.dread_value("stalker", "attack_interval_max", 10.0)))
 
 func _update(delta: float) -> void:
+	TextureKit.set_flash(_body, 1.0 if _hit_flash_timer > 0.0 else 0.0)
 	if _stunned:
 		return
 	_shimmer += delta
@@ -143,19 +146,16 @@ func _draw() -> void:
 	var shimmer_a := 0.02 + 0.06 * (0.5 + 0.5 * sin(_shimmer * 7.0)) + vis * 0.75
 	if flash:
 		shimmer_a = 0.9
+	# The body sprite's alpha follows the same shimmer the old polygon fill used.
+	if _body:
+		_body.self_modulate.a = shimmer_a
 
-	# Jagged asymmetric silhouette — deliberately wrong geometry
+	# Jagged asymmetric silhouette — deliberately wrong geometry (outline only)
 	var body := PackedVector2Array([
 		Vector2(0, -11), Vector2(7, -3), Vector2(12, 2), Vector2(5, 4),
 		Vector2(8, 10), Vector2(0, 6), Vector2(-9, 11), Vector2(-5, 3),
 		Vector2(-12, 1), Vector2(-6, -4),
 	])
-	# Hull tints toward wet chitin only very faintly — the cloak still wins.
-	var hull_tint := EnemyRenderer.body_stop(2, lit)
-	var hull_col := Color(hull_tint.r * 0.3, hull_tint.g * 0.3, hull_tint.b * 0.3, shimmer_a)
-	if flash:
-		hull_col = Color(1, 1, 1, 0.9)
-	draw_colored_polygon(body, hull_col)
 	# Violet edge trace — only reads when partially decloaked
 	if vis > 0.05 or flash:
 		var edge_a := clampf(vis * 0.8 + (0.3 if flash else 0.0), 0.0, 0.9)

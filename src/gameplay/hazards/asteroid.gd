@@ -16,7 +16,7 @@ var size_tier: int = SizeTier.LARGE
 var _hp: int = 3
 var _dead: bool = false
 var _velocity: Vector2 = Vector2.ZERO
-var _rock: RockRenderer.RockData = null
+var _body: Sprite2D = null
 var _instance_seed: int = 0
 
 # ─── Lifecycle ────────────────────────────────────────────────────────────────
@@ -30,14 +30,21 @@ func _ready() -> void:
 	area_entered.connect(_on_area_entered)
 	body_entered.connect(_on_body_entered)
 
-## Configures tier/velocity and precomputes seeded rock geometry — never randf() in _draw.
+## Configures tier/velocity and picks a baked rock variant (art bible v4.0):
+## textured + normal-mapped, shaded live by the sun light. No spin — the
+## slight fixed rotation per instance keeps variants from reading as clones.
 func setup(tier: int, vel: Vector2) -> void:
 	size_tier = clampi(tier, 0, 2)
 	_hp = HP[size_tier]
 	_dead = false
 	_velocity = vel
 	_instance_seed = int(get_instance_id()) ^ (size_tier * 104729)
-	_rock = RockRenderer.build(Vector2.ZERO, RADII[size_tier], _instance_seed)
+	if _body:
+		_body.queue_free()
+	_body = TextureKit.fade_body(self, "hazards", "rock_%d" % (absi(_instance_seed) % 3))
+	# baked at r=12 units, 12 px/unit; scale to this tier's radius. No mirror
+	# flips — they would invert the normal map's X and break sun shading.
+	_body.scale = Vector2.ONE * (RADII[size_tier] / 12.0 / 12.0)
 	_resize_collision()
 
 func _resize_collision() -> void:
@@ -51,18 +58,9 @@ func _process(delta: float) -> void:
 	if _dead:
 		return
 	global_position += _velocity * delta
-	# No spin: shading is baked sun-locked (upper-left key light) — rotating the
-	# node would rotate the terminator with it. Drift + parallax carry the motion.
 	# Despawn when far below screen
 	if global_position.y > get_viewport_rect().size.y + 60:
 		queue_free()
-	queue_redraw()
-
-## Sunlit stepped-form-shaded rock crossfading to the ember-rim dead state.
-func _draw() -> void:
-	if _rock == null:
-		return
-	RockRenderer.draw(self, _rock, Vector2.ZERO)
 
 # ─── Damage & Destruction ─────────────────────────────────────────────────────
 

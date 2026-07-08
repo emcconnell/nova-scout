@@ -1,7 +1,9 @@
-## DerelictShipRenderer — wrecked survey-probe hulk draw pass (TURN 4 polish).
-## The hazard reads as a dead sibling of the player's SP-7: elongated hull with
-## the SP-7 5-stop metal ramp, a snapped solar-wing stub, a torn-open end, panel
-## seams + rivets, scorch streaks, a bent whip antenna, and one ember window.
+## DerelictShipRenderer — wrecked survey-probe hulk draw pass (art bible v4.0
+## "Textured Light"). The hull ramp, panel seams/rivets, snapped solar-wing
+## stub, and torn-open breach hole are baked into the body sprite
+## (TextureKit.fade_body, "hazards"/"derelict"); this module only draws the
+## dynamic overlay on top: scorch streaks, a dead-frequency rim light, the
+## bent whip antenna, and one flickering ember window.
 ## Key light is fixed upper-left (no rotation — lighting is baked into the hulk).
 class_name DerelictShipRenderer
 extends Object
@@ -108,84 +110,16 @@ static func build(seed_value: int) -> HulkData:
 	data.window_pos = Vector2(rng.randf_range(-2.0, 6.0), rng.randf_range(-3.0, 3.0))
 	return data
 
-## Draws the full hulk at local origin. `flash` = hit-flash white-out override.
-static func draw(ci: CanvasItem, data: HulkData, flash: bool, wobble: float) -> void:
+## Draws the procedural FX on top of the baked hull sprite. The hull ramp,
+## panel seams/rivets, torn-open breach hole, and wing stub are baked into
+## the body texture (TextureKit.fade_body) — only the dynamic overlay stays here.
+static func draw(ci: CanvasItem, data: HulkData, wobble: float) -> void:
 	var blend := VisualState.blend()
 
-	if flash:
-		ci.draw_colored_polygon(data.hull_pts, Color(1, 1, 1))
-		return
-
 	_draw_scorch_streaks(ci, data, blend)
-	_draw_hull_ramp(ci, data, blend)
-	_draw_wing_stub(ci, data, blend)
-	_draw_torn_end(ci, data, blend)
-	_draw_seams_and_rivets(ci, data, blend)
 	_draw_rim_light(ci, data, blend)
 	_draw_antenna(ci, data)
 	_draw_ember_window(ci, data, blend, wobble)
-
-## Base hull silhouette re-filled with the 5-stop SP-7 ramp (dark->light->dark).
-static func _draw_hull_ramp(ci: CanvasItem, data: HulkData, blend: float) -> void:
-	for i in 5:
-		var col: Color = VisualState.col(RAMP_SURVEY[i], RAMP_DEAD[i])
-		var clipped := _clip_to_hull(data.ramp_bands[i], data.hull_pts)
-		for p in clipped:
-			ci.draw_colored_polygon(p, col)
-	ci.draw_polyline(_closed(data.hull_pts), Color(0, 0, 0, 0.5), 1.0)
-
-## Snapped-off solar wing stub — dark backing + 2-3 dark cell squares, aft of the hull.
-static func _draw_wing_stub(ci: CanvasItem, data: HulkData, blend: float) -> void:
-	var stub_origin := Vector2(-13, -4)
-	var backing := PackedVector2Array([
-		stub_origin, stub_origin + Vector2(-7, -1),
-		stub_origin + Vector2(-7, 6), stub_origin + Vector2(0, 7),
-	])
-	var back_col := VisualState.col(Color(0.10, 0.11, 0.13), Color(0.04, 0.04, 0.05))
-	ci.draw_colored_polygon(backing, back_col)
-	ci.draw_polyline(_closed(backing), Color(0, 0, 0, 0.5), 0.8)
-	var cell_w := 2.0
-	var cell_h := 2.2
-	var idx := 0
-	for row in 3:
-		for col in 2:
-			if idx >= data.cell_grid.size():
-				break
-			var cx: float = stub_origin.x - 6.2 + float(col) * (cell_w + 0.4)
-			var cy: float = stub_origin.y + 0.2 + float(row) * (cell_h + 0.3)
-			var hi: bool = data.cell_grid[idx]
-			var cell_col := VisualState.col(
-				CELL_HI_SURVEY if hi else CELL_LO_SURVEY,
-				CELL_HI_DEAD if hi else CELL_LO_DEAD)
-			ci.draw_rect(Rect2(cx, cy, cell_w, cell_h), cell_col)
-			idx += 1
-	# Snapped spar stub — a short broken strut line, cut off mid-air.
-	ci.draw_line(stub_origin + Vector2(-2, 2), stub_origin + Vector2(-7, 3),
-		VisualState.col(Color(0.5, 0.52, 0.56), Color(0.2, 0.21, 0.23)), 1.0)
-
-## Jagged torn-open stern — dark irregular polygon + pale ripped-metal edge flecks.
-static func _draw_torn_end(ci: CanvasItem, data: HulkData, blend: float) -> void:
-	var dark := VisualState.col(Color(0.11, 0.10, 0.09), Color(0.03, 0.02, 0.016))
-	ci.draw_colored_polygon(data.torn_pts, dark)
-	ci.draw_polyline(_closed(data.torn_pts), Color(0, 0, 0, 0.6), 0.8)
-	var fleck_col := VisualState.col(Color(0.85, 0.87, 0.90, 0.7), Color(0.5, 0.52, 0.55, 0.5))
-	for fp in data.torn_flecks:
-		ci.draw_rect(Rect2(fp.x - 0.5, fp.y - 0.5, 1.0, 1.0), fleck_col)
-
-## Seam lines at each ramp fraction + rivet specks (bright above, dark below).
-static func _draw_seams_and_rivets(ci: CanvasItem, data: HulkData, blend: float) -> void:
-	var seam_col := Color(0, 0, 0, 0.30)
-	var min_x := -15.0
-	var span := 29.0
-	for frac in data.seam_fracs:
-		var sx: float = min_x + span * frac
-		ci.draw_line(Vector2(sx, -8.5), Vector2(sx, 7.5), seam_col, 0.6)
-	var rivet_col := VisualState.col(RIVET_SURVEY, RIVET_DEAD)
-	for rp in data.rivets:
-		if not Geometry2D.is_point_in_polygon(rp, data.hull_pts):
-			continue
-		ci.draw_circle(rp, 0.45, rivet_col)
-		ci.draw_circle(rp + Vector2(0.3, 0.3), 0.28, Color(0, 0, 0, 0.4))
 
 ## Directional scorch streaks running down the hull — DEAD only, fades with blend.
 static func _draw_scorch_streaks(ci: CanvasItem, data: HulkData, blend: float) -> void:

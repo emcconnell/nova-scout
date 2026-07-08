@@ -28,6 +28,12 @@ var _time: float = 0.0
 var _duration: float = 0.8
 var _type: int = Type.SCOUT
 
+# ─── Light (art bible v4.0 "Textured Light") ─────────────────────────────────
+const LIGHT_ENERGY_START := 1.2
+const LIGHT_COLOR_START := Color(1.0, 1.0, 1.0)   # white-hot flash
+const LIGHT_COLOR_END := Color(1.0, 0.42, 0.2)    # cooling toward ember orange
+var _light: PointLight2D = null
+
 func setup(type: int) -> void:
 	_type = type
 	_time = 0.0
@@ -52,6 +58,9 @@ func setup(type: int) -> void:
 		Type.WARRIOR, Type.DERELICT, Type.LEVIATHAN: _add_embers(4, 1.2)
 		Type.SCOUT: _add_embers(3, 1.0)
 		_: pass
+	# Transient burst light — decays to 0 over the full effect lifetime (embers
+	# included), cooling white -> ember orange. Freed automatically with self.
+	_light = TextureKit.point_light(self, _get_flash_radius() * 2.5, LIGHT_COLOR_START, LIGHT_ENERGY_START)
 
 ## Slow, long-lived embers that outlast the flash and cool from orange to red.
 func _add_embers(count: int, life: float) -> void:
@@ -81,6 +90,11 @@ func _process(delta: float) -> void:
 	for r in _rings:
 		r["radius"] += r["speed"] * delta
 		r["life"] += delta
+	# Burst light — decays to 0 and cools from white to ember orange over the burst.
+	if _light:
+		var lt: float = clampf(_time / _duration, 0.0, 1.0)
+		_light.energy = LIGHT_ENERGY_START * (1.0 - lt)
+		_light.color = LIGHT_COLOR_START.lerp(LIGHT_COLOR_END, lt)
 	queue_redraw()
 
 ## White-hot/orange survey bursts blend toward dimmer red dead-frequency bursts.

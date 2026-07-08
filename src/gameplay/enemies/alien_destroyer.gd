@@ -22,8 +22,10 @@ var _pause_timer: float = PATTERN_PAUSE
 var _exposed: bool = true
 var _invincible_pulse: bool = false
 var _wobble: float = 0.0
-var _flecks: Array[Vector3] = []      # seeded chitin flecks (TURN 4)
 var _eye_dots: Array = []             # seeded eye cluster (dead frequency)
+
+# ─── Textured body (art bible v4.0 "Textured Light") ────────────────────────
+var _body: Sprite2D = null
 
 # Sub-timers
 var _burst_shot_timer: float = 0.0
@@ -37,7 +39,7 @@ func _ready() -> void:
 	contact_damage = 35
 	score_value = 800
 	drop_table = "destroyer"
-	_flecks = EnemyRenderer.seed_flecks(get_instance_id(), 40, Vector2(15, 16))
+	_body = TextureKit.creature_body(self, "enemies", "destroyer")
 	_eye_dots = [
 		Vector3(-8, -13, 1.2), Vector3(8, -13, 1.2), Vector3(-4, -15, 0.9),
 		Vector3(4, -15, 0.9), Vector3(0, -12, 1.6), Vector3(-12, -9, 0.8),
@@ -150,15 +152,12 @@ func _draw() -> void:
 	var w := _wobble
 	var lit := _lit_factor()
 	var blend := VisualState.blend()
+	TextureKit.set_flash(_body, 1.0 if flash else 0.0)
 
-	var hi := EnemyRenderer.body_stop(0, lit)
-	var mid := EnemyRenderer.body_stop(1, lit)
-	var lo := EnemyRenderer.body_stop(2, lit)
-	var hull := hi
-	var armor := mid
-	var dark := lo
+	# Turret mount color — hull ramp mid-stop, whitens on hit flash
+	var armor := EnemyRenderer.body_stop(1, lit)
 	if flash:
-		hull = Color(1, 1, 1); armor = Color(1, 1, 1); dark = Color(1, 1, 1)
+		armor = Color(1, 1, 1)
 
 	# Under-halo behind the hull
 	EnemyRenderer.under_halo(self, Vector2(0, 12), 26.0)
@@ -170,44 +169,6 @@ func _draw() -> void:
 		var sa2 := 0.25 + 0.15 * sin(w * 5.0)
 		draw_arc(Vector2.ZERO, 20.0, w * 0.5, w * 0.5 + TAU, 24,
 			Color(COL_SHIELD.r, COL_SHIELD.g, COL_SHIELD.b, sa2), 1.5)
-
-	# Main carapace — larger beetle hull with layered segments (silhouette unchanged)
-	draw_colored_polygon(PackedVector2Array([
-		Vector2(-8, -18), Vector2(8, -18),
-		Vector2(12, -8), Vector2(-12, -8)
-	]), hull)
-	draw_colored_polygon(PackedVector2Array([
-		Vector2(-12, -8), Vector2(12, -8),
-		Vector2(16, 2), Vector2(14, 8),
-		Vector2(-14, 8), Vector2(-16, 2)
-	]), mid)
-	draw_colored_polygon(PackedVector2Array([
-		Vector2(-14, 8), Vector2(14, 8),
-		Vector2(10, 16), Vector2(-10, 16)
-	]), lo)
-
-	# Plate ridges — dark stroke + light echo (biomech language) over the seams
-	EnemyRenderer.plate_ridge_line(self,
-		PackedVector2Array([Vector2(-11, -8), Vector2(11, -8)]),
-		PackedVector2Array([Vector2(-11, -9.4), Vector2(11, -9.4)]), lit, 2.0)
-	EnemyRenderer.plate_ridge_line(self,
-		PackedVector2Array([Vector2(-15, 2), Vector2(15, 2)]),
-		PackedVector2Array([Vector2(-15, 0.6), Vector2(15, 0.6)]), lit, 1.5)
-	EnemyRenderer.plate_ridge_line(self,
-		PackedVector2Array([Vector2(-13, 8), Vector2(13, 8)]),
-		PackedVector2Array([Vector2(-13, 6.6), Vector2(13, 6.6)]), lit, 1.5)
-	for sx in [-6.0, 0.0, 6.0]:
-		draw_line(Vector2(sx, -16), Vector2(sx, 14), Color(0, 0, 0, 0.5), 1.0)
-
-	# ~40 seeded chitin flecks
-	EnemyRenderer.draw_flecks(self, _flecks, lit)
-
-	# Side hull reinforcement ridges
-	for side in [-1.0, 1.0]:
-		draw_line(Vector2(side * 12, -8), Vector2(side * 16, 2),
-			Color(armor.r, armor.g, armor.b, 0.6), 1.5)
-		draw_line(Vector2(side * 16, 2), Vector2(side * 14, 8),
-			Color(armor.r, armor.g, armor.b, 0.6), 1.5)
 
 	# Rotating turret elements (4 turrets) — glow dies with blend, rotation kept
 	var glow_fade := 1.0 - blend * 0.6

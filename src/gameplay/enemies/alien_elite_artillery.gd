@@ -19,8 +19,8 @@ var _charge_anim: float = 0.0
 var _charging: bool = false
 var _wobble: float = 0.0
 var hp_scale: float = 1.0
-var _flecks: Array[Vector3] = []      # seeded chitin flecks (TURN 4)
 var _eye_dots: Array = []             # seeded eye cluster (dead frequency)
+var _body: Sprite2D = null            # textured hull (art bible v4.0)
 
 func _ready() -> void:
 	super()
@@ -29,13 +29,14 @@ func _ready() -> void:
 	contact_damage = 30
 	score_value = 1500
 	drop_table = "elite"
-	_flecks = EnemyRenderer.seed_flecks(get_instance_id(), 36, Vector2(17, 8))
+	_body = TextureKit.creature_body(self, "enemies", "elite_artillery")
 	_eye_dots = [
 		Vector3(-10, -6, 1.2), Vector3(10, -6, 1.2), Vector3(-4, -7, 0.9),
 		Vector3(4, -7, 0.9), Vector3(0, -5, 1.6),
 	]
 
 func _update(delta: float) -> void:
+	TextureKit.set_flash(_body, 1.0 if _hit_flash_timer > 0.0 else 0.0)
 	if _stunned:
 		return
 	_wobble += delta * 2.0
@@ -75,40 +76,16 @@ func _update(delta: float) -> void:
 			_shot_timer = 0.0
 
 func _draw() -> void:
-	var flash := _hit_flash_timer > 0.0
 	var lit := _lit_factor()
-	var hi := EnemyRenderer.body_stop(0, lit)
-	var mid := EnemyRenderer.body_stop(1, lit)
-	var hull := hi if not flash else Color(1, 1, 1)
-	var barrel_col := mid if not flash else Color(1, 1, 1)
 
 	EnemyRenderer.under_halo(self, Vector2(0, 4), 24.0)
 
-	# Wide flat body — fortress shape (silhouette unchanged)
-	draw_colored_polygon(PackedVector2Array([
-		Vector2(-18, -8), Vector2(18, -8),
-		Vector2(16, 10), Vector2(-16, 10)
-	]), hull)
-
-	# Plate ridge across the front face
-	EnemyRenderer.plate_ridge_line(self,
-		PackedVector2Array([Vector2(-16, 0), Vector2(0, -3), Vector2(16, 0)]),
-		PackedVector2Array([Vector2(-16, -1.4), Vector2(0, -4.4), Vector2(16, -1.4)]), lit)
-	EnemyRenderer.draw_flecks(self, _flecks, lit)
-
-	# Barrel array (6 barrels) — silhouette unchanged
-	for i in 6:
-		var bx := -12.5 + i * 5.0
-		draw_rect(Rect2(bx - 1, 8, 2, 8), barrel_col)
-	# Charge glow
+	# Charge glow — mortar barrels are baked into the body texture
 	if _charging:
 		var ga: float = 0.3 + 0.7 * abs(sin(_charge_anim))
 		for i in 6:
 			var bx := -12.5 + i * 5.0
 			draw_circle(Vector2(bx, 16), 2.0, Color(COL_CHARGE.r, COL_CHARGE.g, COL_CHARGE.b, ga))
-	# Side struts
-	draw_rect(Rect2(-20, -4, 4, 12), hull)
-	draw_rect(Rect2(16, -4, 4, 12), hull)
 
 	# Eye cluster wakes on the fortress face in dead frequency
 	EnemyRenderer.eye_cluster(self, _eye_dots, lit, [0, 1])

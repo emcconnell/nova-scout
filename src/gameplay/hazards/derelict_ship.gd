@@ -15,6 +15,9 @@ var _wobble: float = 0.0
 var _velocity: Vector2 = Vector2(0, DRIFT_SPEED)
 ## Precomputed hulk geometry — seeded once in _ready, never randf in _draw.
 var _hulk: DerelictShipRenderer.HulkData = null
+## Textured hull sprite (art bible v4.0 "Textured Light") — under the
+## procedural window/rim/antenna FX drawn by DerelictShipRenderer.
+var _body: Sprite2D = null
 
 func _ready() -> void:
 	collision_layer = 16   # hazards layer
@@ -31,6 +34,9 @@ func _ready() -> void:
 
 	# Seeded wrecked-hulk geometry — precomputed, never randf in _draw.
 	_hulk = DerelictShipRenderer.build(int(get_instance_id()))
+	# Baked hull slab + plating + breach hole + wing stub. Windows, salvage
+	# glints, and the antenna/rim light stay procedural on top.
+	_body = TextureKit.fade_body(self, "hazards", "derelict")
 
 func _process(delta: float) -> void:
 	if _dead:
@@ -40,6 +46,7 @@ func _process(delta: float) -> void:
 
 	if _hit_flash_timer > 0.0:
 		_hit_flash_timer -= delta
+	TextureKit.set_flash(_body, 1.0 if _hit_flash_timer > 0.0 else 0.0)
 
 	# Remove if off screen
 	if global_position.y > get_viewport_rect().size.y + 30:
@@ -76,7 +83,8 @@ func _die() -> void:
 	queue_free()
 
 ## Wrecked survey-probe hulk — dead sibling of the SP-7, drawn via DerelictShipRenderer.
+## Hull is a baked body sprite (_body); this only draws the procedural FX on top.
 func _draw() -> void:
 	if _hulk == null:
 		return
-	DerelictShipRenderer.draw(self, _hulk, _hit_flash_timer > 0.0, _wobble)
+	DerelictShipRenderer.draw(self, _hulk, _wobble)

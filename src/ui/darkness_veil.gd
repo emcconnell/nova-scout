@@ -18,11 +18,15 @@ func _ready() -> void:
 	var shader := load("res://assets/shaders/post_darkness_falloff.gdshader") as Shader
 	if shader:
 		_mat.shader = shader
-	anchor_right = 1.0
-	anchor_bottom = 1.0
+	# Anchors don't resolve under a Node2D parent (game_world) — size the rect
+	# to the fixed 320x180 canvas explicitly or the veil renders 0x0.
+	# (No anchors: mixing them with an explicit size trips the engine warning.)
+	position = Vector2.ZERO
+	size = get_viewport_rect().size
 	color = Color(0, 0, 0, 0)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	z_index = 30   # Above world entities, below enemy projectiles (35) and HUD
+	light_mask = 0 # the murk is not a surface — no light may lift it
 
 func connect_player(p: Player) -> void:
 	_player = p

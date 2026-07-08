@@ -19,6 +19,7 @@ var _show_timer: float = 0.0
 var _credit_scroll: float = 0.0
 var _font_title: Font = null
 var _font_body: Font = null
+var _gold_planet: Texture2D = null   # the Gold Shore — the one unrationed warmth
 
 const TRUE_LOG := [
 	"Survey Probe Seven, returning.",
@@ -45,6 +46,7 @@ func _ready() -> void:
 	process_mode  = Node.PROCESS_MODE_ALWAYS
 	_font_title = load("res://assets/fonts/Orbitron.ttf") as Font
 	_font_body = load("res://assets/fonts/ShareTechMono-Regular.ttf") as Font
+	_gold_planet = TextureKit.tex("world", "planet_gold_survey")
 	if _font_title == null: _font_title = ThemeDB.fallback_font
 	if _font_body == null: _font_body = ThemeDB.fallback_font
 
@@ -88,6 +90,15 @@ func _draw() -> void:
 		var sy := fmod(float(i) * 53.7, h)
 		var b  := 0.3 + 0.3 * sin(_anim * 1.2 + i)
 		draw_circle(Vector2(sx, sy), 0.6, Color(b, b, b * 1.1))
+
+	# === The Gold Shore rises behind the hangar mouth (true ending only) ===
+	# The starburst rays below emanate from this exact point — a literal dawn.
+	if _is_true_ending and _gold_planet:
+		var reveal := clampf(_show_timer * 0.5, 0.0, 1.0)
+		var pr := (22.0 + 1.2 * sin(_anim * 0.6)) * reveal
+		if pr > 0.5:
+			draw_texture_rect(_gold_planet, Rect2(cx - pr, 30.0 - pr, pr * 2.0, pr * 2.0),
+				false, Color(1, 1, 1, reveal))
 
 	# === Hangar frame ===
 	draw_rect(Rect2(0, 0, w, 14), COL_METAL)

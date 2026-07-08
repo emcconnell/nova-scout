@@ -41,6 +41,9 @@ var _dead: bool = false
 var _blink_timer: float = 0.0
 var _player_ref: Node2D = null
 
+# ─── Textured body (art bible v4.0 "Textured Light") ─────────────────────────
+var _body: Sprite2D = null
+
 # Movement
 var _sine_phase: float = 0.0
 var _sine_freq: float = 3.0
@@ -65,6 +68,9 @@ func _ready() -> void:
 	collision_mask = 5   # 1=player + 4=player bullets
 	area_entered.connect(_on_area_entered)
 	body_entered.connect(_on_body_entered)
+	# Baked warhead casing — plating meridians, stud ring, detonator socket. The
+	# red lens, spikes, and telegraph glows stay procedural (drawn on top).
+	_body = TextureKit.fade_body(self, "hazards", "mine")
 
 ## Call after instantiation to configure mine variant and stagger firing.
 func setup(p_type: int = MineType.STANDARD, stagger: int = 0) -> void:
@@ -187,16 +193,6 @@ func _draw() -> void:
 	ds.blink_timer = _blink_timer
 	ds.blink_rate = 10.0 if (_chasing or _charging) else 3.0
 
-	var body_survey: Color = COLOR_STANDARD
-	var body_dead: Color = DEAD_STANDARD
-	match mine_type:
-		MineType.CLUSTER:
-			body_survey = COLOR_CLUSTER
-			body_dead = DEAD_CLUSTER
-		MineType.RAPID:
-			body_survey = COLOR_RAPID
-			body_dead = DEAD_RAPID
-	ds.body_col = VisualState.col(body_survey, body_dead)
 	ds.metal = VisualState.col(COLOR_METAL, DEAD_METAL)
 	ds.running_light = VisualState.col(COLOR_LIGHT, Color(1.0, 0.165, 0.114))
 

@@ -24,8 +24,10 @@ var _entry_done: bool = false  # Drift into play area first
 var _retreat_timer: float = 0.0
 var _entry_speed: float = BASE_SPEED
 var _wobble: float = 0.0
-var _flecks: Array[Vector3] = []      # seeded chitin flecks (TURN 4)
 var _eye_dots: Array = []             # seeded eye cluster offsets
+
+# ─── Textured body (art bible v4.0 "Textured Light") ────────────────────────
+var _body: Sprite2D = null
 
 func _ready() -> void:
 	super()
@@ -34,7 +36,7 @@ func _ready() -> void:
 	contact_damage = 10
 	score_value = 100
 	drop_table = "scout"
-	_flecks = EnemyRenderer.seed_flecks(get_instance_id(), 20, Vector2(11, 4.5))
+	_body = TextureKit.creature_body(self, "enemies", "scout")
 	_eye_dots = [
 		Vector3(-6, -8, 1.0), Vector3(-2, -10, 1.35), Vector3(3, -9, 1.05),
 		Vector3(7, -6, 0.8), Vector3(0, -6, 1.7), Vector3(-4, -5, 0.7),
@@ -92,39 +94,19 @@ func _draw() -> void:
 	var w := _wobble
 	var lit := _lit_factor()
 	var blend := VisualState.blend()
+	TextureKit.set_flash(_body, 1.0 if flash else 0.0)
 
 	# Under-halo — magenta in SURVEY, dying embers in DEAD (spec: soft under-halo)
 	EnemyRenderer.under_halo(self, Vector2(0, 8), 30.0)
 
-	# Body fill — 3 stacked ellipses forming the violet-black/pitch/chitin ramp
+	# Dome fill color — hull ramp, whitens on hit flash
 	var hi := EnemyRenderer.body_stop(0, lit)
-	var mid := EnemyRenderer.body_stop(1, lit)
-	var lo := EnemyRenderer.body_stop(2, lit)
 	if flash:
-		hi = Color(1, 1, 1); mid = Color(1, 1, 1); lo = Color(1, 1, 1)
-	DrawKit.ellipse(self, Vector2(-2, 0), Vector2(9, 4), lo, 20)
-	DrawKit.ellipse(self, Vector2(-1, 0), Vector2(8, 3.6), mid, 20)
-	draw_colored_polygon(PackedVector2Array([
-		Vector2(-10, 0), Vector2(-7, -3), Vector2(7, -3), Vector2(10, 0),
-		Vector2(9, 3), Vector2(-9, 3)
-	]), hi)
-
-	# 3 plate ridge arcs across the hull
-	for dx in [-8.0, 0.0, 9.0]:
-		var rr := Vector2((26 - absf(dx) * 1.7) * 0.35, (11 - absf(dx) * 0.55) * 0.35)
-		EnemyRenderer.plate_ridge_arc(self, Vector2(dx * 0.35, 0), rr, -1.2, 1.2, lit)
-
-	# Broad diagonal top sheen
-	var sheen_a := 0.12 if not flash else 0.0
-	sheen_a = lerpf(sheen_a, 0.07, blend)
-	DrawKit.ellipse(self, Vector2(-3.5, -1.5), Vector2(3.2, 1.0), Color(1, 1, 1, sheen_a), 12)
-
-	# ~20 seeded chitin flecks
-	EnemyRenderer.draw_flecks(self, _flecks, lit)
+		hi = Color(1, 1, 1)
 
 	# Dome — larger, layered with interior glow that fades with blend
 	var dome_center := Vector2(0, -4)
-	draw_circle(dome_center, 5.0, hi if not flash else Color(1, 1, 1))
+	draw_circle(dome_center, 5.0, hi)
 	var dome_glow_a := (0.35 + 0.25 * sin(w * 1.8)) * (1.0 - blend)
 	DrawKit.glow(self, dome_center, 3.5, Color(MAGENTA.r, MAGENTA.g, MAGENTA.b, dome_glow_a), 3)
 	draw_circle(dome_center + Vector2(-1.5, -1.5), 1.2, Color(1, 1, 1, 0.25))

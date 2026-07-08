@@ -17,10 +17,17 @@ var _returning_to_pool: bool = false
 const MAX_LIFETIME := 4.0
 const TRAIL_LEN := 8
 
+## Small warm exhaust light (art bible v4.0 "Textured Light"). Missiles are
+## pooled — created once here so it persists across setup()/reset() reuse
+## rather than being rebuilt on every activation.
+var _light: PointLight2D = null
+
 func _ready() -> void:
 	add_to_group("player_bullets")
 	area_entered.connect(_on_area_entered)
 	body_entered.connect(_on_body_entered)
+	_light = TextureKit.point_light(self, 18.0, Color(1.0, 0.62, 0.35), 0.5)
+	_light.position = Vector2(0, 3.0)   # near the exhaust flame
 
 func setup(damage: int, target: Node2D) -> void:
 	_target = target

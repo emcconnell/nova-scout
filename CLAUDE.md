@@ -9,7 +9,7 @@ One pilot. Five sectors. Three habitable worlds. One hour to save humanity.
 - **Language**: GDScript
 - **Version Control**: Git / trunk-based
 - **Build System**: Godot export system
-- **Asset Pipeline**: Aseprite (sprites) → Godot, LMMS (audio) → OGG/WAV
+- **Asset Pipeline**: `tools/texture_gen/` Python bake (albedo + normal PNGs) → Godot import, LMMS (audio) → OGG/WAV
 
 ## Project Structure
 
@@ -17,9 +17,10 @@ One pilot. Five sectors. Three habitable worlds. One hour to save humanity.
 src/core/          → GameManager, AudioManager, SaveManager (autoloads)
 src/gameplay/      → Player, Enemies, Hazards, Systems
 src/ui/            → HUD, Menus, Screens
-assets/sprites/    → All pixel art (native 320×180)
+assets/textures/   → Baked body textures (survey/dead/wet albedo + normal)
 assets/audio/      → Music (OGG) + SFX (WAV/OGG)
-assets/shaders/    → CRT, shield, scan, nebula, warp shaders
+assets/shaders/    → Film pass, darkness veil, fade/creature body shaders
+tools/texture_gen/ → Python texture bake pipeline (see art-bible.md §0)
 assets/data/       → JSON balance data (enemy stats, encounters, upgrades)
 design/gdd/        → All game design documents
 production/        → Epics, sprints, milestones

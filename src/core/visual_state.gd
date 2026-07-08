@@ -78,6 +78,20 @@ func _process(delta: float) -> void:
 		blend_changed.emit(_blend)
 	# The whole world dims with the fade — including the clear color.
 	RenderingServer.set_default_clear_color(SURVEY["bg"].lerp(DEAD["bg"], _blend))
+	_update_shader_globals()
+
+## Feeds the textured-body shaders (fade crossfade + flood-cone wet reveal).
+## One set per frame — every fade_sprite/creature_sprite material reads these.
+func _update_shader_globals() -> void:
+	RenderingServer.global_shader_parameter_set("ns_blend", _blend)
+	var p := _get_player()
+	if p != null:
+		RenderingServer.global_shader_parameter_set("ns_player_pos", p.global_position)
+	var half := deg_to_rad(float(value("beam", "half_angle_deg", 17.0)))
+	var soft := deg_to_rad(float(value("beam", "edge_softness_deg", 8.0)))
+	RenderingServer.global_shader_parameter_set("ns_beam", Vector4(
+		float(value("beam", "range", 130.0)), cos(half), cos(half + soft),
+		beam_strength()))
 
 func _compute_target() -> float:
 	var sectors: Variant = value("fade", "sector_blend", {})

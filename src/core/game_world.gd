@@ -89,6 +89,12 @@ var _wrong_star_idx: int = -1            # The star that moves. It's nothing.
 # ─── TURN 4 scene detail (seeded once, never randf() in _draw) ───────────────
 var _scene_detail: Dictionary = {}
 
+# ─── v4.0 Textured Light — sun rig + deep background layers ──────────────────
+var _sun: DirectionalLight2D = null
+var _bg_tiles: Array[Sprite2D] = []       # tiling photographic star layers
+var _nebula_sprites: Array[Sprite2D] = [] # baked wisps, sector-tinted
+const BG_TILE_SPEED := [0.35, 0.65]       # parallax factor per tile layer
+
 # ─── Screen shake ─────────────────────────────────────────────────────────────
 var _shake_amount: float = 0.0
 var _shake_timer: float = 0.0
@@ -124,6 +130,11 @@ func _ready() -> void:
 
 	# Build parallax starfield
 	_build_starfield(Rect2(Vector2.ZERO, _vp_size))
+	_build_bg_layers()
+
+	# THE SUN as a real light — hard key light (SURVEY) that the fade swings
+	# into an ember red; every normal-mapped body in the world shades by it.
+	_sun = TextureKit.sun_light(self)
 
 	# Wire HUD
 	if hud_display and hud_display.has_method("connect_player"):
@@ -201,6 +212,61 @@ func _request_mission_prompt(prompt_id: String) -> void:
 	if _mission_prompt:
 		_mission_prompt.request_prompt(prompt_id)
 
+## Deep photographic background: two tiling baked star layers under the
+## procedural twinkle field, plus sector-tinted nebula wisps (art bible v4.0).
+func _build_bg_layers() -> void:
+	for i in 2:
+		var s := Sprite2D.new()
+		s.texture = TextureKit.tex("world", "starfield_%d" % i)
+		s.centered = false
+		s.z_index = -10 + i
+		s.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+		s.region_enabled = true
+		s.region_rect = Rect2(0, 0, 640, 360)
+		s.scale = Vector2(0.5, 0.5)
+		add_child(s)
+		_bg_tiles.append(s)
+	var wisp_rng := DrawKit.rng(917 + GameManager.current_sector)
+	for i in 3:
+		var n := Sprite2D.new()
+		n.texture = TextureKit.tex("world", "nebula_%d" % i)
+		n.z_index = -8
+		n.position = Vector2(wisp_rng.randf() * _vp_size.x,
+			wisp_rng.randf() * _vp_size.y)
+		n.scale = Vector2.ONE * (0.5 + wisp_rng.randf() * 0.7)
+		n.rotation = wisp_rng.randf() * TAU
+		var mat := CanvasItemMaterial.new()
+		mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+		n.material = mat
+		n.light_mask = 0   # nebulae are self-lit gas, not surfaces
+		add_child(n)
+		_nebula_sprites.append(n)
+
+## Sun light + background layers track the fade and the scroll each frame.
+func _update_light_rig() -> void:
+	var blend := VisualState.blend()
+	if _sun:
+		var sun_pos := VisualState.sun_screen_pos()
+		var from_dir := sun_pos - _vp_size * 0.5
+		if from_dir.length_squared() > 1.0:
+			TextureKit.aim_sun(_sun, from_dir)
+		_sun.color = Color(0.95, 0.97, 1.0).lerp(Color(1.0, 0.30, 0.18), blend)
+		_sun.energy = lerpf(0.85, 0.50, blend)
+	for i in _bg_tiles.size():
+		var tile := _bg_tiles[i]
+		# region scrolls in texture px (tile is drawn at 0.5 scale)
+		tile.region_rect.position.y = -_scroll_offset * float(BG_TILE_SPEED[i]) * 2.0
+		tile.modulate.a = lerpf(1.0, 0.35, blend)
+	var sector := clampi(GameManager.current_sector, 1, 5)
+	var wisp_col: Color = [
+		Color(0.30, 0.42, 0.75), Color(0.45, 0.26, 0.60), Color(0.22, 0.52, 0.42),
+		Color(0.55, 0.22, 0.14), Color(0.34, 0.18, 0.44),
+	][sector - 1]
+	for n in _nebula_sprites:
+		# wisps dim and redden as the frequency dies
+		n.modulate = wisp_col.lerp(Color(0.35, 0.06, 0.04), blend)
+		n.modulate.a = lerpf(0.30, 0.16, blend)
+
 ## Build the parallax starfield and precompute all seeded TURN 4 scene detail
 ## (dust lane, ambient glows, derelict hulk, ghost chain) once — never randf()
 ## inside _draw().
@@ -248,6 +314,7 @@ func _process(delta: float) -> void:
 		position = Vector2.ZERO
 		rotation = 0.0
 
+	_update_light_rig()
 	queue_redraw()
 
 func _update_travel_spawning(delta: float) -> void:

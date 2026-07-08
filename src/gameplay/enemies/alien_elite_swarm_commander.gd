@@ -18,8 +18,8 @@ var _scouts_spawned: int = 0
 var _wobble: float = 0.0
 var _phase: float = 0.0
 var hp_scale: float = 1.0
-var _flecks: Array[Vector3] = []      # seeded chitin flecks (TURN 4)
 var _eye_dots: Array = []             # seeded eye cluster (dead frequency)
+var _body: Sprite2D = null            # textured hull (art bible v4.0)
 
 func _ready() -> void:
 	super()
@@ -28,13 +28,14 @@ func _ready() -> void:
 	contact_damage = 25
 	score_value = 1500
 	drop_table = "elite"
-	_flecks = EnemyRenderer.seed_flecks(get_instance_id(), 28, Vector2(13, 8))
+	_body = TextureKit.creature_body(self, "enemies", "elite_swarm")
 	_eye_dots = [
 		Vector3(-6, -6, 1.2), Vector3(6, -6, 1.2), Vector3(0, -8, 1.5),
 		Vector3(-10, -2, 0.8), Vector3(10, -2, 0.8),
 	]
 
 func _update(delta: float) -> void:
+	TextureKit.set_flash(_body, 1.0 if _hit_flash_timer > 0.0 else 0.0)
 	if _stunned:
 		return
 	_wobble += delta * 3.0
@@ -77,29 +78,13 @@ func _fire_homing_missile() -> void:
 		m.setup(MISSILE_DAMAGE, target, MISSILE_SPEED)
 
 func _draw() -> void:
-	var flash := _hit_flash_timer > 0.0
 	var lit := _lit_factor()
 	var blend := VisualState.blend()
-	var hi := EnemyRenderer.body_stop(0, lit)
 	var lo := EnemyRenderer.body_stop(2, lit)
-	var hull := hi if not flash else Color(1, 1, 1)
 
 	EnemyRenderer.under_halo(self, Vector2(0, 2), 22.0)
 
-	# Central command pod (silhouette unchanged)
-	draw_colored_polygon(PackedVector2Array([
-		Vector2(-12, -10), Vector2(12, -10),
-		Vector2(14, 8), Vector2(-14, 8)
-	]), hull)
-	# Spawn bays (two ports)
-	draw_rect(Rect2(-18, 0, 6, 10), hull)
-	draw_rect(Rect2(12, 0, 6, 10), hull)
-
-	EnemyRenderer.plate_ridge_line(self,
-		PackedVector2Array([Vector2(-13, -1), Vector2(0, 2), Vector2(13, -1)]),
-		PackedVector2Array([Vector2(-13, -2.4), Vector2(0, 0.6), Vector2(13, -2.4)]), lit)
-	EnemyRenderer.draw_flecks(self, _flecks, lit)
-
+	# Spawn bay glows — hatch bays baked into the body texture
 	var port_a: float = (0.5 + 0.5 * abs(sin(_wobble * 2.0))) * (1.0 - blend * 0.5)
 	draw_circle(Vector2(-15, 8), 3.0, Color(COL_PORT.r, COL_PORT.g, COL_PORT.b, port_a))
 	draw_circle(Vector2(15, 8), 3.0, Color(COL_PORT.r, COL_PORT.g, COL_PORT.b, port_a))

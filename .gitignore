@@ -33,3 +33,4 @@ builds/web/
 # Temporary files
 *.tmp
 *.bak
+.probe_out/

@@ -11,7 +11,6 @@ const COLOR_CHARGE := Color(1.0, 0.50, 0.00)
 ## Everything the draw pass needs for one frame — built fresh in SpaceMine._draw().
 class DrawState:
 	var mine_type: int = 0
-	var body_col: Color = Color.WHITE
 	var metal: Color = Color.WHITE
 	var running_light: Color = Color.RED
 	var chasing: bool = false
@@ -30,7 +29,6 @@ static func draw(ci: CanvasItem, ds: DrawState) -> void:
 	_draw_chase_glow(ci, ds, bt)
 	_draw_contact_spikes(ci, ds)
 	_draw_body_and_lens(ci, ds)
-	_draw_panel_seams(ci, ds)
 	_draw_arm_telegraph(ci, ds, bt, blink)
 	_draw_sensor_bulbs(ci, ds, bt)
 	_draw_type_accents(ci, ds, bt)
@@ -74,29 +72,11 @@ static func _draw_contact_spikes(ci: CanvasItem, ds: DrawState) -> void:
 			var ct2: float = ds.charge_timer / ds.charge_dur
 			DrawKit.glow(ci, spike_tip, ct2 * 2.0, Color(COLOR_CHARGE.r, COLOR_CHARGE.g, COLOR_CHARGE.b, ct2 * 0.6), 3)
 
-## Casing body ramp + red core-lens "eye" with a tiny specular catch-light + hairline ring.
+## Red core-lens "eye" + its tiny specular catch-light — the casing itself
+## (ramp, socket shading, stud ring, panel seams) is baked into the body sprite.
 static func _draw_body_and_lens(ci: CanvasItem, ds: DrawState) -> void:
-	ci.draw_circle(Vector2.ZERO, 6.0, ds.body_col.darkened(0.2))
-	ci.draw_circle(Vector2.ZERO, 5.6, ds.body_col)
-	ci.draw_circle(Vector2.ZERO, 3.2, Color(0.05, 0.01, 0.01))
 	ci.draw_circle(Vector2.ZERO, 2.7, VisualState.col(Color(0.55, 0.04, 0.03), Color(0.30, 0.02, 0.02)))
 	ci.draw_circle(Vector2(-0.8, -0.9), 0.6, Color(1, 0.7, 0.65, VisualState.f(0.6, 0.4)))
-	ci.draw_arc(Vector2.ZERO, 5.0, 0, TAU, 16, ds.metal, 0.8)
-	ci.draw_circle(Vector2(-1.5, -2.0), 1.5, Color(1, 1, 1, VisualState.f(0.12, 0.05)))
-	for i in 8:
-		var ra: float = TAU / 8.0 * float(i) + 0.2
-		var rpos := Vector2(cos(ra), sin(ra)) * 5.0
-		ci.draw_circle(rpos, 0.5, ds.metal.lightened(0.3))
-		ci.draw_circle(rpos + Vector2(0.3, 0.3), 0.35, Color(0, 0, 0, 0.4))
-
-## Hairline panel seams — 4 short radial ticks + a cross pattern on the casing face.
-static func _draw_panel_seams(ci: CanvasItem, ds: DrawState) -> void:
-	for i in 4:
-		var sa: float = TAU / 4.0 * float(i) + 0.4
-		var sdir := Vector2(cos(sa), sin(sa))
-		ci.draw_line(sdir * 3.4, sdir * 5.0, Color(0, 0, 0, 0.28), 0.4)
-	ci.draw_line(Vector2(-4, 0), Vector2(4, 0), Color(0, 0, 0, 0.2), 0.8)
-	ci.draw_line(Vector2(0, -4), Vector2(0, 4), Color(0, 0, 0, 0.2), 0.8)
 
 ## Arm-blink telegraph — same period as legacy blinking dots, now a crisp core
 ## flash + a thin expanding ring instead of fat blinking dots.

@@ -1437,3 +1437,45 @@ b68004d log
 production/session-logs/session-log.md
 ---
 
+## Session End: 20260707_213318
+### Commits
+fa931ca Merge pull request #5 from emcconnell/claude/game-graphics-photo-realism-a2bd73
+e758496 log: session log update for Turn 5
+9429b42 feat: Turn 5 graphics overhaul — Textured Light (art bible v4.0)
+74cbf3f Merge pull request #4 from emcconnell/claude/zealous-burnell-e44092
+b68004d log
+28ad4e9 Merge pull request #3 from emcconnell/claude/zealous-burnell-e44092
+80b07ee feat: Turn 4 graphics overhaul — punched-up realism + the fade
+---
+
+## Session End: 20260707_213359
+### Commits
+fa931ca Merge pull request #5 from emcconnell/claude/game-graphics-photo-realism-a2bd73
+e758496 log: session log update for Turn 5
+9429b42 feat: Turn 5 graphics overhaul — Textured Light (art bible v4.0)
+74cbf3f Merge pull request #4 from emcconnell/claude/zealous-burnell-e44092
+b68004d log
+28ad4e9 Merge pull request #3 from emcconnell/claude/zealous-burnell-e44092
+80b07ee feat: Turn 4 graphics overhaul — punched-up realism + the fade
+### Uncommitted Changes
+production/session-logs/session-log.md
+---
+
+
+## Turn 6 — "Wet Black" graphics overhaul (art bible v5.0) — 2026-07-07
+AAA-realism space-horror light-behavior pass on top of Turn 5's textured bodies:
+- Specular: baked _spec gloss masks now drive Blinn-Phong in custom light() passes
+  (fade_sprite / creature_sprite); wet chitin turns high-gloss inside the flood cone.
+  (SPECULAR_SHININESS is read-only in 4.6 fragment shaders — custom light() required.)
+- Shadows: circular occluders on rocks/mines/derelict (back-face cull keeps rims lit);
+  flood cone, muzzle and explosion lights cast soft PCF13 shadows (visuals.json → shadows).
+- Cinematic pass: always-on PostStack (z 45) — 13-tap threshold bloom, ACES tonemap,
+  fade-driven grade (survey cool shadows → dead crushed blacks + red isolation).
+- Refraction: engine plume heat haze, explosion shockwave rings, and The Silence's
+  cloak now bends starlight (canvas_fx_refraction.gdshader).
+- Beam as volume: gradient shaft polygon + DustField motes igniting via beam_lit();
+  flood lamp restores TRUE albedo per pixel on rocks/wrecks (they were unliftable by
+  2D lights — light multiplies albedo, DEAD albedo is near-black).
+- Probe harness: PROBE_SPAWN now accepts rockN:x:y static asteroids.
+Verified: probe screenshots sectors 1/2/3/4/5 incl. beam-reveal composition shots;
+104/104 unit tests (6 new for post-stack data plumbing).

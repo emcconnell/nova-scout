@@ -1,8 +1,8 @@
 # NOVA SCOUT — Art Bible
 
-**Version:** 4.0 (Textured Light — baked PBR-style bodies + real-time 2D lighting)
+**Version:** 5.0 (Wet Black — specular light, real shadows, cinematic post, refraction)
 **Art Director:** Star-Finder Studio
-**Supersedes:** v3.0 procedural-vector render language (all dread pillars and palettes retained; body rendering replaced)
+**Supersedes:** v4.0 Textured Light (fully retained; v5.0 adds the light-behavior layer on top — see §0a)
 **Binding creative source:** `design/gdd/dark-directive.md` (tone) + v3.0 palettes/silhouettes (geometry) + this document's §0 pipeline
 
 ---
@@ -52,6 +52,46 @@ photographic starfield tiles and tinted nebula wisps now sit *behind* them).
 Sections below this line are v3.0 text: palettes, silhouettes, sizes, FX
 rules and dread pillars all still bind — only the words "procedural vector
 drawing" for BODIES are superseded by the baked-texture pipeline above.
+
+---
+
+## 0a. v5.0 Render Language — Wet Black
+
+v4.0 gave every body a surface; v5.0 makes light BEHAVE on it. Five laws,
+all data-driven from `assets/data/visuals.json`:
+
+1. **Light glints.** The baked `_spec` gloss masks now drive Blinn-Phong
+   specular in a custom `light()` pass (`fade_sprite` / `creature_sprite`).
+   Hulls and rock take a broad metal sheen that dulls as the frequency dies;
+   chitin caught in the flood cone turns HIGH-GLOSS — the wet glisten is
+   real light, not paint (`wet_gloss_boost`, `shininess_wet`).
+2. **Light is blocked.** Solid inert bodies (rocks, mines, the derelict)
+   carry circular `LightOccluder2D`s (~70% visual radius, back-face cull so
+   their own rim stays lit); the flood cone, muzzle snap and explosion
+   lights cast soft PCF13 shadows (`shadows.color_alpha` — never a hard
+   wall). Creatures do not occlude (their reveal is the shader's job).
+   Star layers are light-years away: `light_mask = 0`, nothing lights or
+   shadows them.
+3. **The lens is honest.** An always-on `PostStack` ColorRect (z 45, under
+   the film overlay at 50) runs `post_bloom_grade.gdshader`: 13-tap
+   threshold bloom at native-canvas radii, ACES filmic tonemap
+   (`post.exposure`), and the fade-driven grade — SURVEY gets cold clean
+   shadows; DEAD crushes blacks (`grade_strength`), drains every color
+   except red. The CRT overlay stays a toggle; the lens does not.
+4. **Space bends.** `canvas_fx_refraction.gdshader` displaces the rendered
+   screen behind masked patches: engine-plume heat haze (flares on boost),
+   explosion shockwave rings (expand ~3x in 0.35 s, then die), and The
+   Silence's cloak — a silhouette of bent starlight, strongest while fully
+   cloaked, gone when it decloaks into an honest surface.
+5. **The beam is a volume.** A per-vertex-faded shaft polygon rises from
+   the probe's nose; `DustField` motes (near-invisible at `dust.base_alpha`)
+   ignite inside the cone via `VisualState.beam_lit()`; and the flood lamp
+   restores TRUE albedo per pixel on everything it touches — a rock in the
+   beam shows its real sunlit surface through the dead-frequency scorch,
+   with its glint restored (`fade_sprite` beam reveal).
+
+Emissives, HUD, pickups and projectiles remain procedural and unlit, as in
+v4.0. Every number above lives in `visuals.json → post / shadows / dust`.
 
 ---
 
@@ -218,6 +258,13 @@ All in `assets/data/dread.json` or shader uniforms unless noted:
 | Silence shimmer alpha band | 0.02–0.08 | the_silence.gd |
 | `dread_intensity` | player setting 0–1 | settings menus |
 | Boost light flare | +20% radius | darkness_veil.gd |
+| `post.exposure` | 0.85 (safe 0.6–1.1; scene brightness before the filmic curve) | visuals.json |
+| `post.bloom_survey → bloom_dead` | 0.35 → 0.75 (safe 0–1.2; highlight bleed) | visuals.json |
+| `post.bloom_threshold` | 0.66 (safe 0.4–1.0; lower = more of the frame glows) | visuals.json |
+| `post.grade_strength` | 0.85 (safe 0–1; DEAD crush/desat amount) | visuals.json |
+| `shadows.enabled` / `filter_smooth` / `color_alpha` | true / 3.5 / 0.72 (alpha safe 0.3–0.9) | visuals.json |
+| `dust.count` / `base_alpha` / `beam_alpha` | 64 / 0.045 / 0.7 (base must stay < 0.1) | visuals.json |
+| Body spec strength / shininess | shader defaults (`spec_strength`, `shininess*`) | fade/creature_sprite.gdshader |
 
 ## 8. Acceptance Criteria
 
@@ -232,3 +279,9 @@ All in `assets/data/dread.json` or shader uniforms unless noted:
 8. All drawn assets read cleanly at 1280×720; enemy silhouettes are distinguishable in murk by glow/eye color alone in BOTH lighting states (magenta biolume at blend 0, red eyes at blend 1).
 9. The wrong star, when present, drifts against parallax and has no collision or gameplay effect.
 10. Discovery/ending sequences remain visibly warmer than every surrounding scene (the dawn contrast survives the dark pass).
+11. (v5.0) The sun and every emissive above `bloom_threshold` visibly halo; sector-1 void still reads near-black behind the bloom (no milk).
+12. (v5.0) A rock or wreck between the probe and a lit surface blocks the flood cone — the murk behind it stays dark; the occluding body's own beam-facing rim stays lit.
+13. (v5.0) A creature inside the flood cone shows wet glisten highlights that move with the probe; the same creature outside the cone shows only the dry sheen.
+14. (v5.0) The beam reads as a volume in sectors 4–5: visible shaft, dust motes inside it, and true-albedo reveal on any body it crosses.
+15. (v5.0) The Silence while cloaked visibly distorts the starfield behind it (bent light), and the distortion disappears when it decloaks.
+16. (v5.0) Explosions produce an expanding refraction ring ≤ 0.35 s and throw transient shadows off nearby rocks; the engine plume shows heat haze that strengthens on boost.

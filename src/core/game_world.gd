@@ -157,6 +157,11 @@ func _ready() -> void:
 	enemy_projectiles_node.z_index = 35
 	projectiles_node.z_index = 35
 
+	# v5.0 "Wet Black" — volumetric dust in the beam + the cinematic pass
+	# (bloom / filmic tonemap / fade grade) under the film overlay.
+	add_child(DustField.new())
+	add_child(PostStack.new())
+
 	# Wire CRT overlay
 	var crt := get_node_or_null("CRTOverlay")
 	if crt and crt.has_method("connect_player"):
@@ -224,6 +229,9 @@ func _build_bg_layers() -> void:
 		s.region_enabled = true
 		s.region_rect = Rect2(0, 0, 640, 360)
 		s.scale = Vector2(0.5, 0.5)
+		# v5.0: stars are light-years away — no in-scene light may brighten
+		# them, and no occluder may shadow them.
+		s.light_mask = 0
 		add_child(s)
 		_bg_tiles.append(s)
 	var wisp_rng := DrawKit.rng(917 + GameManager.current_sector)

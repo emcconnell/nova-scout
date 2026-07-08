@@ -23,6 +23,7 @@ var _attack_dir: Vector2 = Vector2.DOWN
 var _fired_shots: int = 0
 var _shimmer: float = 0.0
 var _body: Sprite2D = null       # textured hull; alpha follows the cloak shimmer
+var _cloak_haze: Sprite2D = null # refraction silhouette — bent starlight
 
 func _ready() -> void:
 	super()
@@ -36,6 +37,15 @@ func _ready() -> void:
 	_phase_timer = _roll_attack_interval()
 	_drift_target_x = randf_range(40.0, GameManager.VIEWPORT_W - 40.0)
 	_body = TextureKit.creature_body(self, "enemies", "silence")
+	# v5.0 "Wet Black": the cloak REFRACTS — a silhouette of bent starlight,
+	# strongest while fully cloaked, gone when decloaked (the hull is visible
+	# then). Predator-glass: you don't see it, you see space fail around it.
+	_cloak_haze = TextureKit.refraction_patch(self, 11.0, 0.007,
+		TextureKit.tex("enemies", "silence_survey"))
+	_cloak_haze.scale = _body.scale
+	var haze_mat := _cloak_haze.material as ShaderMaterial
+	haze_mat.set_shader_parameter("noise_scale", 3.5)
+	haze_mat.set_shader_parameter("speed", 0.8)
 	AudioManager.play_sfx("stalker_drone", 0.55)
 
 func _exit_tree() -> void:
@@ -149,6 +159,10 @@ func _draw() -> void:
 	# The body sprite's alpha follows the same shimmer the old polygon fill used.
 	if _body:
 		_body.self_modulate.a = shimmer_a
+	# The refraction silhouette works opposite the hull: strongest cloaked,
+	# fading out as the thing decloaks and becomes an honest surface.
+	if _cloak_haze:
+		_cloak_haze.modulate.a = _cloak * (0.6 + 0.4 * sin(_shimmer * 2.3))
 
 	# Jagged asymmetric silhouette — deliberately wrong geometry (outline only)
 	var body := PackedVector2Array([

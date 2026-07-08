@@ -15,14 +15,23 @@ func _ready() -> void:
 	var world: Node = load("res://scenes/game_world.tscn").instantiate()
 	get_parent().add_child.call_deferred(world)
 
-	# PROBE_SPAWN="scout:60:60,warrior:120:70,..." — enemy showcase placement.
+	# PROBE_SPAWN="scout:60:60,warrior:120:70,rock0:160:90..." — showcase
+	# placement. rockN = asteroid tier N (0-2), held static for lighting shots.
 	var spawn_spec := OS.get_environment("PROBE_SPAWN")
 	if not spawn_spec.is_empty():
 		await get_tree().create_timer(0.3).timeout
 		for entry in spawn_spec.split(","):
 			var parts := entry.split(":")
-			if parts.size() == 3 and world.has_method("spawn_enemy_at"):
-				world.spawn_enemy_at(parts[0], Vector2(parts[1].to_float(), parts[2].to_float()))
+			if parts.size() != 3:
+				continue
+			var pos := Vector2(parts[1].to_float(), parts[2].to_float())
+			if parts[0].begins_with("rock"):
+				var rock: Node2D = load("res://scenes/hazards/asteroid.tscn").instantiate()
+				world.get_node("Hazards").add_child(rock)
+				rock.global_position = pos
+				rock.setup(parts[0].trim_prefix("rock").to_int(), Vector2.ZERO)
+			elif world.has_method("spawn_enemy_at"):
+				world.spawn_enemy_at(parts[0], pos)
 
 	await get_tree().create_timer(wait_s).timeout
 	DirAccess.make_dir_recursive_absolute(

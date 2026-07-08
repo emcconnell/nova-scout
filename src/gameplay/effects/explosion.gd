@@ -33,6 +33,8 @@ const LIGHT_ENERGY_START := 1.2
 const LIGHT_COLOR_START := Color(1.0, 1.0, 1.0)   # white-hot flash
 const LIGHT_COLOR_END := Color(1.0, 0.42, 0.2)    # cooling toward ember orange
 var _light: PointLight2D = null
+var _shockwave: Sprite2D = null
+const SHOCKWAVE_LIFE := 0.35   # s — ring expands ~3x then vanishes
 
 func setup(type: int) -> void:
 	_type = type
@@ -61,6 +63,11 @@ func setup(type: int) -> void:
 	# Transient burst light — decays to 0 over the full effect lifetime (embers
 	# included), cooling white -> ember orange. Freed automatically with self.
 	_light = TextureKit.point_light(self, _get_flash_radius() * 2.5, LIGHT_COLOR_START, LIGHT_ENERGY_START)
+	# v5.0 "Wet Black": the blast throws real shadows off nearby rock, and a
+	# shockwave refraction ring bends space outward for the first ~third of it.
+	TextureKit.enable_shadows(_light)
+	_shockwave = TextureKit.refraction_patch(self, _get_flash_radius() * 0.6, 0.010)
+	(_shockwave.material as ShaderMaterial).set_shader_parameter("radial_push", 1.4)
 
 ## Slow, long-lived embers that outlast the flash and cool from orange to red.
 func _add_embers(count: int, life: float) -> void:
@@ -90,6 +97,16 @@ func _process(delta: float) -> void:
 	for r in _rings:
 		r["radius"] += r["speed"] * delta
 		r["life"] += delta
+	# Shockwave — expands fast, fades faster, then frees (backbuffer copies
+	# are not cheap; the ring must never outlive its read).
+	if _shockwave:
+		var st: float = _time / SHOCKWAVE_LIFE
+		if st >= 1.0:
+			_shockwave.queue_free()
+			_shockwave = null
+		else:
+			_shockwave.scale *= 1.0 + 6.0 * delta
+			_shockwave.modulate.a = 1.0 - st
 	# Burst light — decays to 0 and cools from white to ember orange over the burst.
 	if _light:
 		var lt: float = clampf(_time / _duration, 0.0, 1.0)

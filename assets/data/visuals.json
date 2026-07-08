@@ -1,7 +1,13 @@
 {
-  "comment": "TURN 4 'Punched-Up Realism + The Fade' visual tuning — see design/gdd/art-bible.md. One 0..1 blend crossfades the world from SURVEY (4A) to DEAD FREQUENCY (4B).",
+  "comment": "TURN 4 'Punched-Up Realism + The Fade' visual tuning \u2014 see design/gdd/art-bible.md. One 0..1 blend crossfades the world from SURVEY (4A) to DEAD FREQUENCY (4B).",
   "fade": {
-    "sector_blend": { "1": 0.0, "2": 0.1, "3": 0.4, "4": 0.7, "5": 1.0 },
+    "sector_blend": {
+      "1": 0.0,
+      "2": 0.1,
+      "3": 0.4,
+      "4": 0.7,
+      "5": 1.0
+    },
     "hull_dead_bonus": 0.18,
     "threat_bonus": 0.08,
     "lerp_speed": 0.55,
@@ -17,14 +23,41 @@
   "film": {
     "grain_survey": 0.035,
     "grain_dead": 0.085,
-    "vignette_survey": 0.30,
+    "vignette_survey": 0.3,
     "vignette_dead": 0.72,
     "hud_glitch_hull_threshold": 0.5
   },
   "sun": {
-    "survey_screen_pos": [98.0, 44.0],
-    "dead_screen_pos": [44.0, 140.0],
+    "survey_screen_pos": [
+      98.0,
+      44.0
+    ],
+    "dead_screen_pos": [
+      44.0,
+      140.0
+    ],
     "flare_strength": 0.55
+  },
+  "post": {
+    "comment": "v5.0 Wet Black cinematic pass \u2014 exposure feeds the ACES curve; bloom gain lerps survey->dead by the fade; grade_strength scales the DEAD crush/desat (post_bloom_grade.gdshader)",
+    "exposure": 0.85,
+    "bloom_survey": 0.35,
+    "bloom_dead": 0.75,
+    "bloom_threshold": 0.66,
+    "grade_strength": 0.85
+  },
+  "shadows": {
+    "comment": "2D shadow casting on the flood cone + explosion lights; filter_smooth = PCF13 smoothing px, color_alpha = how much light a shadow blocks (never fully)",
+    "enabled": true,
+    "filter_smooth": 3.5,
+    "color_alpha": 0.72
+  },
+  "dust": {
+    "comment": "volumetric dust motes \u2014 near-invisible at base_alpha, ignite to beam_alpha inside the flood cone; drift_speed in px/s sideways wander",
+    "count": 64,
+    "base_alpha": 0.045,
+    "beam_alpha": 0.7,
+    "drift_speed": 4.0
   },
   "scan": {
     "auto_start_delay": 0.5,

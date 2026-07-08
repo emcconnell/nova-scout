@@ -71,6 +71,8 @@ func _ready() -> void:
 	# Baked warhead casing — plating meridians, stud ring, detonator socket. The
 	# red lens, spikes, and telegraph glows stay procedural (drawn on top).
 	_body = TextureKit.fade_body(self, "hazards", "mine")
+	# v5.0: the warhead is a solid body — it blocks the flood cone.
+	TextureKit.occluder(self, 4.5)
 
 ## Call after instantiation to configure mine variant and stagger firing.
 func setup(p_type: int = MineType.STANDARD, stagger: int = 0) -> void:
